@@ -3,7 +3,6 @@ import 'dart:ui' show ImageFilter;
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/physics.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 
 class LiquidGlassNavBar extends StatefulWidget {
@@ -27,9 +26,10 @@ class _LiquidGlassNavBarState extends State<LiquidGlassNavBar>
   static const _pillHeight = 64.0;
   static const _gap = 12.0;
   static const _sidePadding = 4.0;
-  static const _inset = 4.0;
-  static const _lensExtraWidth = 30.0;
-  static const _lensExtraHeight = 22.0;
+
+  // ---- DIUBAH: Dimensi agar lebih lebar dan lonjong (oval) ----
+  static const _lensExtraWidth = 45.0;  // Diperbesar dari 30.0 agar bubble lebih lebar
+  static const _lensExtraHeight = 35.0; // Diperkecil dari 22.0 agar proporsi lebih lonjong/oval
 
   // ---- Lens look (tune these) ----
   static const _magnify = 0.18; // zoom of everything under the lens
@@ -282,8 +282,10 @@ class _LiquidGlassNavBarState extends State<LiquidGlassNavBar>
 
   Widget _buildPill(double itemWidth) {
     final radius = BorderRadius.circular(_pillHeight / 2);
-    final idleW = itemWidth - _inset * 2;
-    final idleH = _pillHeight - _inset * 2;
+    
+    // ---- DIUBAH: Membuat highlight selected symbol lebih lebar dan lonjong ----
+    final idleW = itemWidth + 8.0; // Diperlebar secara signifikan (sebelumnya itemWidth - 8)
+    final idleH = _pillHeight - 10.0; // Tinggi dikontrol agar proporsi lebih oval (48.0)
 
     return Listener(
       behavior: HitTestBehavior.opaque,
@@ -300,15 +302,16 @@ class _LiquidGlassNavBarState extends State<LiquidGlassNavBar>
           final lensActive = press > 0.01;
 
           // Stretch the lens while it is between two items (liquid feel).
-          final between =
-              ((pos - pos.round()).abs() * 2).clamp(0.0, 1.0).toDouble();
-          final stretch = between * 18 * pressC;
+          // Ditingkatkan sedikit agar transisi antar item yang lebih lebar tetap terlihat cair
+          final between = ((pos - pos.round()).abs() * 2).clamp(0.0, 1.0).toDouble();
+          final stretch = between * 28.0 * pressC; 
 
           final cx = _sidePadding + (pos + 0.5) * itemWidth;
           final cy = _pillHeight / 2;
 
           final lensW = idleW + _lensExtraWidth * press + stretch;
-          final lensH = idleH + _lensExtraHeight * press - stretch * 0.25;
+          final lensH = idleH + _lensExtraHeight * press - (stretch * 0.2);
+          
           final lensRect = Rect.fromCenter(
             center: Offset(cx, cy),
             width: lensW,
@@ -336,9 +339,10 @@ class _LiquidGlassNavBarState extends State<LiquidGlassNavBar>
               Positioned.fill(child: _FrostedBase(radius: radius)),
 
               // 2. Flat highlight behind the selected item (idle state)
+              // Sekarang lebih lebar dan lebih lonjong (oval)
               Positioned(
                 left: cx - idleW / 2,
-                top: _inset,
+                top: (_pillHeight - idleH) / 2, // Centered vertically
                 width: idleW,
                 height: idleH,
                 child: Opacity(
@@ -346,7 +350,7 @@ class _LiquidGlassNavBarState extends State<LiquidGlassNavBar>
                   child: DecoratedBox(
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.13),
-                      borderRadius: BorderRadius.circular(idleH / 2),
+                      borderRadius: BorderRadius.circular(idleH / 2), // Membuatnya oval sempurna
                       border: Border.all(
                         color: Colors.white.withValues(alpha: 0.06),
                       ),
@@ -359,7 +363,6 @@ class _LiquidGlassNavBarState extends State<LiquidGlassNavBar>
               Positioned.fill(child: _iconRow(pos)),
 
               // 4. Glass lens: magnifies everything painted behind it
-              //    (page content + pill + icons).
               if (lensActive)
                 Positioned(
                   left: lensRect.left,
@@ -435,24 +438,75 @@ class _GlassLens extends StatelessWidget {
         foregroundPainter: _LensRimPainter(opacity: opacity),
         child: ClipRRect(
           borderRadius: radius,
-          child: BackdropFilter(
-            filter: ImageFilter.matrix(
-              matrix.storage,
-              filterQuality: FilterQuality.medium,
-            ),
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Colors.white.withValues(alpha: 0.10 * opacity),
-                    Colors.white.withValues(alpha: 0.02 * opacity),
-                    Colors.white.withValues(alpha: 0.04 * opacity),
-                  ],
+          child: Stack(
+            children: [
+              // 1. Base Magnification Layer
+              Positioned.fill(
+                child: BackdropFilter(
+                  filter: ImageFilter.matrix(
+                    matrix.storage,
+                    filterQuality: FilterQuality.medium,
+                  ),
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          Colors.white.withValues(alpha: 0.10 * opacity),
+                          Colors.white.withValues(alpha: 0.02 * opacity),
+                          Colors.white.withValues(alpha: 0.04 * opacity),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
               ),
-            ),
+              
+              // 2. Liquid Specular Reflection (Glare/Pantulan Cahaya)
+              Positioned.fill(
+                child: Opacity(
+                  opacity: opacity,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      borderRadius: radius,
+                      gradient: RadialGradient(
+                        center: const Alignment(-0.6, -0.8), 
+                        radius: 1.5,
+                        colors: [
+                          Colors.white.withValues(alpha: 0.5), 
+                          Colors.white.withValues(alpha: 0.1), 
+                          Colors.transparent,
+                        ],
+                        stops: const [0.0, 0.3, 0.8],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
+              // 3. Inner Shadow / Refractive Tint
+              Positioned.fill(
+                child: Opacity(
+                  opacity: opacity,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      borderRadius: radius,
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          Colors.transparent,
+                          const Color(0xFF7DD3FC).withValues(alpha: 0.15),
+                          Colors.black.withValues(alpha: 0.1),
+                        ],
+                        stops: const [0.5, 0.8, 1.0],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),
