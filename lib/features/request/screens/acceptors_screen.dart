@@ -156,18 +156,29 @@ class AcceptorsScreen extends StatelessWidget {
                                   Expanded(
                                     child: FilledButton(
                                       onPressed: () async {
-                                        await Services.requests.updateAcceptance(
-                                          a.copyWith(status: AcceptanceStatus.selected),
-                                        );
+                                        // 1. Set agen ini jadi terpilih
+                                        await Services.requests.updateAcceptance(a.copyWith(status: AcceptanceStatus.selected));
+                                        
+                                        // 2. Batalkan agen lain & kirim pesan sistem
+                                        final allAccs = Services.requests.getAcceptances(req.id);
+                                        for (var other in allAccs) {
+                                          if (other.id != a.id && other.status == AcceptanceStatus.accepted) {
+                                            final otherChatId = 'chat_order_${req.id}_${other.agentId}';
+                                            Services.chats.sendMessage(ChatMessage(
+                                              id: 'sys_${DateTime.now().microsecondsSinceEpoch}',
+                                              chatId: otherChatId, senderId: 'system', senderName: 'Sistem',
+                                              type: MessageType.system, body: 'Maaf, klien telah memilih agen lain. Request ditutup.',
+                                              createdAt: DateTime.now(),
+                                            ));
+                                            Services.requests.updateAcceptance(other.copyWith(status: AcceptanceStatus.declined));
+                                          }
+                                        }
+
                                         if (!context.mounted) return;
-                                        Navigator.of(context).push(
-                                          MaterialPageRoute(
-                                            builder: (_) => PaymentScreen(
-                                              request: req,
-                                              acceptance: a,
-                                            ),
-                                          ),
-                                        );
+                                        // Lanjut ke pembayaran
+                                        Navigator.of(context).push(MaterialPageRoute(
+                                          builder: (_) => PaymentScreen(request: req, acceptance: a),
+                                        ));
                                       },
                                       child: const Text('Pilih'),
                                     ),

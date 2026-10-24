@@ -19,6 +19,7 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
   final _address = TextEditingController(text: 'Jl. Demo No. 1, Jakarta');
   final _price = TextEditingController(text: '150000');
   final _workers = TextEditingController(text: '1');
+  final _timeCtrl = TextEditingController(text: 'Hari ini, 2 jam');
   String _category = 'cleaning';
   PriceType _priceType = PriceType.lumpSum;
   bool _loading = false;
@@ -38,6 +39,8 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
     setState(() => _loading = true);
     try {
       final user = Services.auth.currentUser!;
+      
+      // PASTIKAN SEMUA PARAMETER INI TERISI
       final req = JobRequest(
         id: 'req_${DateTime.now().microsecondsSinceEpoch}',
         clientId: user.id,
@@ -54,9 +57,18 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
         createdAt: DateTime.now(),
         expiresAt: DateTime.now().add(const Duration(hours: 2)),
       );
+      
       await Services.requests.create(req);
       if (!mounted) return;
-      Navigator.of(context).pop();
+
+      if (Navigator.of(context).canPop()) {
+        Navigator.of(context).pop();
+      } else {
+        _title.clear();
+        _desc.clear(); 
+        _price.clear();
+      }
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Request dibuat. Agen akan segera menyetujui.'),
@@ -118,6 +130,16 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
               ),
               validator: (v) => requiredValidator(v, 'Alamat wajib diisi'),
             ),
+            TextFormField(
+              controller: _timeCtrl,
+              decoration: const InputDecoration(
+                labelText: 'Waktu Pelaksanaan',
+                hintText: 'Contoh: Hari ini, 2 jam',
+                prefixIcon: Icon(Icons.access_time),
+              ),
+              validator: (v) => requiredValidator(v, 'Waktu wajib diisi'),
+            ),
+            const SizedBox(height: 12),
             const SizedBox(height: 12),
             Row(
               children: [

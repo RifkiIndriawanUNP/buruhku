@@ -46,12 +46,12 @@ class _LiquidGlassNavBarState extends State<LiquidGlassNavBar>
   // ★ Ikon disesuaikan dengan kebutuhan Buruhku
   static const _icons = <IconData>[
     Icons.home_rounded,
-    Icons.history_rounded,
-    Icons.chat_bubble_rounded,
+    Icons.assignment_outlined, // Ikon Aktivitas (Riwayat & Favorit)
+    Icons.post_add_rounded,    // Ikon Request (Bukan +)
+    Icons.forum_rounded,       // Ikon Order Aktif (Chat)
     Icons.person_rounded,
   ];
-  // ★ Label disesuaikan
-  static const _labels = <String>['Beranda', 'Riwayat', 'Pesan', 'Akun'];
+  static const _labels = <String>['Beranda', 'Aktivitas', 'Request', 'Order Aktif', 'Akun'];
 
   static final _spring = SpringDescription.withDampingRatio(
     mass: 1,

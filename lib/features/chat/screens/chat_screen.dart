@@ -1,6 +1,6 @@
- import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import '../../../app/services.dart';
-import '../../../core/utils/rupiah.dart';
+//import '../../../core/utils/rupiah.dart';
 import '../../../data/models/message.dart';
 
 class ChatScreen extends StatefulWidget {
@@ -10,12 +10,8 @@ class ChatScreen extends StatefulWidget {
   final String agentName;
   final String? requestId;
   const ChatScreen({
-    super.key,
-    required this.chatId,
-    required this.title,
-    required this.agentId,
-    required this.agentName,
-    this.requestId,
+    super.key, required this.chatId, required this.title,
+    required this.agentId, required this.agentName, this.requestId,
   });
 
   @override
@@ -40,64 +36,65 @@ class _ChatScreenState extends State<ChatScreen> {
     final user = Services.auth.currentUser!;
     setState(() => _sending = true);
     try {
-      await Services.chats.sendMessage(
-        ChatMessage(
-          id: 'msg_${DateTime.now().microsecondsSinceEpoch}',
-          chatId: widget.chatId,
-          senderId: user.id,
-          senderName: user.fullName,
-          type: MessageType.text,
-          body: txt,
-          createdAt: DateTime.now(),
-        ),
-      );
+      await Services.chats.sendMessage(ChatMessage(
+        id: 'msg_${DateTime.now().microsecondsSinceEpoch}',
+        chatId: widget.chatId, senderId: user.id, senderName: user.fullName,
+        type: MessageType.text, body: txt, createdAt: DateTime.now(),
+      ));
       _input.clear();
-      // trigger agent reply
       Services.simulator.replyTo(
-        chatId: widget.chatId,
-        agentId: widget.agentId,
-        agentName: widget.agentName,
-        clientMessage: txt,
+        chatId: widget.chatId, agentId: widget.agentId, agentName: widget.agentName, clientMessage: txt,
       );
-      _jumpToEnd();
     } finally {
       if (mounted) setState(() => _sending = false);
     }
   }
 
-  void _jumpToEnd() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scroll.hasClients) {
-        _scroll.animateTo(
-          _scroll.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 200),
-          curve: Curves.easeOut,
-        );
-      }
-    });
-  }
+  void _showBookingDialog() {
+    final titleCtrl = TextEditingController();
+    final priceCtrl = TextEditingController();
+    final timeCtrl = TextEditingController();
 
-  Future<void> _acceptOffer(ChatMessage msg) async {
-    final user = Services.auth.currentUser!;
-    await Services.chats.sendMessage(
-      ChatMessage(
-        id: 'msg_${DateTime.now().microsecondsSinceEpoch}_a',
-        chatId: widget.chatId,
-        senderId: user.id,
-        senderName: user.fullName,
-        type: MessageType.system,
-        body: 'Anda menyetujui penawaran ${rupiah(msg.offerAmount ?? 0)}',
-        createdAt: DateTime.now(),
-      ),
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Ajukan Booking'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(controller: titleCtrl, decoration: const InputDecoration(labelText: 'Judul Pekerjaan')),
+            TextField(controller: priceCtrl, decoration: const InputDecoration(labelText: 'Harga (Rp)'), keyboardType: TextInputType.number),
+            TextField(controller: timeCtrl, decoration: const InputDecoration(labelText: 'Waktu (Cth: Besok Pagi)')),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Batal')),
+          FilledButton(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              final user = Services.auth.currentUser!;
+              final msgId = 'card_${DateTime.now().microsecondsSinceEpoch}';
+              
+              await Services.chats.sendMessage(ChatMessage(
+                id: msgId, chatId: widget.chatId, senderId: user.id, senderName: user.fullName,
+                type: MessageType.requestCard, body: 'Pengajuan Booking',
+                createdAt: DateTime.now(),
+                requestData: {
+                  'title': titleCtrl.text,
+                  'price': priceCtrl.text,
+                  'time': timeCtrl.text,
+                  'status': 'pending',
+                }
+              ));
+              
+              // Simulasi agen merespon
+              Services.simulator.simulateBookingResponse(widget.chatId, msgId, widget.agentId, widget.agentName);
+            },
+            child: const Text('Kirim'),
+          )
+        ],
+      )
     );
-    if (msg.offerAmount != null) {
-      Services.simulator.respondToAcceptedOffer(
-        chatId: widget.chatId,
-        agentId: widget.agentId,
-        agentName: widget.agentName,
-        finalPrice: msg.offerAmount!,
-      );
-    }
   }
 
   @override
@@ -108,13 +105,18 @@ class _ChatScreenState extends State<ChatScreen> {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(widget.title,
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
-            if (widget.requestId != null)
-              const Text('Chat Order',
-                  style: TextStyle(fontSize: 11, color: Colors.black54)),
+            Text(widget.title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+            const Text('Chat Order', style: TextStyle(fontSize: 11, color: Colors.black54)),
           ],
         ),
+        actions: [
+          // Tombol buat Request Card
+          IconButton(
+            icon: const Icon(Icons.add_box_outlined),
+            onPressed: _showBookingDialog,
+            tooltip: 'Ajukan Booking',
+          )
+        ],
       ),
       body: Column(
         children: [
@@ -123,13 +125,12 @@ class _ChatScreenState extends State<ChatScreen> {
               stream: Services.chats.watchMessages(widget.chatId),
               builder: (context, snap) {
                 final list = snap.data ?? const <ChatMessage>[];
-                _jumpToEnd();
-                if (list.isEmpty) {
-                  return const Center(
-                    child: Text('Belum ada pesan',
-                        style: TextStyle(color: Colors.black54)),
-                  );
-                }
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (_scroll.hasClients) _scroll.jumpTo(_scroll.position.maxScrollExtent);
+                });
+                
+                if (list.isEmpty) return const Center(child: Text('Belum ada pesan'));
+
                 return ListView.builder(
                   controller: _scroll,
                   padding: const EdgeInsets.all(12),
@@ -137,32 +138,61 @@ class _ChatScreenState extends State<ChatScreen> {
                   itemBuilder: (_, i) {
                     final m = list[i];
                     final mine = m.senderId == user.id;
+                    
                     if (m.type == MessageType.system) {
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 6),
-                        child: Center(
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 10, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: Colors.grey.shade200,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Text(m.body,
-                                style: const TextStyle(
-                                    fontSize: 11, color: Colors.black54)),
-                          ),
+                      return Center(
+                        child: Container(
+                          margin: const EdgeInsets.symmetric(vertical: 8),
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(color: Colors.grey.shade200, borderRadius: BorderRadius.circular(12)),
+                          child: Text(m.body, style: const TextStyle(fontSize: 11, color: Colors.black54)),
                         ),
                       );
                     }
-                    if (m.type == MessageType.offer) {
-                      return _OfferBubble(
+
+                    if (m.type == MessageType.requestCard) {
+                      return _RequestCardWidget(
                         msg: m,
-                        mine: mine,
-                        onAccept: () => _acceptOffer(m),
+                        isClient: mine,
+                        onAction: (newStatus) async {
+                          Services.chats.updateRequestCardStatus(m.id, newStatus);
+                          
+                          // Jika di-approve agen, kirim pesan sistem
+                          if (newStatus == 'approved') {
+                            Services.chats.sendMessage(ChatMessage(
+                              id: 'sys_${DateTime.now().microsecondsSinceEpoch}',
+                              chatId: widget.chatId, senderId: 'system', senderName: 'Sistem',
+                              type: MessageType.system, body: 'Agen menyetujui request Anda. Silakan bayar.',
+                              createdAt: DateTime.now(),
+                            ));
+                          }
+                          
+                          // Jika dibatalkan agen
+                          if (newStatus == 'cancelled') {
+                             Services.chats.sendMessage(ChatMessage(
+                              id: 'sys_${DateTime.now().microsecondsSinceEpoch}',
+                              chatId: widget.chatId, senderId: 'system', senderName: 'Sistem',
+                              type: MessageType.system, body: 'Agen membatalkan request.',
+                              createdAt: DateTime.now(),
+                            ));
+                          }
+                        },
                       );
                     }
-                    return _Bubble(mine: mine, child: Text(m.body));
+
+                    return Align(
+                      alignment: mine ? Alignment.centerRight : Alignment.centerLeft,
+                      child: Container(
+                        margin: const EdgeInsets.symmetric(vertical: 3),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.72),
+                        decoration: BoxDecoration(
+                          color: mine ? Theme.of(context).colorScheme.primary : Colors.grey.shade100,
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: Text(m.body, style: TextStyle(color: mine ? Colors.white : Colors.black87)),
+                      ),
+                    );
                   },
                 );
               },
@@ -175,20 +205,9 @@ class _ChatScreenState extends State<ChatScreen> {
               color: Colors.white,
               child: Row(
                 children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _input,
-                      onSubmitted: (_) => _send(),
-                      decoration: const InputDecoration(
-                        hintText: 'Tulis pesan…',
-                      ),
-                    ),
-                  ),
+                  Expanded(child: TextField(controller: _input, decoration: const InputDecoration(hintText: 'Tulis pesan…'))),
                   const SizedBox(width: 8),
-                  IconButton.filled(
-                    onPressed: _sending ? null : _send,
-                    icon: const Icon(Icons.send),
-                  ),
+                  IconButton.filled(onPressed: _sending ? null : _send, icon: const Icon(Icons.send)),
                 ],
               ),
             ),
@@ -199,98 +218,85 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 }
 
-class _Bubble extends StatelessWidget {
-  final bool mine;
-  final Widget child;
-  const _Bubble({required this.mine, required this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    return Align(
-      alignment: mine ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 3),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        constraints: BoxConstraints(
-            maxWidth: MediaQuery.of(context).size.width * 0.72),
-        decoration: BoxDecoration(
-          color: mine
-              ? Theme.of(context).colorScheme.primary
-              : Colors.grey.shade100,
-          borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(14),
-            topRight: const Radius.circular(14),
-            bottomLeft: Radius.circular(mine ? 14 : 4),
-            bottomRight: Radius.circular(mine ? 4 : 14),
-          ),
-        ),
-        child: DefaultTextStyle.merge(
-          style: TextStyle(color: mine ? Colors.white : Colors.black87),
-          child: child,
-        ),
-      ),
-    );
-  }
-}
-
-class _OfferBubble extends StatelessWidget {
+// --- WIDGET CARD REQUEST ---
+class _RequestCardWidget extends StatelessWidget {
   final ChatMessage msg;
-  final bool mine;
-  final VoidCallback onAccept;
-  const _OfferBubble({
-    required this.msg,
-    required this.mine,
-    required this.onAccept,
-  });
+  final bool isClient;
+  final Function(String) onAction;
+  
+  const _RequestCardWidget({required this.msg, required this.isClient, required this.onAction});
 
   @override
   Widget build(BuildContext context) {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 4),
-        padding: const EdgeInsets.all(12),
-        constraints: BoxConstraints(
-            maxWidth: MediaQuery.of(context).size.width * 0.78),
-        decoration: BoxDecoration(
-          color: Colors.blue.shade50,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: Colors.blue.shade200),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Row(
-              children: [
-                Icon(Icons.local_offer_outlined, size: 16, color: Colors.blue),
-                SizedBox(width: 4),
-                Text('Penawaran Harga',
-                    style: TextStyle(
-                        fontWeight: FontWeight.w700, color: Colors.blue)),
-              ],
-            ),
-            const SizedBox(height: 6),
-            Text(rupiah(msg.offerAmount ?? 0),
-                style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.black87)),
-            const SizedBox(height: 8),
-            if (!mine)
+    final data = msg.requestData ?? {};
+    final status = data['status'] ?? 'pending'; 
+    
+    Color statusColor = status == 'pending' ? Colors.orange 
+        : status == 'approved' ? Colors.blue 
+        : status == 'paid' ? Colors.purple
+        : status == 'completed' ? Colors.green : Colors.red;
+
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: statusColor.withValues(alpha: 0.5)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.receipt_long, color: statusColor),
+              const SizedBox(width: 8),
+              const Text('Detail Booking', style: TextStyle(fontWeight: FontWeight.bold)),
+              const Spacer(),
+              Text(status.toUpperCase(), style: TextStyle(fontWeight: FontWeight.bold, color: statusColor, fontSize: 12)),
+            ],
+          ),
+          const Divider(),
+          Text('Jasa: ${data['title']}'),
+          Text('Harga: Rp ${data['price']}'),
+          Text('Waktu: ${data['time']}'),
+          const SizedBox(height: 12),
+          
+          if (isClient) ...[
+            if (status == 'pending')
+              const Text('Menunggu persetujuan agen...', style: TextStyle(fontStyle: FontStyle.italic, fontSize: 12)),
+            if (status == 'approved')
               SizedBox(
                 width: double.infinity,
                 child: FilledButton(
-                  onPressed: msg.offerStatus == 'accepted' ? null : onAccept,
-                  style: FilledButton.styleFrom(
-                    minimumSize: const Size.fromHeight(36),
-                  ),
-                  child: Text(msg.offerStatus == 'accepted'
-                      ? 'Sudah disetujui'
-                      : 'Setuju'),
+                  onPressed: () => onAction('paid'),
+                  child: const Text('Bayar Sekarang (Mock)'),
                 ),
               ),
-          ],
-        ),
+            if (status == 'paid')
+              const Text('Menunggu agen menyelesaikan pekerjaan...', style: TextStyle(color: Colors.orange, fontSize: 12)),
+            if (status == 'completed')
+               const Text('Pekerjaan Selesai.', style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
+          ] else ...[
+            if (status == 'pending')
+              Row(
+                children: [
+                  Expanded(child: OutlinedButton(onPressed: () => onAction('cancelled'), child: const Text('Batalkan'))),
+                  const SizedBox(width: 8),
+                  Expanded(child: FilledButton(onPressed: () => onAction('approved'), child: const Text('Setujui'))),
+                ],
+              ),
+            if (status == 'paid')
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  style: FilledButton.styleFrom(backgroundColor: Colors.green),
+                  onPressed: () => onAction('completed'),
+                  child: const Text('Selesaikan Pekerjaan'),
+                ),
+              ),
+          ]
+        ],
       ),
     );
   }

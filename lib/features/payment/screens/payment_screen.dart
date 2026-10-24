@@ -94,15 +94,18 @@ class _PaymentScreenState extends State<PaymentScreen> {
           const Text('Metode Pembayaran',
               style: TextStyle(fontWeight: FontWeight.w700)),
           const SizedBox(height: 8),
-          ...['QRIS', 'Virtual Account', 'E-Wallet'].map(
-            (m) => RadioListTile<String>(
-              value: m,
-              groupValue: _method,
-              onChanged: (v) => setState(() => _method = v!),
-              title: Text(m),
+          ...['QRIS', 'Virtual Account', 'E-Wallet'].map((m) {
+            final isSelected = _method == m;
+            return ListTile(
               contentPadding: EdgeInsets.zero,
-            ),
-          ),
+              leading: Icon(
+                isSelected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+                color: isSelected ? Theme.of(context).colorScheme.primary : Colors.grey,
+              ),
+              title: Text(m),
+              onTap: () => setState(() => _method = m),
+            );
+          }).toList(),
           const SizedBox(height: 8),
           AppBox(
             color: const Color(0xFFEAF5EA),

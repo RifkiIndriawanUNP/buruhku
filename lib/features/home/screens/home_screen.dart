@@ -4,8 +4,8 @@ import '../../../app/services.dart';
 import '../../../core/widgets/avatar.dart';
 import '../../../core/widgets/box.dart';
 import '../../../data/models/agent.dart';
-// TAMBAHKAN IMPORT INI (Error method CategoryScreen tidak ditemukan)
-import 'agent_profile_screen.dart'; 
+import '../../request/screens/create_request_screen.dart'; // Import untuk Cari Agen Baru
+import 'agent_profile_screen.dart';
 import 'category_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -16,13 +16,14 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  static const _cats = [
-    ('cleaning', 'Bersih-bersih', Icons.cleaning_services_outlined),
-    ('repair', 'Perbaikan Ringan', Icons.handyman_outlined),
-    ('moving', 'Angkat & Pindah', Icons.local_shipping_outlined),
-    ('garden', 'Taman & Halaman', Icons.grass_outlined),
-    ('laundry', 'Setrika / Laundry', Icons.local_laundry_service_outlined),
-    ('pickup', 'Antar-Jemput', Icons.delivery_dining_outlined),
+  // Menggunakan Named Record agar lebih rapi dan tidak bingung $1, $2, $3
+  static const _cats = <({String id, String label, IconData icon})>[
+    (id: 'cleaning', label: 'Bersih-bersih', icon: Icons.cleaning_services_outlined),
+    (id: 'repair', label: 'Perbaikan Ringan', icon: Icons.handyman_outlined),
+    (id: 'moving', label: 'Angkat & Pindah', icon: Icons.local_shipping_outlined),
+    (id: 'garden', label: 'Taman & Halaman', icon: Icons.grass_outlined),
+    (id: 'laundry', label: 'Setrika / Laundry', icon: Icons.local_laundry_service_outlined),
+    (id: 'pickup', label: 'Antar-Jemput', icon: Icons.delivery_dining_outlined),
   ];
 
   final _search = TextEditingController();
@@ -100,20 +101,49 @@ class _HomeScreenState extends State<HomeScreen> {
               crossAxisSpacing: 10,
               childAspectRatio: 1.05,
               children: _cats
-                  .where((c) =>
-                      _query.isEmpty || c.$2.toLowerCase().contains(_query))
+                  .where((c) => _query.isEmpty || c.label.toLowerCase().contains(_query))
                   .map((c) => _CategoryTile(
-                        id: c.$1,
-                        label: c.$2,
-                        icon: c.$3,
-                        onTap: () => Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => CategoryScreen(
-                              categoryId: c.$1,
-                              categoryName: c.$2,
+                        id: c.id,
+                        label: c.label,
+                        icon: c.icon,
+                        onTap: () {
+                          showDialog(
+                            context: context,
+                            builder: (ctx) => AlertDialog(
+                              title: Text(c.label),
+                              content: const Text('Pilih tindakan untuk kategori ini:'),
+                              actions: [
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.pop(ctx);
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => CategoryScreen(
+                                          categoryId: c.id,
+                                          categoryName: c.label,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                  child: const Text('Lihat Agen (Existing)'),
+                                ),
+                                FilledButton(
+                                  onPressed: () {
+                                    Navigator.pop(ctx);
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => const CreateRequestScreen(),
+                                      ),
+                                    );
+                                  },
+                                  child: const Text('Cari Agen Baru'),
+                                ),
+                              ],
                             ),
-                          ),
-                        ),
+                          );
+                        },
                       ))
                   .toList(),
             ),
@@ -149,24 +179,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: _AgentRow(agent: a),
                     ),
                   ),
-            const SizedBox(height: 12),
-            AppBox(
-              color: const Color(0xFFFFF6E5),
-              border: Border.all(color: const Color(0xFFFFE0A3)),
-              child: Row(
-                children: [
-                  const Icon(Icons.shield_outlined, color: Color(0xFFB26B00)),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      'Dana ditahan (escrow) hingga pekerjaan selesai. Pembayaran di luar aplikasi tidak dilindungi.',
-                      style: TextStyle(color: Colors.brown.shade800, fontSize: 12),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 40),
+            const SizedBox(height: 80), // Spasi untuk nav bar melayang
           ],
         ),
       ),

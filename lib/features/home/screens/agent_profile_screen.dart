@@ -67,31 +67,21 @@ class AgentProfileScreen extends StatelessWidget {
             onPressed: () {
               final chatId = 'chat_direct_${agent.id}';
               final user = Services.auth.currentUser!;
-              final chat = Services.chats.getChat(chatId);
-              if (chat == null) {
-                Services.chats.addChatToParticipants(
-                  Chat(
-                    id: chatId,
-                    type: ChatType.direct,
-                    title: 'Chat dengan ${agent.displayName}',
-                    participantIds: [user.id, agent.id],
-                    createdAt: DateTime.now(),
-                  ),
-                );
+              if (Services.chats.getChat(chatId) == null) {
+                Services.chats.addChatToParticipants(Chat(
+                  id: chatId, type: ChatType.direct, title: agent.displayName,
+                  participantIds: [user.id, agent.id], createdAt: DateTime.now(),
+                ));
               }
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => ChatScreen(
-                    chatId: chatId,
-                    title: agent.displayName,
-                    agentId: agent.id,
-                    agentName: agent.displayName,
-                  ),
+              Navigator.push(context, MaterialPageRoute(
+                builder: (_) => ChatScreen(
+                  chatId: chatId, title: agent.displayName,
+                  agentId: agent.id, agentName: agent.displayName,
                 ),
-              );
+              ));
             },
             icon: const Icon(Icons.chat_bubble_outline),
-            label: const Text('Chat Langsung'),
+            label: const Text('Chat & Booking'),
           ),
           const SizedBox(height: 8),
           WireButton(

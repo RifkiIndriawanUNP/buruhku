@@ -26,9 +26,13 @@ class _OtpScreenState extends State<OtpScreen> {
         _code.text.trim(),
         fullName: _name.text.trim().isEmpty ? null : _name.text.trim(),
       );
+
       if (!mounted) return;
-      // Navigate back to root; root will show MainShell
-      Navigator.of(context).popUntil((r) => r.isFirst);
+
+      // HAPUS popUntil, ganti dengan ini:
+      if (Navigator.of(context).canPop()) {
+        Navigator.of(context).pop();
+      }
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

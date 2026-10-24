@@ -1,5 +1,6 @@
-enum MessageType { text, image, location, offer, contact, ewallet, system }
+enum MessageType { text, image, location, offer, contact, ewallet, system, requestCard }
 enum ChatType { order, direct }
+enum CardStatus { pending, approved, paid, completed, cancelled }
 
 class Chat {
   final String id;
@@ -29,8 +30,10 @@ class ChatMessage {
   final MessageType type;
   final String body;
   final DateTime createdAt;
+  
   final int? offerAmount;
   final String? offerStatus;
+  final Map<String, dynamic>? requestData; // Untuk menyimpan data booking (title, price, time, status)
 
   ChatMessage({
     required this.id,
@@ -42,9 +45,10 @@ class ChatMessage {
     required this.createdAt,
     this.offerAmount,
     this.offerStatus,
+    this.requestData,
   });
 
-  ChatMessage copyWith({String? offerStatus}) => ChatMessage(
+  ChatMessage copyWith({String? offerStatus, Map<String, dynamic>? requestData}) => ChatMessage(
         id: id,
         chatId: chatId,
         senderId: senderId,
@@ -54,5 +58,6 @@ class ChatMessage {
         createdAt: createdAt,
         offerAmount: offerAmount,
         offerStatus: offerStatus ?? this.offerStatus,
+        requestData: requestData ?? this.requestData,
       );
 }
