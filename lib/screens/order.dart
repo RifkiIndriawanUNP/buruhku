@@ -678,7 +678,7 @@ class _OrderPageState extends State<OrderPage> {
               }, icon: Icons.undo)),
             ],
           ])),
-        ],
+        ], // ---- rincian order
         const Section('Rincian'),
         Box(child: Column(children: [
           Kv('Jadwal', o.schedAt == null ? 'Fleksibel' : fdt(o.schedAt!)),
