@@ -9,8 +9,29 @@ import 'order.dart';
 import 'request.dart';
 import 'service.dart';
 
-class Shell extends StatelessWidget {
+class Shell extends StatefulWidget {
   const Shell({super.key});
+  @override
+  State<Shell> createState() => _ShellState();
+}
+
+class _ShellState extends State<Shell> {
+  bool _hidden = false;
+
+  bool _onNotification(ScrollNotification notification) {
+    if (notification is ScrollUpdateNotification) {
+      if (notification.metrics.axis == Axis.vertical) {
+        final delta = notification.scrollDelta ?? 0;
+        if (delta > 0 && !_hidden) {
+          setState(() => _hidden = true);
+        } else if (delta < 0 && _hidden) {
+          setState(() => _hidden = false);
+        }
+      }
+    }
+    return false;
+  }
+
   @override
   Widget build(BuildContext context) {
     final s = context.s;
@@ -34,9 +55,32 @@ class Shell extends StatelessWidget {
         ? const [IncomingTab(), JobsTab(), ChatsTab(), EarningsTab(), AccountTab()]
         : const [HomeTab(), HistoryTab(), MyRequestsTab(), ChatsTab(), AccountTab()];
     final i = s.tab.clamp(0, 4).toInt();
+
     return Scaffold(
-      body: SafeArea(bottom: false, child: IndexedStack(index: i, children: pages)),
-      bottomNavigationBar: BottomBar(index: i, items: items, center: agent ? null : 2, onTap: (v) => context.r.goTab(v)),
+      extendBody: true,
+      body: Stack(
+        children: [
+          NotificationListener<ScrollNotification>(
+            onNotification: _onNotification,
+            child: SafeArea(bottom: false, child: IndexedStack(index: i, children: pages)),
+          ),
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: BottomBar(
+              index: i,
+              items: items,
+              center: agent ? null : 2,
+              onTap: (v) {
+                setState(() => _hidden = false);
+                context.r.goTab(v);
+              },
+              hidden: _hidden,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -56,7 +100,7 @@ class _HomeTabState extends State<HomeTab> {
     final near = s.searchAgents(sort: 'jarak').take(8).toList();
     final pop = [...s.agents]..sort((a, b) => b.jobs.compareTo(a.jobs));
     final svcs = s.svcsNear().take(8).toList();
-    return ListView(padding: const EdgeInsets.all(16), children: [
+    return ListView(padding: const EdgeInsets.fromLTRB(16, 16, 16, kBarSpace), children: [
       Row(children: [
         Expanded(
           child: InkWell(
@@ -271,7 +315,7 @@ class _AgentListPageState extends State<AgentListPage> {
       ]),
       body: l.isEmpty
           ? const Empty(Icons.search_off, 'Tidak ada agen yang cocok. Longgarkan filter atau buat request agar agen yang menghubungimu.')
-          : ListView(padding: const EdgeInsets.all(16), children: [for (final a in l) AgentTile(a)]),
+          : ListView(padding: const EdgeInsets.fromLTRB(16, 16, 16, kBarSpace), children: [for (final a in l) AgentTile(a)]),
       bottomNavigationBar: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(12),
@@ -299,7 +343,7 @@ class SearchPage extends StatelessWidget {
       child: Scaffold(
         appBar: AppBar(title: Text('"$q"'), bottom: const TabBar(tabs: [Tab(text: 'Jasa'), Tab(text: 'Agen')])),
         body: TabBarView(children: [
-          ListView(padding: const EdgeInsets.all(16), children: [
+          ListView(padding: const EdgeInsets.fromLTRB(16, 16, 16, kBarSpace), children: [
             for (final c in cs)
               ListTile(leading: Icon(c.icon), title: Text(c.name), trailing: const Icon(Icons.chevron_right), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => AgentListPage(cat: c.id, title: c.name)))),
             for (final t in ts)
@@ -316,7 +360,7 @@ class SearchPage extends StatelessWidget {
                     action: pbtn('Buat request', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RequestFormPage())))),
               ),
           ]),
-          ag.isEmpty ? const Empty(Icons.person_search, 'Agen tidak ditemukan.') : ListView(padding: const EdgeInsets.all(16), children: [for (final a in ag) AgentTile(a)]),
+          ag.isEmpty ? const Empty(Icons.person_search, 'Agen tidak ditemukan.') : ListView(padding: const EdgeInsets.fromLTRB(16, 16, 16, kBarSpace), children: [for (final a in ag) AgentTile(a)]),
         ]),
       ),
     );
@@ -350,7 +394,7 @@ class AgentDetail extends StatelessWidget {
         IconButton(onPressed: () => s.toggleFav(a.id), icon: Icon(s.favs.contains(a.id) ? Icons.favorite : Icons.favorite_border)),
         IconButton(onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ReportPage(target: a.short, targetId: a.id))), icon: const Icon(Icons.flag_outlined)),
       ]),
-      body: ListView(padding: const EdgeInsets.all(16), children: [
+      body: ListView(padding: const EdgeInsets.fromLTRB(16, 16, 16, kBarSpace), children: [
         Row(children: [
           const Avatar(size: 76),
           const SizedBox(width: 14),

@@ -1,6 +1,8 @@
 import 'dart:math';
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/physics.dart';
 
 // ---------- palet grayscale ----------
 const cW = Colors.white;
@@ -12,6 +14,9 @@ const g400 = Color(0xFFA3A3A3);
 const g500 = Color(0xFF808080);
 const g700 = Color(0xFF4A4A4A);
 const g900 = Color(0xFF1C1C1C);
+
+const kGreen = Color(0xFF1FA75A);
+const kGreenLt = Color(0xFF7BD39A);
 
 ThemeData buildTheme() {
   final b = OutlineInputBorder(borderRadius: BorderRadius.circular(6), borderSide: const BorderSide(color: g300));
@@ -55,7 +60,6 @@ String rp(num n) {
   return '${n < 0 ? '-' : ''}Rp$b';
 }
 
-/// Angka dengan pemisah titik ribuan, tanpa 'Rp' (mis. 1.000.000).
 String fmtNum(num n) {
   final s = n.round().abs().toString();
   final b = StringBuffer();
@@ -66,10 +70,8 @@ String fmtNum(num n) {
   return '${n < 0 ? '-' : ''}$b';
 }
 
-/// Mengubah teks input uang ("1.000.000") menjadi angka.
 int money(String s) => int.tryParse(s.replaceAll(RegExp(r'\D'), '')) ?? 0;
 
-/// Memformat input angka otomatis dengan titik ribuan saat mengetik.
 class MoneyFormatter extends TextInputFormatter {
   @override
   TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
@@ -433,7 +435,7 @@ class FakeQr extends StatelessWidget {
       width: 180, height: 180, padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: cW, border: Border.all(color: g900)),
       child: CustomPaint(painter: _Qr(seed)));
 }
-
+const kBarSpace = 110.0; // ruang kosong di akhir list supaya item terakhir tidak tertutup bar
 // ---------- bottom bar ----------
 class BarItem {
   final IconData icon;
@@ -442,39 +444,509 @@ class BarItem {
   const BarItem(this.icon, this.label, [this.badge = 0]);
 }
 
-class BottomBar extends StatelessWidget {
+
+class BottomBar extends StatefulWidget {
   final int index;
   final List<BarItem> items;
   final int? center;
   final ValueChanged<int> onTap;
-  const BottomBar({required this.index, required this.items, required this.onTap, this.center});
+  final bool hidden;
+  const BottomBar({required this.index, required this.items, required this.onTap, this.center, this.hidden = false, super.key});
   @override
-  Widget build(BuildContext context) => Container(
-      decoration: const BoxDecoration(color: cW, border: Border(top: BorderSide(color: g300))),
-      child: SafeArea(
-          top: false,
-          child: SizedBox(
-              height: 62,
-              child: Row(children: [
-                for (var i = 0; i < items.length; i++)
-                  Expanded(
-                      child: InkWell(
-                          onTap: () => onTap(i),
-                          child: i == center
-                              ? Center(
-                                  child: Container(
-                                      width: 46, height: 46,
-                                      decoration: BoxDecoration(color: g900, borderRadius: BorderRadius.circular(8), border: Border.all(color: g900, width: i == index ? 3 : 0)),
-                                      child: Icon(items[i].icon, color: cW)))
-                              : Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                                  Badge(
-                                      isLabelVisible: items[i].badge > 0, label: Text('${items[i].badge}'), backgroundColor: g900,
-                                      child: Icon(items[i].icon, color: i == index ? g900 : g400, size: 24)),
-                                  const SizedBox(height: 3),
-                                  Text(items[i].label, style: TextStyle(fontSize: 11, color: i == index ? g900 : g500, fontWeight: i == index ? FontWeight.w700 : FontWeight.w400)),
-                                ]))),
-              ]))));
+  State<BottomBar> createState() => _BottomBarState();
 }
+
+class _Geo {
+  static const pad = 6.0;
+  final List<double> lefts = [], widths = [];
+  _Geo(int n, int? center, double inner) {
+    final wt = [for (var i = 0; i < n; i++) i == center ? 1.35 : 1.0];
+    final sum = wt.fold(0.0, (a, b) => a + b);
+    var x = 0.0;
+    for (final k in wt) {
+      final w = inner * k / sum;
+      lefts.add(x);
+      widths.add(w);
+      x += w;
+    }
+  }
+  int get n => lefts.length;
+  double center(int i) => lefts[i] + widths[i] / 2;
+  double _at(double Function(int) f, double p) {
+    if (n < 2) return f(0);
+    p = p.clamp(0.0, n - 1.0);
+    final i = p.floor().clamp(0, n - 2);
+    final t = p - i;
+    return f(i) + (f(i + 1) - f(i)) * t;
+  }
+  double centerAt(double p) => _at(center, p);
+  double widthAt(double p) => _at((i) => widths[i], p);
+  double posOf(double x) {
+    x -= pad;
+    if (n < 2 || x <= center(0)) return 0;
+    if (x >= center(n - 1)) return n - 1.0;
+    for (var i = 0; i < n - 1; i++) {
+      if (x <= center(i + 1)) return i + (x - center(i)) / (center(i + 1) - center(i));
+    }
+    return n - 1.0;
+  }
+}
+
+class _BottomBarState extends State<BottomBar> with TickerProviderStateMixin {
+  static const _barH = 66.0;
+  static const _posSpring = SpringDescription(mass: 1, stiffness: 260, damping: 24);
+  static const _pressSpring = SpringDescription(mass: 1, stiffness: 420, damping: 16);
+  static const _stretchSpring = SpringDescription(mass: 1, stiffness: 320, damping: 11);
+  
+  late final AnimationController _stretch = AnimationController.unbounded(vsync: this, value: 0);
+  double _downY = 0;
+  late final AnimationController _pos = AnimationController.unbounded(vsync: this, value: widget.index.toDouble());
+  late final AnimationController _press = AnimationController.unbounded(vsync: this, value: 0);
+  
+  late final AnimationController _hideCtrl = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 400),
+    value: widget.hidden ? 1.0 : 0.0,
+  );
+
+  bool _down = false, _dragging = false;
+  double _downX = 0;
+  int _hover = 0;
+  double _w = 0;
+
+  void _spring(AnimationController c, SpringDescription d, double to) =>
+      c.animateWith(SpringSimulation(d, c.value, to, c.velocity));
+
+  @override
+  void didUpdateWidget(BottomBar old) {
+    super.didUpdateWidget(old);
+    if (old.hidden != widget.hidden) {
+      if (widget.hidden) {
+        _hideCtrl.forward();
+      } else {
+        _hideCtrl.reverse();
+      }
+    }
+    if (!_down && (old.index != widget.index || old.items.length != widget.items.length)) {
+      _spring(_pos, _posSpring, widget.index.toDouble());
+    }
+  }
+
+  @override
+  void dispose() {
+    _hideCtrl.dispose();
+    _pos.dispose();
+    _press.dispose();
+    _stretch.dispose();
+    super.dispose();
+  }
+
+  int _slot(_Geo g, double x) => g.posOf(x).round().clamp(0, g.n - 1);
+
+  void _onDown(PointerEvent e, _Geo g) {
+    _down = true;
+    _dragging = false;
+    _downX = e.localPosition.dx;
+    _downY = e.localPosition.dy;
+    _stretch.stop();
+    _hover = _slot(g, _downX);
+    _spring(_press, _pressSpring, 1);
+    _spring(_pos, _posSpring, _hover.toDouble());
+    HapticFeedback.selectionClick();
+  }
+
+  void _onMove(PointerEvent e, _Geo g) {
+    if (!_down) return;
+    final rawY = e.localPosition.dy - _downY;
+    _stretch.value = (rawY / (1 + rawY.abs() / 5)).clamp(-24.0, 24.0);
+    if (!_dragging && (e.localPosition.dx - _downX).abs() < 6) return;
+    _dragging = true;
+    _pos.stop();
+    _pos.value = g.posOf(e.localPosition.dx);
+    final h = _slot(g, e.localPosition.dx);
+    if (h != _hover) {
+      _hover = h;
+      HapticFeedback.selectionClick();
+    }
+  }
+
+  void _onUp(PointerEvent e, _Geo g, {bool cancel = false}) {
+    if (!_down) return;
+    _down = false;
+    _spring(_press, _pressSpring, 0);
+    _spring(_stretch, _stretchSpring, 0);
+    if (cancel) {
+      _spring(_pos, _posSpring, widget.index.toDouble());
+      return;
+    }
+    final i = _slot(g, e.localPosition.dx);
+    _spring(_pos, _posSpring, i.toDouble());
+    widget.onTap(i);
+  }
+
+  Widget _item(int i, double w, Color col, bool bold) {
+    final it = widget.items[i];
+    if (i == widget.center) {
+      return Center(
+        child: Container(
+          width: w - 4, height: 42,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(21),
+            gradient: const LinearGradient(colors: [kGreenLt, kGreen], begin: Alignment.centerLeft, end: Alignment.centerRight),
+          ),
+          child: Icon(it.icon, color: cW, size: 28),
+        ),
+      );
+    }
+    return Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+      Badge(
+        isLabelVisible: it.badge > 0, label: Text('${it.badge}'), backgroundColor: const Color(0xFFE53935),
+        child: Icon(it.icon, color: col, size: 24),
+      ),
+      const SizedBox(height: 2),
+      Text(it.label, maxLines: 1, overflow: TextOverflow.clip,
+          style: TextStyle(fontSize: 11, color: col, fontWeight: bold ? FontWeight.w700 : FontWeight.w600)),
+    ]);
+  }
+
+  Widget _row(_Geo g, Color Function(int) col, bool Function(int) bold) => SizedBox(
+        width: _w, height: _barH,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: _Geo.pad),
+          child: Row(children: [
+            for (var i = 0; i < g.n; i++) SizedBox(width: g.widths[i], child: _item(i, g.widths[i], col(i), bold(i))),
+          ]),
+        ),
+      );
+
+  Widget _buildActiveBubble() {
+    // Ambil lebar dari slot tengah agar ukurannya sama persis saat diam
+    final centerIdx = widget.center ?? 2; 
+    final g = _Geo(widget.items.length, widget.center, _w > 0 ? _w - _Geo.pad * 2 : 200);
+    final w = _w > 0 ? g.widths[centerIdx] : 60.0;
+    
+    return Container(
+      width: w - 4, 
+      height: 42,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(21), // Kapsul, bukan bulat
+        gradient: const LinearGradient(
+          colors: [kGreenLt, kGreen], 
+          begin: Alignment.centerLeft, 
+          end: Alignment.centerRight,
+        ),
+      ),
+      child: const Center(
+        child: Icon(Icons.add, color: cW, size: 28), // Ukuran ikon 28 sama seperti aslinya
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bottom = MediaQuery.of(context).padding.bottom;
+    final bottomPad = bottom > 12 ? bottom - 6 : 14.0;
+
+    final content = Padding(
+      padding: EdgeInsets.fromLTRB(24, 10, 24, bottomPad),
+      child: LayoutBuilder(builder: (ctx, bc) {
+        _w = bc.maxWidth;
+        final g = _Geo(widget.items.length, widget.center, _w - _Geo.pad * 2);
+        return Listener(
+          behavior: HitTestBehavior.opaque,
+          onPointerDown: (e) => _onDown(e, g),
+          onPointerMove: (e) => _onMove(e, g),
+          onPointerUp: (e) => _onUp(e, g),
+          onPointerCancel: (e) => _onUp(e, g, cancel: true),
+          child: AnimatedBuilder(
+            animation: Listenable.merge([_pos, _press, _stretch]),
+            builder: (_, __) {
+              final pr = _press.value;
+              final prc = pr.clamp(0.0, 1.0);
+              final p = _pos.value.clamp(0.0, g.n - 1.0);
+              final cx = _Geo.pad + g.centerAt(p);
+              final wd = g.widthAt(p);
+
+              final grow = 8.0 * pr;
+              final growV = 6.0 * pr;
+              final t = g.n < 2 ? 0.0 : p / (g.n - 1);
+              final stretchL = (1 - t) * 14.0 * pr;
+              final stretchR = t * 14.0 * pr;
+
+              final contentScale = 1 + 0.08 * pr;
+              final contentShift = (stretchR - stretchL) / 2;
+              final sv = _stretch.value;
+              final upS = sv < 0 ? -sv : 0.0;
+              final downS = sv > 0 ? sv : 0.0;
+              final squeeze = sv.abs() * 0.3;
+
+              final restW = wd, restH = 54.0;
+              final lensW = wd + 48 * pr - squeeze * 0.5;
+              final lensH = 54 + 22 * pr + sv.abs() * 0.8;
+              final lensL = cx - lensW / 2, lensT = (_barH - lensH) / 2 + sv * 0.4;
+
+              final shellRad = (_barH + growV * 2 + upS + downS) / 2;
+              final shellRadius = BorderRadius.circular(shellRad);
+
+              return SizedBox(
+                height: _barH,
+                child: Stack(clipBehavior: Clip.none, children: [
+                  // 1) background bar
+                  Positioned(
+                    left: -(grow + stretchL - squeeze),
+                    right: -(grow + stretchR - squeeze),
+                    top: -(growV + upS),
+                    bottom: -(growV + downS),
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        borderRadius: shellRadius,
+                        border: Border.all(color: cW.withAlpha(2), width: 1.2),
+                        boxShadow: [
+                          BoxShadow(color: const Color(0x1F000000), blurRadius: 28 + 10 * pr, offset: Offset(0, 8 + 3 * pr)),
+                          const BoxShadow(color: Color(0x0A000000), blurRadius: 4, offset: Offset(0, 1)),
+                        ],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: shellRadius,
+                        child: BackdropFilter(
+                          filter: ui.ImageFilter.blur(sigmaX: 3, sigmaY: 3),
+                          child: Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              DecoratedBox(
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topCenter,
+                                    end: Alignment.bottomCenter,
+                                    colors: [
+                                      cW.withAlpha(240),
+                                      const Color(0xFFF1F1F1).withAlpha(50),
+                                      const Color(0xFFE7E7E7).withAlpha(180),
+                                    ],
+                                    stops: const [0.0, 0.55, 1.0],
+                                  ),
+                                ),
+                              ),
+                              CustomPaint(painter: _SmokePainter()),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  // 2) isi bar
+                  Positioned.fill(
+                    child: Transform.translate(
+                      offset: Offset(contentShift, sv * 0.25),
+                      child: Transform.scale(
+                        scale: contentScale,
+                        child: Stack(clipBehavior: Clip.none, children: [
+                          if (prc < 1)
+                            Positioned(
+                              left: cx - restW / 2, top: (_barH - restH) / 2, width: restW, height: restH,
+                              child: Opacity(
+                                opacity: 1 - prc,
+                                child: DecoratedBox(
+                                  decoration: BoxDecoration(color: const Color(0xFFE2E2E2), borderRadius: BorderRadius.circular(restH / 2)),
+                                ),
+                              ),
+                            ),
+
+                          _row(
+                            g,
+                            (i) => i == widget.index ? Color.lerp(kGreen, g900, prc)! : g900,
+                            (i) => i == widget.index && prc < .5,
+                          ),
+
+                          if (prc > .01)
+                            Positioned(
+                              left: lensL, top: lensT, width: lensW, height: lensH,
+                              child: Opacity(
+                                opacity: prc,
+                                child: DecoratedBox(
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(lensH / 2),
+                                    boxShadow: const [BoxShadow(color: Color(0x22000000), blurRadius: 18, offset: Offset(0, 6))],
+                                  ),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(lensH / 2),
+                                    child: Stack(clipBehavior: Clip.hardEdge, children: [
+                                      Positioned.fill(
+                                        child: DecoratedBox(
+                                          decoration: BoxDecoration(
+                                            gradient: LinearGradient(
+                                              begin: Alignment.topCenter,
+                                              end: Alignment.bottomCenter,
+                                              colors: [cW.withAlpha(250), const Color(0xFFF1F1F1).withAlpha(240)],
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      Positioned(
+                                        left: -lensL, top: -lensT, width: _w, height: _barH,
+                                        child: Transform.scale(
+                                          scale: 1 + .16 * pr,
+                                          alignment: Alignment((cx / _w) * 2 - 1, 0),
+                                          child: _row(g, (_) => kGreen, (_) => true),
+                                        ),
+                                      ),
+                                      Positioned.fill(child: CustomPaint(painter: _LensPainter())),
+                                    ]),
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ]),
+                      ),
+                    ),
+                  ),
+                ]),
+              );
+            },
+          ),
+        );
+      }),
+    );
+
+    return AnimatedBuilder(
+      animation: _hideCtrl,
+      builder: (context, child) {
+        final t = Curves.easeInOut.transform(_hideCtrl.value);
+        
+        // Fase 1: Morph bar ke tengah (0.0 -> 0.4)
+        final morph = (t / 0.4).clamp(0.0, 1.0);
+        // Fase 2: Bubble meluncur turun (0.4 -> 1.0)
+        final drop = ((t - 0.4) / 0.6).clamp(0.0, 1.0);
+
+        final barScaleX = 1.0 - morph * 0.85;
+        final barScaleY = 1.0 - morph * 0.55;
+        final barOpacity = 1.0 - morph;
+
+        final bubbleScale = 0.6 + morph * 0.4;
+        final bubbleDrop = Curves.easeIn.transform(drop) * 180;
+        final bubbleOpacity = 1.0 - drop;
+
+        return Stack(
+          clipBehavior: Clip.none,
+          alignment: Alignment.bottomCenter,
+          children: [
+            // Bar Asli
+            IgnorePointer(
+              ignoring: t > 0.01,
+              child: Transform.scale(
+                scaleX: barScaleX,
+                scaleY: barScaleY,
+                alignment: Alignment.center,
+                child: Opacity(
+                  opacity: barOpacity,
+                  child: child,
+                ),
+              ),
+            ),
+
+            // Bubble Ikon Aktif
+            if (t > 0.0)
+              Positioned(
+                bottom: bottomPad + 12, // Pusat dari bar 66px adalah bottomPad + 33. Pusat bubble 54px adalah 27. Maka bottomPad + 33 - 27 = bottomPad + 6
+                child: Transform.translate(
+                  offset: Offset(0, bubbleDrop),
+                  child: Transform.scale(
+                    scale: bubbleScale,
+                    child: Opacity(
+                      opacity: bubbleOpacity,
+                      child: _buildActiveBubble(),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
+      child: content,
+    );
+  }
+}
+
+/// Tekstur smoky halus (blob lembut + grain tipis) — statis, tidak di-repaint.
+class _SmokePainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rect = Offset.zero & size;
+    canvas.save();
+    canvas.clipRect(rect);
+    final r = Random(7);
+
+    // blob lembut (asap)
+    for (var i = 0; i < 16; i++) {
+      final cx = r.nextDouble() * size.width;
+      final cy = r.nextDouble() * size.height;
+      final rad = 20 + r.nextDouble() * 70;
+      final shade = r.nextBool() ? const Color(0xFFB8B8B8) : cW;
+      final paint = Paint()
+        ..shader = RadialGradient(
+          colors: [shade.withAlpha(28), shade.withAlpha(0)],
+          stops: const [0.0, 1.0],
+        ).createShader(Rect.fromCircle(center: Offset(cx, cy), radius: rad));
+      canvas.drawCircle(Offset(cx, cy), rad, paint);
+    }
+
+    // grain noise tipis
+    final dot = Paint()..color = g900.withAlpha(8);
+    for (var i = 0; i < 160; i++) {
+      final x = r.nextDouble() * size.width;
+      final y = r.nextDouble() * size.height;
+      canvas.drawCircle(Offset(x, y), 0.7, dot);
+    }
+
+    // garis asap memanjang halus
+    final wisp = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 18
+      ..strokeCap = StrokeCap.round
+      ..color = const Color(0xFF9C9C9C).withAlpha(10);
+    final path = Path()..moveTo(-10, size.height * 0.55);
+    for (var x = 0.0; x <= size.width + 10; x += 30) {
+      final y = size.height * 0.55 + sin(x / 55) * 6;
+      path.lineTo(x, y);
+    }
+    canvas.drawPath(path, wisp);
+
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter old) => false;
+}
+
+class _LensPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rect = Offset.zero & size;
+    final r = RRect.fromRectAndRadius(rect, Radius.circular(size.height / 2));
+    canvas.drawRRect(
+      r.deflate(1.4),
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.6
+        ..shader = const SweepGradient(colors: [
+          Color(0x9966E0FF), Color(0x99FFFFFF), Color(0x99FFE95C), Color(0x99FF8AD8),
+          Color(0x99FFFFFF), Color(0x9966E0FF),
+        ]).createShader(rect),
+    );
+    canvas.drawRRect(
+      r.deflate(4.5),
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.2
+        ..color = const Color(0xE6FFFFFF),
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter old) => false;
+}
+
 
 /// Membangun ulang tiap detik (untuk countdown / timer).
 class Live extends StatefulWidget {
