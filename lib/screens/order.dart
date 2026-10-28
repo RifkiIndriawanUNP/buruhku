@@ -246,10 +246,6 @@ class GroupOrderPage extends StatelessWidget {
     final open = ['OPEN', 'HAS_ACCEPTORS', 'FULL'].contains(r.status);
     final canAdd = open || r.status == 'LOCKED';
     final editable = !started && (open || r.status == 'EXPIRED' || r.status == 'IN_REVIEW');
-    final everAcc = r.acc.map((a) => a.agentId).toSet();
-    final nearby = (canAdd && !started)
-        ? s.searchAgents(cat: r.cat, maxDist: r.radius, online: true, verified: true, sort: 'jarak').where((a) => !everAcc.contains(a.id) && (catOf(r.cat).risk == 1 || a.level >= 2)).take(6).toList()
-        : <Agent>[];
     final pending = subs.where((o) => o.status == 'AGREED').toList();
     final live = subs.where((o) => !['CANCELLED', 'REFUNDED'].contains(o.status)).toList();
     final total = live.fold<int>(0, (a, o) => a + o.total);
@@ -322,11 +318,20 @@ class GroupOrderPage extends StatelessWidget {
         for (final a in shown) _GroupAcc(r, a, subs.where((o) => o.otherId == a.agentId).isEmpty ? null : subs.firstWhere((o) => o.otherId == a.agentId)),
         if (!started) ...[
           // ---- 2. Sedang mencari agen: agen yang bisa dipilih
-          const Section('Sedang mencari agen'),
-          if (interest.isEmpty && nearby.isEmpty)
-            const Box(child: Row(children: [SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: g700)), SizedBox(width: 12), Expanded(child: Text('Mencari agen terdekat. Agen yang tertarik akan muncul di sini.'))])),
+          Section('Sedang mencari agen (${interest.length}/${AppStore.kSearchTarget})'),
           for (final a in interest) _Candidate(r, s.agentById(a.agentId), a),
-          for (final a in nearby) _Candidate(r, a, null),
+          // terus mencari sampai 5/5; jika ada yang dipilih atau ditolak, agen baru dicari lagi
+          if (open && interest.length < AppStore.kSearchTarget)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: Box(
+                child: Row(children: [
+                  const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: g700)),
+                  const SizedBox(width: 12),
+                  Expanded(child: Text('Mencari agen terdekat dan memberi notifikasi bertahap (3 km, 7 km, lalu lebih jauh)...\nDitemukan ${interest.length} dari ${AppStore.kSearchTarget} agen')),
+                ]),
+              ),
+            ),
           // ---- 3. Agen menolak setelah dipilih
           if (refused.isNotEmpty) ...[
             Section('Agen menolak (${refused.length})'),
@@ -361,7 +366,7 @@ class GroupOrderPage extends StatelessWidget {
   }
 }
 
-/// Baris agen yang bisa dipilih (agen yang tertarik, atau agen sekitar).
+/// Kartu agen di "Sedang mencari agen": sama seperti kartu ACC request 1 agen (Chat, Pilih, X).
 class _Candidate extends StatelessWidget {
   final Req r;
   final Agent ag;
@@ -371,36 +376,54 @@ class _Candidate extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = context.s;
     final acc = a;
+    final unit = unitOf(r.ptype);
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.only(bottom: 10),
       child: Box(
-        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => AgentDetail(ag.id))),
-        child: Row(children: [
-          const Avatar(size: 42),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Row(children: [Flexible(child: Text(ag.short, style: const TextStyle(fontWeight: FontWeight.w700))), const SizedBox(width: 6), if (ag.verified) const Icon(Icons.verified_outlined, size: 16)]),
-              Text('${s.ratingOf(ag).toStringAsFixed(1)}  |  ~${ag.dist.toStringAsFixed(1)} km  |  ${acc == null ? 'mulai ${rp(ag.base)}' : '${rp(acc.price)}${unitOf(r.ptype)}'}', style: const TextStyle(fontSize: 12, color: g500)),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          InkWell(
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => AgentDetail(ag.id))),
+            child: Row(children: [
+              const Avatar(size: 46),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Row(children: [Text(ag.short, style: const TextStyle(fontWeight: FontWeight.w700)), const SizedBox(width: 6), if (ag.verified) const Icon(Icons.verified_outlined, size: 16)]),
+                  Row(children: [Stars(s.ratingOf(ag), size: 12), Text('  ${s.ratingOf(ag).toStringAsFixed(1)}  ~${ag.dist.toStringAsFixed(1)} km  ${ag.jobs} job', style: const TextStyle(fontSize: 11.5, color: g500))]),
+                ]),
+              ),
+              Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+                Text(rp(acc == null ? ag.base : acc.price), style: const TextStyle(fontWeight: FontWeight.w800)),
+                Text(acc == null ? 'mulai dari' : (unit.isEmpty ? 'borongan' : unit), style: const TextStyle(fontSize: 11, color: g500)),
+              ]),
             ]),
           ),
-          if (acc != null)
-            IconButton(
-              tooltip: 'Chat',
-              onPressed: () {
+          const SizedBox(height: 10),
+          Row(children: [
+            Expanded(
+              child: obtn('Chat', () {
                 final ch = s.chatFor(type: 'order', refId: r.id, otherId: ag.id, otherName: ag.short, otherAgent: true, title: r.title);
                 Navigator.push(context, MaterialPageRoute(builder: (_) => ChatPage(ch.id)));
-              },
-              icon: const Icon(Icons.chat_bubble_outline),
+              }, icon: Icons.chat_bubble_outline),
             ),
-          OutlinedButton(
-            style: OutlinedButton.styleFrom(minimumSize: const Size(0, 36), padding: const EdgeInsets.symmetric(horizontal: 14)),
-            onPressed: () {
-              s.inviteAgent(r, ag);
-              toast(context, 'Menunggu persetujuan ${ag.short}.');
-            },
-            child: const Text('Pilih'),
-          ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: pbtn('Pilih', () {
+                s.inviteAgent(r, ag);
+                toast(context, 'Menunggu persetujuan ${ag.short}.');
+              }),
+            ),
+            if (acc != null) ...[
+              const SizedBox(width: 8),
+              IconButton.outlined(
+                tooltip: 'Tolak agen',
+                onPressed: () async {
+                  if (await confirm(context, 'Tolak ${ag.short}?', 'Agen dipindah ke daftar agen menolak.', ok: 'Tolak')) s.declineAcc(r, acc);
+                },
+                icon: const Icon(Icons.close),
+              ),
+            ],
+          ]),
         ]),
       ),
     );
@@ -678,7 +701,7 @@ class _OrderPageState extends State<OrderPage> {
               }, icon: Icons.undo)),
             ],
           ])),
-        ], // ---- rincian order
+        ],
         const Section('Rincian'),
         Box(child: Column(children: [
           Kv('Jadwal', o.schedAt == null ? 'Fleksibel' : fdt(o.schedAt!)),

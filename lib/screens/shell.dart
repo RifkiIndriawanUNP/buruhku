@@ -19,14 +19,14 @@ class _ShellState extends State<Shell> {
   bool _hidden = false;
 
   bool _onNotification(ScrollNotification notification) {
-    if (notification is ScrollUpdateNotification) {
-      if (notification.metrics.axis == Axis.vertical) {
-        final delta = notification.scrollDelta ?? 0;
-        if (delta > 0 && !_hidden) {
-          setState(() => _hidden = true);
-        } else if (delta < 0 && _hidden) {
-          setState(() => _hidden = false);
-        }
+    if (notification is ScrollUpdateNotification && notification.metrics.axis == Axis.vertical) {
+      final delta = notification.scrollDelta ?? 0;
+      if (notification.metrics.pixels <= 0) {
+        if (_hidden) setState(() => _hidden = false);
+      } else if (delta > 4 && !_hidden) {
+        setState(() => _hidden = true);
+      } else if (delta < -4 && _hidden) {
+        setState(() => _hidden = false);
       }
     }
     return false;
@@ -76,7 +76,7 @@ class _ShellState extends State<Shell> {
                 setState(() => _hidden = false);
                 context.r.goTab(v);
               },
-              hidden: _hidden,
+              compact: _hidden,
             ),
           ),
         ],

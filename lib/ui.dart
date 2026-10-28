@@ -450,8 +450,8 @@ class BottomBar extends StatefulWidget {
   final List<BarItem> items;
   final int? center;
   final ValueChanged<int> onTap;
-  final bool hidden;
-  const BottomBar({required this.index, required this.items, required this.onTap, this.center, this.hidden = false, super.key});
+  final bool compact;
+  const BottomBar({required this.index, required this.items, required this.onTap, this.center, this.compact = false, super.key});
   @override
   State<BottomBar> createState() => _BottomBarState();
 }
@@ -459,8 +459,8 @@ class BottomBar extends StatefulWidget {
 class _Geo {
   static const pad = 6.0;
   final List<double> lefts = [], widths = [];
-  _Geo(int n, int? center, double inner) {
-    final wt = [for (var i = 0; i < n; i++) i == center ? 1.35 : 1.0];
+  _Geo(int n, int? center, double inner, {double centerWeight = 1.35}) {
+    final wt = [for (var i = 0; i < n; i++) i == center ? centerWeight : 1.0];
     final sum = wt.fold(0.0, (a, b) => a + b);
     var x = 0.0;
     for (final k in wt) {
@@ -493,26 +493,27 @@ class _Geo {
 }
 
 class _BottomBarState extends State<BottomBar> with TickerProviderStateMixin {
-  static const _barH = 66.0;
+  static const _barH = 66.0;       // tinggi bar normal
+  static const _barHCompact = 52.0; // tinggi bar saat kompak
+  static const _slotCompact = 50.0; // lebar tiap ikon saat kompak (jarak antar ikon)
   static const _posSpring = SpringDescription(mass: 1, stiffness: 260, damping: 24);
   static const _pressSpring = SpringDescription(mass: 1, stiffness: 420, damping: 16);
   static const _stretchSpring = SpringDescription(mass: 1, stiffness: 320, damping: 11);
-  
+  static const _compactSpring = SpringDescription(mass: 1, stiffness: 240, damping: 26);
+
   late final AnimationController _stretch = AnimationController.unbounded(vsync: this, value: 0);
-  double _downY = 0;
   late final AnimationController _pos = AnimationController.unbounded(vsync: this, value: widget.index.toDouble());
   late final AnimationController _press = AnimationController.unbounded(vsync: this, value: 0);
-  
-  late final AnimationController _hideCtrl = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 400),
-    value: widget.hidden ? 1.0 : 0.0,
-  );
+  late final AnimationController _compact = AnimationController.unbounded(vsync: this, value: widget.compact ? 1 : 0);
 
+  double _downY = 0;
   bool _down = false, _dragging = false;
   double _downX = 0;
   int _hover = 0;
-  double _w = 0;
+  double _w = 0;   // lebar bar saat ini (animasi)
+  double _cv = 0;  // progres kompak 0..1 (animasi)
+
+  double get _h => _barH + (_barHCompact - _barH) * _cv;
 
   void _spring(AnimationController c, SpringDescription d, double to) =>
       c.animateWith(SpringSimulation(d, c.value, to, c.velocity));
@@ -520,12 +521,8 @@ class _BottomBarState extends State<BottomBar> with TickerProviderStateMixin {
   @override
   void didUpdateWidget(BottomBar old) {
     super.didUpdateWidget(old);
-    if (old.hidden != widget.hidden) {
-      if (widget.hidden) {
-        _hideCtrl.forward();
-      } else {
-        _hideCtrl.reverse();
-      }
+    if (old.compact != widget.compact) {
+      _spring(_compact, _compactSpring, widget.compact ? 1 : 0);
     }
     if (!_down && (old.index != widget.index || old.items.length != widget.items.length)) {
       _spring(_pos, _posSpring, widget.index.toDouble());
@@ -534,7 +531,7 @@ class _BottomBarState extends State<BottomBar> with TickerProviderStateMixin {
 
   @override
   void dispose() {
-    _hideCtrl.dispose();
+    _compact.dispose();
     _pos.dispose();
     _press.dispose();
     _stretch.dispose();
@@ -587,9 +584,11 @@ class _BottomBarState extends State<BottomBar> with TickerProviderStateMixin {
   Widget _item(int i, double w, Color col, bool bold) {
     final it = widget.items[i];
     if (i == widget.center) {
+      // pill -> lingkaran 42x42 saat kompak
+      final pillW = 42 + max(0.0, (w - 4) - 42) * (1 - _cv);
       return Center(
         child: Container(
-          width: w - 4, height: 42,
+          width: pillW, height: 42,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(21),
             gradient: const LinearGradient(colors: [kGreenLt, kGreen], begin: Alignment.centerLeft, end: Alignment.centerRight),
@@ -598,19 +597,30 @@ class _BottomBarState extends State<BottomBar> with TickerProviderStateMixin {
         ),
       );
     }
+    final lab = 1 - _cv;
     return Column(mainAxisAlignment: MainAxisAlignment.center, children: [
       Badge(
         isLabelVisible: it.badge > 0, label: Text('${it.badge}'), backgroundColor: const Color(0xFFE53935),
         child: Icon(it.icon, color: col, size: 24),
       ),
-      const SizedBox(height: 2),
-      Text(it.label, maxLines: 1, overflow: TextOverflow.clip,
-          style: TextStyle(fontSize: 11, color: col, fontWeight: bold ? FontWeight.w700 : FontWeight.w600)),
+      SizedBox(height: 2 * lab),
+      // label memudar dan menutup (tinggi menyusut) saat kompak
+      ClipRect(
+        child: Align(
+          alignment: Alignment.topCenter,
+          heightFactor: lab,
+          child: Opacity(
+            opacity: lab * lab,
+            child: Text(it.label, maxLines: 1, overflow: TextOverflow.clip,
+                style: TextStyle(fontSize: 11, color: col, fontWeight: bold ? FontWeight.w700 : FontWeight.w600)),
+          ),
+        ),
+      ),
     ]);
   }
 
   Widget _row(_Geo g, Color Function(int) col, bool Function(int) bold) => SizedBox(
-        width: _w, height: _barH,
+        width: _w, height: _h,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: _Geo.pad),
           child: Row(children: [
@@ -619,251 +629,183 @@ class _BottomBarState extends State<BottomBar> with TickerProviderStateMixin {
         ),
       );
 
-  Widget _buildActiveBubble() {
-    // Ambil lebar dari slot tengah agar ukurannya sama persis saat diam
-    final centerIdx = widget.center ?? 2; 
-    final g = _Geo(widget.items.length, widget.center, _w > 0 ? _w - _Geo.pad * 2 : 200);
-    final w = _w > 0 ? g.widths[centerIdx] : 60.0;
-    
-    return Container(
-      width: w - 4, 
-      height: 42,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(21), // Kapsul, bukan bulat
-        gradient: const LinearGradient(
-          colors: [kGreenLt, kGreen], 
-          begin: Alignment.centerLeft, 
-          end: Alignment.centerRight,
-        ),
-      ),
-      child: const Center(
-        child: Icon(Icons.add, color: cW, size: 28), // Ukuran ikon 28 sama seperti aslinya
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final bottom = MediaQuery.of(context).padding.bottom;
     final bottomPad = bottom > 12 ? bottom - 6 : 14.0;
 
-    final content = Padding(
+    return Padding(
       padding: EdgeInsets.fromLTRB(24, 10, 24, bottomPad),
       child: LayoutBuilder(builder: (ctx, bc) {
-        _w = bc.maxWidth;
-        final g = _Geo(widget.items.length, widget.center, _w - _Geo.pad * 2);
-        return Listener(
-          behavior: HitTestBehavior.opaque,
-          onPointerDown: (e) => _onDown(e, g),
-          onPointerMove: (e) => _onMove(e, g),
-          onPointerUp: (e) => _onUp(e, g),
-          onPointerCancel: (e) => _onUp(e, g, cancel: true),
-          child: AnimatedBuilder(
-            animation: Listenable.merge([_pos, _press, _stretch]),
-            builder: (_, __) {
-              final pr = _press.value;
-              final prc = pr.clamp(0.0, 1.0);
-              final p = _pos.value.clamp(0.0, g.n - 1.0);
-              final cx = _Geo.pad + g.centerAt(p);
-              final wd = g.widthAt(p);
+        final full = bc.maxWidth;
+        final n = widget.items.length;
+        final compactW = min(full, _Geo.pad * 2 + n * _slotCompact);
 
-              final grow = 8.0 * pr;
-              final growV = 6.0 * pr;
-              final t = g.n < 2 ? 0.0 : p / (g.n - 1);
-              final stretchL = (1 - t) * 14.0 * pr;
-              final stretchR = t * 14.0 * pr;
+        return AnimatedBuilder(
+          animation: Listenable.merge([_pos, _press, _stretch, _compact]),
+          builder: (_, __) {
+            final c = _compact.value.clamp(0.0, 1.0);
+            _cv = c;
+            final barW = full + (compactW - full) * c;
+            _w = barW;
+            final g = _Geo(n, widget.center, barW - _Geo.pad * 2, centerWeight: 1.35 - 0.35 * c);
 
-              final contentScale = 1 + 0.08 * pr;
-              final contentShift = (stretchR - stretchL) / 2;
-              final sv = _stretch.value;
-              final upS = sv < 0 ? -sv : 0.0;
-              final downS = sv > 0 ? sv : 0.0;
-              final squeeze = sv.abs() * 0.3;
+            final pr = _press.value;
+            final prc = pr.clamp(0.0, 1.0);
+            final p = _pos.value.clamp(0.0, g.n - 1.0);
+            final cx = _Geo.pad + g.centerAt(p);
+            final wd = g.widthAt(p);
 
-              final restW = wd, restH = 54.0;
-              final lensW = wd + 48 * pr - squeeze * 0.5;
-              final lensH = 54 + 22 * pr + sv.abs() * 0.8;
-              final lensL = cx - lensW / 2, lensT = (_barH - lensH) / 2 + sv * 0.4;
+            final grow = 8.0 * pr;
+            final growV = 6.0 * pr;
+            final t = g.n < 2 ? 0.0 : p / (g.n - 1);
+            final stretchL = (1 - t) * 14.0 * pr;
+            final stretchR = t * 14.0 * pr;
 
-              final shellRad = (_barH + growV * 2 + upS + downS) / 2;
-              final shellRadius = BorderRadius.circular(shellRad);
+            final contentScale = 1 + 0.08 * pr;
+            final contentShift = (stretchR - stretchL) / 2;
+            final sv = _stretch.value;
+            final upS = sv < 0 ? -sv : 0.0;
+            final downS = sv > 0 ? sv : 0.0;
+            final squeeze = sv.abs() * 0.3;
 
-              return SizedBox(
-                height: _barH,
-                child: Stack(clipBehavior: Clip.none, children: [
-                  // 1) background bar
-                  Positioned(
-                    left: -(grow + stretchL - squeeze),
-                    right: -(grow + stretchR - squeeze),
-                    top: -(growV + upS),
-                    bottom: -(growV + downS),
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        borderRadius: shellRadius,
-                        border: Border.all(color: cW.withAlpha(2), width: 1.2),
-                        boxShadow: [
-                          BoxShadow(color: const Color(0x1F000000), blurRadius: 28 + 10 * pr, offset: Offset(0, 8 + 3 * pr)),
-                          const BoxShadow(color: Color(0x0A000000), blurRadius: 4, offset: Offset(0, 1)),
-                        ],
-                      ),
-                      child: ClipRRect(
-                        borderRadius: shellRadius,
-                        child: BackdropFilter(
-                          filter: ui.ImageFilter.blur(sigmaX: 3, sigmaY: 3),
-                          child: Stack(
-                            fit: StackFit.expand,
-                            children: [
-                              DecoratedBox(
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    begin: Alignment.topCenter,
-                                    end: Alignment.bottomCenter,
-                                    colors: [
-                                      cW.withAlpha(240),
-                                      const Color(0xFFF1F1F1).withAlpha(50),
-                                      const Color(0xFFE7E7E7).withAlpha(180),
-                                    ],
-                                    stops: const [0.0, 0.55, 1.0],
+            final restW = wd, restH = _h - 12;
+            final lensW = wd + 48 * pr - squeeze * 0.5;
+            final lensH = (_h - 12) + 22 * pr + sv.abs() * 0.8;
+            final lensL = cx - lensW / 2, lensT = (_h - lensH) / 2 + sv * 0.4;
+
+            final shellRad = (_h + growV * 2 + upS + downS) / 2;
+            final shellRadius = BorderRadius.circular(shellRad);
+
+            return Align(
+              heightFactor: 1,
+              child: SizedBox(
+                width: barW,
+                height: _h,
+                child: Listener(
+                  behavior: HitTestBehavior.opaque,
+                  onPointerDown: (e) => _onDown(e, g),
+                  onPointerMove: (e) => _onMove(e, g),
+                  onPointerUp: (e) => _onUp(e, g),
+                  onPointerCancel: (e) => _onUp(e, g, cancel: true),
+                  child: Stack(clipBehavior: Clip.none, children: [
+                    // 1) background bar
+                    Positioned(
+                      left: -(grow + stretchL - squeeze),
+                      right: -(grow + stretchR - squeeze),
+                      top: -(growV + upS),
+                      bottom: -(growV + downS),
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          borderRadius: shellRadius,
+                          border: Border.all(color: cW.withAlpha(2), width: 1.2),
+                          boxShadow: [
+                            BoxShadow(color: const Color(0x1F000000), blurRadius: 28 + 10 * pr, offset: Offset(0, 8 + 3 * pr)),
+                            const BoxShadow(color: Color(0x0A000000), blurRadius: 4, offset: Offset(0, 1)),
+                          ],
+                        ),
+                        child: ClipRRect(
+                          borderRadius: shellRadius,
+                          child: BackdropFilter(
+                            filter: ui.ImageFilter.blur(sigmaX: 3, sigmaY: 3),
+                            child: Stack(
+                              fit: StackFit.expand,
+                              children: [
+                                DecoratedBox(
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      begin: Alignment.topCenter,
+                                      end: Alignment.bottomCenter,
+                                      colors: [
+                                        cW.withAlpha(180),
+                                        const Color(0xFFF7F7F7).withAlpha(180),
+                                        const Color(0xFFF7F7F7).withAlpha(180),
+                                      ],
+                                      stops: const [0.0, 0.55, 1.0],
+                                    ),
                                   ),
                                 ),
-                              ),
-                              CustomPaint(painter: _SmokePainter()),
-                            ],
+                                CustomPaint(painter: _SmokePainter()),
+                              ],
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
 
-                  // 2) isi bar
-                  Positioned.fill(
-                    child: Transform.translate(
-                      offset: Offset(contentShift, sv * 0.25),
-                      child: Transform.scale(
-                        scale: contentScale,
-                        child: Stack(clipBehavior: Clip.none, children: [
-                          if (prc < 1)
-                            Positioned(
-                              left: cx - restW / 2, top: (_barH - restH) / 2, width: restW, height: restH,
-                              child: Opacity(
-                                opacity: 1 - prc,
-                                child: DecoratedBox(
-                                  decoration: BoxDecoration(color: const Color(0xFFE2E2E2), borderRadius: BorderRadius.circular(restH / 2)),
+                    // 2) isi bar
+                    Positioned.fill(
+                      child: Transform.translate(
+                        offset: Offset(contentShift, sv * 0.25),
+                        child: Transform.scale(
+                          scale: contentScale,
+                          child: Stack(clipBehavior: Clip.none, children: [
+                            if (prc < 1)
+                              Positioned(
+                                left: cx - restW / 2, top: (_h - restH) / 2, width: restW, height: restH,
+                                child: Opacity(
+                                  opacity: 1 - prc,
+                                  child: DecoratedBox(
+                                    decoration: BoxDecoration(color: const Color(0xFFE2E2E2), borderRadius: BorderRadius.circular(restH / 2)),
+                                  ),
                                 ),
                               ),
+
+                            _row(
+                              g,
+                              (i) => i == widget.index ? Color.lerp(kGreen, g900, prc)! : g900,
+                              (i) => i == widget.index && prc < .5,
                             ),
 
-                          _row(
-                            g,
-                            (i) => i == widget.index ? Color.lerp(kGreen, g900, prc)! : g900,
-                            (i) => i == widget.index && prc < .5,
-                          ),
-
-                          if (prc > .01)
-                            Positioned(
-                              left: lensL, top: lensT, width: lensW, height: lensH,
-                              child: Opacity(
-                                opacity: prc,
-                                child: DecoratedBox(
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(lensH / 2),
-                                    boxShadow: const [BoxShadow(color: Color(0x22000000), blurRadius: 18, offset: Offset(0, 6))],
-                                  ),
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(lensH / 2),
-                                    child: Stack(clipBehavior: Clip.hardEdge, children: [
-                                      Positioned.fill(
-                                        child: DecoratedBox(
-                                          decoration: BoxDecoration(
-                                            gradient: LinearGradient(
-                                              begin: Alignment.topCenter,
-                                              end: Alignment.bottomCenter,
-                                              colors: [cW.withAlpha(250), const Color(0xFFF1F1F1).withAlpha(240)],
+                            if (prc > .01)
+                              Positioned(
+                                left: lensL, top: lensT, width: lensW, height: lensH,
+                                child: Opacity(
+                                  opacity: prc,
+                                  child: DecoratedBox(
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(lensH / 2),
+                                      boxShadow: const [BoxShadow(color: Color(0x22000000), blurRadius: 18, offset: Offset(0, 6))],
+                                    ),
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(lensH / 2),
+                                      child: Stack(clipBehavior: Clip.hardEdge, children: [
+                                        Positioned.fill(
+                                          child: DecoratedBox(
+                                            decoration: BoxDecoration(
+                                              gradient: LinearGradient(
+                                                begin: Alignment.topCenter,
+                                                end: Alignment.bottomCenter,
+                                                colors: [cW.withAlpha(250), const Color(0xFFF1F1F1).withAlpha(240)],
+                                              ),
                                             ),
                                           ),
                                         ),
-                                      ),
-                                      Positioned(
-                                        left: -lensL, top: -lensT, width: _w, height: _barH,
-                                        child: Transform.scale(
-                                          scale: 1 + .16 * pr,
-                                          alignment: Alignment((cx / _w) * 2 - 1, 0),
-                                          child: _row(g, (_) => kGreen, (_) => true),
+                                        Positioned(
+                                          left: -lensL, top: -lensT, width: _w, height: _h,
+                                          child: Transform.scale(
+                                            scale: 1 + .16 * pr,
+                                            alignment: Alignment((cx / _w) * 2 - 1, 0),
+                                            child: _row(g, (_) => kGreen, (_) => true),
+                                          ),
                                         ),
-                                      ),
-                                      Positioned.fill(child: CustomPaint(painter: _LensPainter())),
-                                    ]),
+                                        Positioned.fill(child: CustomPaint(painter: _LensPainter())),
+                                      ]),
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                        ]),
+                          ]),
+                        ),
                       ),
                     ),
-                  ),
-                ]),
-              );
-            },
-          ),
+                  ]),
+                ),
+              ),
+            );
+          },
         );
       }),
-    );
-
-    return AnimatedBuilder(
-      animation: _hideCtrl,
-      builder: (context, child) {
-        final t = Curves.easeInOut.transform(_hideCtrl.value);
-        
-        // Fase 1: Morph bar ke tengah (0.0 -> 0.4)
-        final morph = (t / 0.4).clamp(0.0, 1.0);
-        // Fase 2: Bubble meluncur turun (0.4 -> 1.0)
-        final drop = ((t - 0.4) / 0.6).clamp(0.0, 1.0);
-
-        final barScaleX = 1.0 - morph * 0.85;
-        final barScaleY = 1.0 - morph * 0.55;
-        final barOpacity = 1.0 - morph;
-
-        final bubbleScale = 0.6 + morph * 0.4;
-        final bubbleDrop = Curves.easeIn.transform(drop) * 180;
-        final bubbleOpacity = 1.0 - drop;
-
-        return Stack(
-          clipBehavior: Clip.none,
-          alignment: Alignment.bottomCenter,
-          children: [
-            // Bar Asli
-            IgnorePointer(
-              ignoring: t > 0.01,
-              child: Transform.scale(
-                scaleX: barScaleX,
-                scaleY: barScaleY,
-                alignment: Alignment.center,
-                child: Opacity(
-                  opacity: barOpacity,
-                  child: child,
-                ),
-              ),
-            ),
-
-            // Bubble Ikon Aktif
-            if (t > 0.0)
-              Positioned(
-                bottom: bottomPad + 12, // Pusat dari bar 66px adalah bottomPad + 33. Pusat bubble 54px adalah 27. Maka bottomPad + 33 - 27 = bottomPad + 6
-                child: Transform.translate(
-                  offset: Offset(0, bubbleDrop),
-                  child: Transform.scale(
-                    scale: bubbleScale,
-                    child: Opacity(
-                      opacity: bubbleOpacity,
-                      child: _buildActiveBubble(),
-                    ),
-                  ),
-                ),
-              ),
-          ],
-        );
-      },
-      child: content,
     );
   }
 }

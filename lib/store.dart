@@ -486,13 +486,18 @@ class AppStore extends ChangeNotifier {
     return ['ok', ''];
   }
 
+  /// Jumlah agen yang terus dicari untuk daftar "Sedang mencari agen" pada request banyak agen.
+  static const int kSearchTarget = 5;
+
+  int interestCount(Req r) => r.acc.where((a) => a.status == 'accepted').length;
+
   List<Acc> activeAcc(Req r) => r.acc.where((a) => ['accepted', 'invited', 'agreed', 'selected'].contains(a.status)).toList();
   List<Req> get myReqs => reqs.where((r) => r.mine).toList();
 
   void _refreshReq(Req r) {
     if (!['OPEN', 'HAS_ACCEPTORS', 'FULL'].contains(r.status)) return;
     final n = activeAcc(r).length;
-    r.status = n == 0 ? 'OPEN' : (n >= r.quota ? 'FULL' : 'HAS_ACCEPTORS');
+    r.status = n == 0 ? 'OPEN' : ((r.workers == 1 && n >= r.quota) ? 'FULL' : 'HAS_ACCEPTORS');
   }
 
   /// Mengembalikan [verdict, alasan]. 'reject' berarti tidak disimpan.
@@ -1512,7 +1517,7 @@ class AppStore extends ChangeNotifier {
             notify('Request kedaluwarsa', '"${r.title}" belum mendapat kesepakatan. Naikkan harga atau perluas radius.');
           }
           ch = true;
-        } else if (r.status != 'FULL' && _simAgentAcc(r)) {
+        } else if ((r.workers > 1 ? (r.chosen.isEmpty && interestCount(r) < kSearchTarget) : r.status != 'FULL') && _simAgentAcc(r)) {
           ch = true;
         }
       }
