@@ -495,7 +495,7 @@ class _Geo {
 class _BottomBarState extends State<BottomBar> with TickerProviderStateMixin {
   static const _barH = 66.0;       // tinggi bar normal
   static const _barHCompact = 52.0; // tinggi bar saat kompak
-  static const _slotCompact = 50.0; // lebar tiap ikon saat kompak (jarak antar ikon)
+  static const _slotCompact = 45.0; // lebar tiap ikon saat kompak (jarak antar ikon)
   static const _posSpring = SpringDescription(mass: 1, stiffness: 260, damping: 24);
   static const _pressSpring = SpringDescription(mass: 1, stiffness: 420, damping: 16);
   static const _stretchSpring = SpringDescription(mass: 1, stiffness: 320, damping: 11);
