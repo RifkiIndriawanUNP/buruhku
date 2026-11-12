@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import '../models.dart';
-import '../seed.dart';
-import '../store.dart';
-import '../ui.dart';
-import 'chat.dart';
-import 'location.dart';
-import 'order.dart';
-import 'service.dart';
-import 'shell.dart';
+import 'package:buruhku/data/models/models.dart';
+import 'package:buruhku/data/seed/seed.dart';
+import 'package:buruhku/data/repositories/memory/app_store.dart';
+import 'package:buruhku/core/ui/ui.dart';
+import 'package:buruhku/features/chat/screens/chat.dart';
+import 'package:buruhku/features/location/screens/location.dart';
+import 'package:buruhku/features/order/screens/order.dart';
+import 'package:buruhku/features/service/screens/service.dart';
+import 'package:buruhku/app/shell.dart';
 
 // ---------------------------------------------------------------- tab Request
 class MyRequestsTab extends StatelessWidget {

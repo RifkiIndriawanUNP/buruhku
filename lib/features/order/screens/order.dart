@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../models.dart';
-import '../store.dart';
-import '../ui.dart';
-import 'account.dart';
-import 'chat.dart';
-import 'request.dart';
-import 'shell.dart';
+import 'package:buruhku/data/models/models.dart';
+import 'package:buruhku/data/repositories/memory/app_store.dart';
+import 'package:buruhku/core/ui/ui.dart';
+import 'package:buruhku/features/account/screens/account.dart';
+import 'package:buruhku/features/chat/screens/chat.dart';
+import 'package:buruhku/features/request/screens/request.dart';
+import 'package:buruhku/app/shell.dart';
 
 // ---------------------------------------------------------------- riwayat & favorit
 class OrderTile extends StatelessWidget {

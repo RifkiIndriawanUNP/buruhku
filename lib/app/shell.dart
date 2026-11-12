@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import '../models.dart';
-import '../store.dart';
-import '../ui.dart';
-import 'account.dart';
-import 'agent.dart';
-import 'chat.dart';
-import 'order.dart';
-import 'request.dart';
-import 'service.dart';
+import 'package:buruhku/data/models/models.dart';
+import 'package:buruhku/data/repositories/memory/app_store.dart';
+import 'package:buruhku/core/ui/ui.dart';
+import 'package:buruhku/features/account/screens/account.dart';
+import 'package:buruhku/features/agent_mode/screens/agent.dart';
+import 'package:buruhku/features/chat/screens/chat.dart';
+import 'package:buruhku/features/order/screens/order.dart';
+import 'package:buruhku/features/request/screens/request.dart';
+import 'package:buruhku/features/service/screens/service.dart';
 
 class Shell extends StatefulWidget {
   const Shell({super.key});

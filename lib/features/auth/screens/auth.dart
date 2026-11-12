@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../store.dart';
-import '../ui.dart';
-import 'account.dart';
+import 'package:buruhku/data/repositories/memory/app_store.dart';
+import 'package:buruhku/core/ui/ui.dart';
+import 'package:buruhku/features/account/screens/account.dart';
 
 class Onboarding extends StatefulWidget {
   const Onboarding({super.key});

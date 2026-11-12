@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../models.dart';
-import '../store.dart';
-import '../ui.dart';
+import 'package:buruhku/data/models/models.dart';
+import 'package:buruhku/data/repositories/memory/app_store.dart';
+import 'package:buruhku/core/ui/ui.dart';
 
 IconData placeIcon(String label) {
   final t = label.toLowerCase();

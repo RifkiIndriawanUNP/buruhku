@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import '../models.dart';
-import '../store.dart';
-import '../ui.dart';
-import 'account.dart';
-import 'location.dart';
-import 'order.dart';
-import 'request.dart';
+import 'package:buruhku/data/models/models.dart';
+import 'package:buruhku/data/repositories/memory/app_store.dart';
+import 'package:buruhku/core/ui/ui.dart';
+import 'package:buruhku/features/account/screens/account.dart';
+import 'package:buruhku/features/location/screens/location.dart';
+import 'package:buruhku/features/order/screens/order.dart';
+import 'package:buruhku/features/request/screens/request.dart';
 
 String _preview(Msg m) {
   switch (m.type) {

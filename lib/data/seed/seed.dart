@@ -1,5 +1,5 @@
 import 'dart:math';
-import 'models.dart';
+import 'package:buruhku/data/models/models.dart';
 
 const _fn = ['Budi', 'Agus', 'Joko', 'Slamet', 'Dedi', 'Rudi', 'Eko', 'Hendra', 'Andi', 'Yanto', 'Bayu', 'Fajar',
   'Wawan', 'Iwan', 'Tono', 'Sugeng', 'Ucok', 'Asep', 'Dani', 'Rizal', 'Siti', 'Rina', 'Wati', 'Yuli', 'Ani', 'Dewi',

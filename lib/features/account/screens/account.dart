@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../models.dart';
-import '../store.dart';
-import '../ui.dart';
-import 'agent.dart';
-import 'location.dart';
-import 'order.dart';
-import 'service.dart';
+import 'package:buruhku/data/models/models.dart';
+import 'package:buruhku/data/repositories/memory/app_store.dart';
+import 'package:buruhku/core/ui/ui.dart';
+import 'package:buruhku/features/agent_mode/screens/agent.dart';
+import 'package:buruhku/features/location/screens/location.dart';
+import 'package:buruhku/features/order/screens/order.dart';
+import 'package:buruhku/features/service/screens/service.dart';
 
 void _go(BuildContext c, Widget w) => Navigator.push(c, MaterialPageRoute(builder: (_) => w));
 
