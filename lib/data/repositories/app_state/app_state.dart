@@ -2,6 +2,9 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:latlong2/latlong.dart' show LatLng;
+import 'package:buruhku/config/env.dart';
+import 'package:buruhku/utils/geo.dart';
 import 'package:buruhku/domain/models/models.dart';
 import 'package:buruhku/data/repositories/safety_repository.dart';
 import 'package:buruhku/data/services/snapshot_storage.dart';
@@ -63,6 +66,14 @@ class AppState extends ChangeNotifier {
   // ---- akun ----
   bool onboarded = false, loggedIn = false, agentMode = false;
   String phone = '', name = '', address = '', emName = '', emPhone = '', pin = '';
+  /// Path foto profil di penyimpanan privat aplikasi ('' = belum ada).
+  String profilePhoto = '';
+
+  void setProfilePhoto(String path) {
+    profilePhoto = path;
+    notifyListeners();
+  }
+
   bool nOrder = true, nChat = true, nPromo = false, biometric = false;
   List<String> wallets = []; // 'GoPay|0812xxxx'
   Set<String> favs = {}, blocked = {}, hidden = {};
@@ -134,7 +145,7 @@ class AppState extends ChangeNotifier {
   void _save() => _storage.save(_dump());
 
   Map<String, dynamic> _dump() => {
-        'onboarded': onboarded, 'loggedIn': loggedIn, 'agentMode': agentMode, 'phone': phone, 'name': name,
+        'onboarded': onboarded, 'loggedIn': loggedIn, 'agentMode': agentMode, 'phone': phone, 'name': name, 'profilePhoto': profilePhoto,
         'address': address, 'emName': emName, 'emPhone': emPhone, 'pin': pin, 'nOrder': nOrder, 'nChat': nChat,
         'nPromo': nPromo, 'biometric': biometric, 'wallets': wallets, 'favs': favs.toList(),
         'blocked': blocked.toList(), 'hidden': hidden.toList(), 'kyc': kyc.toJson(),
@@ -153,6 +164,7 @@ class AppState extends ChangeNotifier {
     agentMode = j['agentMode'];
     phone = j['phone'];
     name = j['name'];
+    profilePhoto = j['profilePhoto'] ?? '';
     address = j['address'];
     emName = j['emName'];
     emPhone = j['emPhone'];
@@ -190,7 +202,7 @@ class AppState extends ChangeNotifier {
   void _wipe() {
     onboarded = true;
     agentMode = false;
-    name = address = emName = emPhone = pin = '';
+    name = address = emName = emPhone = pin = profilePhoto = '';
     wallets = [];
     favs = {};
     blocked = {};

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:buruhku/domain/models/models.dart';
 import 'package:buruhku/data/repositories/app_state/app_state.dart';
 import 'package:buruhku/ui/core/ui.dart';
+import 'package:latlong2/latlong.dart' show LatLng;
+import 'package:buruhku/utils/geo.dart';
 
 IconData placeIcon(String label) {
   final t = label.toLowerCase();
@@ -16,8 +18,8 @@ const _maxPlaces = 10;
 /// Dipakai di form request dan form order langsung.
 class LocationField extends StatefulWidget {
   final TextEditingController addr;
-  final Offset pin;
-  final ValueChanged<Offset> onPin;
+  final LatLng pin;
+  final ValueChanged<LatLng> onPin;
   final double mapH;
   const LocationField({required this.addr, required this.pin, required this.onPin, this.mapH = 150, super.key});
   @override
@@ -77,17 +79,18 @@ class _LocationFieldState extends State<LocationField> {
                   onSelected: (_) {
                     setState(() => sel = p.id);
                     widget.addr.text = p.address;
-                    widget.onPin(Offset(p.lat, p.lng));
+                    widget.onPin(LatLng(p.lat, p.lng));
                   },
                 ),
               ),
           ]),
         ),
       const SizedBox(height: 10),
-      FakeMap(
-        h: widget.mapH,
+      AppMap(
+        height: widget.mapH,
         pin: widget.pin,
-        onTap: (o) {
+        zoom: 15,
+        onPick: (o) {
           setState(() => sel = null);
           widget.onPin(o);
         },
@@ -103,7 +106,7 @@ class _LocationFieldState extends State<LocationField> {
             icon: const Icon(Icons.my_location),
             onPressed: () {
               widget.addr.text = s.address.isEmpty ? 'Jl. Melati No. 5, Palabuhanratu' : s.address;
-              widget.onPin(const Offset(.5, .5));
+              widget.onPin(kMapCenter);
               setState(() => sel = null);
             },
           )),
@@ -187,7 +190,7 @@ class PlaceEditPage extends StatefulWidget {
 class _PlaceEditPageState extends State<PlaceEditPage> {
   late final label = TextEditingController(text: widget.place?.label ?? '');
   late final addr = TextEditingController(text: widget.place?.address ?? '');
-  late Offset pin = widget.place == null ? const Offset(.5, .5) : Offset(widget.place!.lat, widget.place!.lng);
+  late LatLng pin = widget.place == null ? kMapCenter : LatLng(widget.place!.lat, widget.place!.lng);
   final key = GlobalKey<FormState>();
 
   @override
@@ -204,10 +207,13 @@ class _PlaceEditPageState extends State<PlaceEditPage> {
             const SizedBox(height: 14),
             const Text('Titik di peta', style: TextStyle(fontWeight: FontWeight.w700)),
             const SizedBox(height: 8),
-            FakeMap(h: 170, pin: pin, onTap: (o) => setState(() => pin = o)),
+            AppMap(height: 190, pin: pin, zoom: 15, onPick: (o) => setState(() => pin = o)),
             const SizedBox(height: 12),
             TF('Alamat lengkap', addr, lines: 2, validator: (v) => (v ?? '').trim().isEmpty ? 'Alamat wajib diisi' : null,
-                suffix: IconButton(icon: const Icon(Icons.my_location), onPressed: () => setState(() => addr.text = context.r.address.isEmpty ? 'Jl. Melati No. 5, Palabuhanratu' : context.r.address))),
+                suffix: IconButton(icon: const Icon(Icons.my_location), onPressed: () => setState(() {
+                  addr.text = context.r.address.isEmpty ? 'Jl. Melati No. 5, Palabuhanratu' : context.r.address;
+                  pin = kMapCenter;
+                }))),
             const SizedBox(height: 8),
             full(pbtn('Simpan', () {
               if (!key.currentState!.validate()) return;

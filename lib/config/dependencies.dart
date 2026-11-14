@@ -4,6 +4,7 @@ import 'package:buruhku/config/env.dart';
 import 'package:buruhku/data/repositories/app_state/app_state.dart';
 import 'package:buruhku/data/repositories/safety_repository.dart';
 import 'package:buruhku/data/services/local_snapshot_storage.dart';
+import 'package:buruhku/data/services/photo_service.dart';
 import 'package:buruhku/data/services/snapshot_storage.dart';
 
 /// Service dan repository dibuat sekali, di satu tempat, lalu dibagikan lewat Provider.
@@ -16,6 +17,7 @@ Future<List<SingleChildWidget>> buildProviders() async {
   await store.init();
   return [
     Provider<SnapshotStorage>.value(value: storage),
+    Provider<PhotoService>(create: (_) => PhotoService()),
     ChangeNotifierProvider<AppState>(create: (_) => store),
     // Repository per domain: dipakai ViewModel baru. AppState yang memegang dan membuangnya.
     ChangeNotifierProvider<SafetyRepository>.value(value: store.safety),

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:buruhku/data/repositories/app_state/app_state.dart';
 import 'package:buruhku/ui/core/ui.dart';
 import 'package:buruhku/ui/auth/auth_screen.dart';
 import 'package:buruhku/ui/shell/app_shell.dart';

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:buruhku/domain/models/models.dart';
 import 'package:buruhku/data/repositories/app_state/app_state.dart';
 import 'package:buruhku/ui/core/ui.dart';
+import 'package:buruhku/utils/geo.dart';
 import 'package:buruhku/ui/agents/agent_widgets.dart';
 import 'package:buruhku/ui/chat/chat_screen.dart';
 import 'package:buruhku/ui/location/location_screen.dart';
@@ -193,7 +194,7 @@ Future<String?> orderServiceSheet(BuildContext context, Svc svc) {
   final dur = TextEditingController(text: svc.dur > 0 ? '${svc.dur}' : (svc.ptype == 'lump' ? '' : '1'));
   var sched = 'now';
   DateTime? when;
-  var pin = const Offset(.5, .5);
+  var pin = kMapCenter;
   final key = GlobalKey<FormState>();
   return sheet<String>(context, (x) => StatefulBuilder(builder: (ctx, set) {
         final p = money(price.text);
@@ -242,7 +243,7 @@ Future<String?> orderServiceSheet(BuildContext context, Svc svc) {
                 s.sendOrderOffer(ch, {
                   'title': svc.title, 'cat': svc.cat, 'desc': svc.desc, 'address': addr.text.trim(),
                   'sched': sched, 'schedAt': sched == 'date' ? when!.toIso8601String() : null,
-                  'when': sched == 'date' ? fdt(when!) : 'Sekarang', 'lat': pin.dx, 'lng': pin.dy,
+                  'when': sched == 'date' ? fdt(when!) : 'Sekarang', 'lat': pin.latitude, 'lng': pin.longitude,
                   'price': money(price.text), 'ptype': svc.ptype,
                   'dur': svc.ptype == 'lump' ? 0.0 : (double.tryParse(dur.text.replaceAll(',', '.')) ?? 1.0),
                   'svcId': svc.id, 'svcPrice': svc.price,

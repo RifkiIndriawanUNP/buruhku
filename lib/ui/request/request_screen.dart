@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:buruhku/domain/models/models.dart';
 import 'package:buruhku/data/repositories/app_state/app_state.dart';
 import 'package:buruhku/ui/core/ui.dart';
+import 'package:latlong2/latlong.dart' show LatLng;
+import 'package:buruhku/utils/geo.dart';
 import 'package:buruhku/ui/agents/agent_detail_screen.dart';
 import 'package:buruhku/ui/chat/chat_screen.dart';
 import 'package:buruhku/ui/location/location_screen.dart';
@@ -95,8 +97,9 @@ class _RequestFormPageState extends State<RequestFormPage> {
   final notes = TextEditingController(), price = TextEditingController(), dur = TextEditingController();
   String cat = 'other', sched = 'now', ptype = 'lump';
   int workers = 1, photos = 0;
+  List<String> photoPaths = [];
   DateTime? when;
-  Offset pin = const Offset(.5, .5);
+  LatLng pin = kMapCenter;
 
   @override
   void initState() {
@@ -114,8 +117,9 @@ class _RequestFormPageState extends State<RequestFormPage> {
       ptype = e.ptype;
       workers = e.workers;
       photos = e.photos;
+      photoPaths = List.filled(e.photos, ''); // foto sesi lama sudah tidak tersedia -> placeholder
       when = e.schedAt;
-      pin = Offset(e.lat, e.lng);
+      pin = LatLng(e.lat, e.lng);
     } else {
       if (t != null) _applyTpl(t);
       if (widget.cat != null) cat = widget.cat!;
@@ -139,9 +143,9 @@ class _RequestFormPageState extends State<RequestFormPage> {
 
   Req _build() => Req(
         title: title.text.trim(), cat: cat, desc: desc.text.trim(), address: addr.text.trim(),
-        area: 'Kel. ${areas[(pin.dx * 8).floor().clamp(0, 7)]}', ptype: ptype, price: p, workers: workers,
+        area: 'Kel. ${nearestArea(pin)}', ptype: ptype, price: p, workers: workers,
         photos: photos, dur: ptype == 'lump' ? 0 : d, notes: notes.text.trim(), sched: sched,
-        schedAt: sched == 'date' ? when : null, lat: pin.dx, lng: pin.dy,
+        schedAt: sched == 'date' ? when : null, lat: pin.latitude, lng: pin.longitude,
       );
 
   Future<void> _pickWhen() async {
@@ -298,17 +302,7 @@ class _RequestFormPageState extends State<RequestFormPage> {
           ),
           const Text('Foto pendukung (maks 5)', style: TextStyle(fontWeight: FontWeight.w700)),
           const SizedBox(height: 8),
-          Wrap(spacing: 8, runSpacing: 8, children: [
-            for (var i = 0; i < photos; i++) Stack(children: [
-              const Ph(w: 64, h: 64),
-              Positioned(right: 0, top: 0, child: GestureDetector(onTap: () => setState(() => photos--), child: const Icon(Icons.cancel, size: 18))),
-            ]),
-            if (photos < 5)
-              InkWell(
-                onTap: () => setState(() => photos++),
-                child: Container(width: 64, height: 64, decoration: BoxDecoration(border: Border.all(color: g500), borderRadius: BorderRadius.circular(6)), child: const Icon(Icons.add_a_photo_outlined)),
-              ),
-          ]),
+          PhotoStrip(paths: photoPaths, onChanged: (l) => setState(() { photoPaths = l; photos = l.length; })),
           const SizedBox(height: 16),
           TF('Catatan khusus (opsional)', notes, hint: 'mis. bawa alat sendiri, makan disediakan'),
           full(pbtn('Lihat ringkasan', _preview, icon: Icons.fact_check_outlined)),

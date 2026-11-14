@@ -115,10 +115,13 @@ class AgentModeRepository extends RepoBase {
       'laundry': 'Setrika seragam sekolah', 'other': 'Bantu atur gudang kecil'};
     final p = _round5((c.lo + c.hi) / 2 * (0.8 + _rnd.nextDouble() * 0.4));
     final n = DateTime.now();
-    reqs.insert(0, Req(id: nid('SIM'), clientId: 'sim', clientName: _pick(simNames), title: titles[cid]!, cat: cid,
+    final sid = nid('SIM');
+    final dist = double.parse((0.5 + _rnd.nextDouble() * max(kyc.radius - 0.5, 1)).toStringAsFixed(1));
+    final at = pointAt(dist, sid);
+    reqs.insert(0, Req(id: sid, lat: at.latitude, lng: at.longitude, clientId: 'sim', clientName: _pick(simNames), title: titles[cid]!, cat: cid,
         desc: 'Mohon dikerjakan rapi. Peralatan dasar tersedia di rumah. Bisa mulai sekarang.', price: p,
-        dist: double.parse((0.5 + _rnd.nextDouble() * max(kyc.radius - 0.5, 1)).toStringAsFixed(1)),
-        area: 'Kel. ${_pick(areas)}', address: 'Jl. Kenanga No. ${1 + _rnd.nextInt(60)}', created: n,
+        dist: dist,
+        area: 'Kel. ${nearestArea(at)}', address: 'Jl. Kenanga No. ${1 + _rnd.nextInt(60)}', created: n,
         expires: n.add(const Duration(hours: 2)), clientRating: 4.0 + _rnd.nextInt(10) / 10));
   }
 }

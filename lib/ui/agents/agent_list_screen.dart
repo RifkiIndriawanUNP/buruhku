@@ -4,6 +4,7 @@ import 'package:buruhku/domain/models/models.dart';
 import 'package:buruhku/data/repositories/app_state/app_state.dart';
 import 'package:buruhku/ui/core/ui.dart';
 import 'package:buruhku/ui/agents/agent_list_view_model.dart';
+import 'package:buruhku/ui/agents/agent_map_view.dart';
 import 'package:buruhku/ui/agents/agent_widgets.dart';
 import 'package:buruhku/ui/request/request_screen.dart';
 
@@ -18,6 +19,7 @@ class AgentListPage extends StatefulWidget {
 
 class _AgentListPageState extends State<AgentListPage> {
   late final AgentListViewModel vm = AgentListViewModel(store: context.read<AppState>(), cat: widget.cat, sort: widget.sort);
+  bool _map = false;
 
   @override
   void dispose() {
@@ -34,6 +36,11 @@ class _AgentListPageState extends State<AgentListPage> {
     final l = vm.agents;
     return Scaffold(
       appBar: AppBar(title: Text(widget.title), actions: [
+        IconButton(
+          tooltip: _map ? 'Tampilkan daftar' : 'Tampilkan peta',
+          icon: Icon(_map ? Icons.view_list_outlined : Icons.map_outlined),
+          onPressed: () => setState(() => _map = !_map),
+        ),
         IconButton(
           icon: const Icon(Icons.tune),
           onPressed: () => sheet(context, (_) => ListenableBuilder(listenable: vm, builder: (ctx, _) {
@@ -58,7 +65,9 @@ class _AgentListPageState extends State<AgentListPage> {
               })),
         ),
       ]),
-      body: l.isEmpty
+      body: _map
+          ? AgentMapView(agents: l, radiusKm: vm.maxDist)
+          : l.isEmpty
           ? const Empty(Icons.search_off, 'Tidak ada agen yang cocok. Longgarkan filter atau buat request agar agen yang menghubungimu.')
           : ListView(padding: const EdgeInsets.fromLTRB(16, 16, 16, kBarSpace), children: [for (final a in l) AgentTile(a)]),
       bottomNavigationBar: SafeArea(

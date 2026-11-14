@@ -1,3 +1,5 @@
+import 'package:buruhku/config/env.dart';
+import 'package:buruhku/utils/geo.dart';
 import 'package:buruhku/utils/json.dart';
 import 'package:buruhku/domain/models/catalog.dart';
 
@@ -24,7 +26,7 @@ class Req {
   Req({this.id = '', this.clientId = 'me', this.clientName = '', required this.title, required this.cat,
       this.desc = '', this.address = '', this.area = '', this.status = 'OPEN', this.ptype = 'lump', this.notes = '',
       this.sched = 'now', this.reason = '', this.workers = 1, required this.price, this.quota = 5, this.photos = 0,
-      this.dur = 0, this.radius = 10, this.dist = 0, this.lat = 0.5, this.lng = 0.5, this.clientRating = 4.8,
+      this.dur = 0, this.radius = 10, this.dist = 0, this.lat = Env.mapLat, this.lng = Env.mapLng, this.clientRating = 4.8,
       this.schedAt, DateTime? created, DateTime? expires, List<Acc>? acc, List<String>? chosen, this.direct = false})
       : created = created ?? DateTime.now(),
         expires = expires ?? DateTime.now().add(const Duration(minutes: 30)),
@@ -44,7 +46,8 @@ class Req {
         address: j['ad'], area: j['ar'], status: j['st'], ptype: j['pt'], notes: j['no'], sched: j['sc'],
         reason: j['re'], workers: j['wk'], price: j['pr'], quota: j['qu'], photos: j['ph'],
         dur: (j['du'] as num).toDouble(), radius: (j['ra'] as num).toDouble(), dist: (j['di'] as num).toDouble(),
-        lat: (j['la'] as num).toDouble(), lng: (j['ln'] as num).toDouble(), clientRating: (j['cr'] as num).toDouble(),
+        lat: fixLat((j['la'] as num).toDouble(), (j['ln'] as num).toDouble()),
+        lng: fixLng((j['la'] as num).toDouble(), (j['ln'] as num).toDouble()), clientRating: (j['cr'] as num).toDouble(),
         schedAt: jDate(j['sa']), created: jDate(j['c']), expires: jDate(j['e']),
         acc: jList(j['acc'], Acc.fromJson), chosen: List<String>.from(j['ch'] ?? []), direct: j['dr'] ?? false,
       );

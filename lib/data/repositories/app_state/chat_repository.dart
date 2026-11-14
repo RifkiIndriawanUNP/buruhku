@@ -82,8 +82,8 @@ class ChatRepository extends RepoBase {
     _simReply(c, text);
   }
 
-  void sendMedia(Chat c, String type, String body) {
-    c.msgs.add(Msg(id: nid('m'), from: 'me', type: type, body: body));
+  void sendMedia(Chat c, String type, String body, [Map<String, dynamic>? data]) {
+    c.msgs.add(Msg(id: nid('m'), from: 'me', type: type, body: body, data: data));
     notifyListeners();
     Future.delayed(const Duration(seconds: 2), () {
       _incoming(c, type == 'image' ? 'Fotonya sudah saya terima, terima kasih.' : 'Lokasinya sudah saya lihat.');
@@ -161,11 +161,12 @@ class ChatRepository extends RepoBase {
     final dur = (d['dur'] as num).toDouble();
     final price = d['price'] as int;
     final at = d['schedAt'] == null ? null : DateTime.tryParse(d['schedAt'] as String);
+    final la = (d['lat'] as num?)?.toDouble() ?? Env.mapLat, ln = (d['lng'] as num?)?.toDouble() ?? Env.mapLng;
     final r = Req(id: nid('REQ'), clientId: iAmClient ? 'me' : 'sim', clientName: iAmClient ? '' : c.otherName,
         title: d['title'], cat: d['cat'] ?? 'other', desc: d['desc'] ?? '', address: d['address'] ?? address,
         area: 'Kel. ${_pick(areas)}', status: 'LOCKED', ptype: d['ptype'], price: price, dur: dur, direct: true,
-        sched: at == null ? 'now' : 'date', schedAt: at, lat: (d['lat'] as num?)?.toDouble() ?? 0.5,
-        lng: (d['lng'] as num?)?.toDouble() ?? 0.5, chosen: [iAmClient ? c.otherId : 'me']);
+        sched: at == null ? 'now' : 'date', schedAt: at, lat: fixLat(la, ln),
+        lng: fixLng(la, ln), chosen: [iAmClient ? c.otherId : 'me']);
     reqs.insert(0, r);
     c.refId = r.id;
     final amt = totalOf(r.ptype, price, dur);

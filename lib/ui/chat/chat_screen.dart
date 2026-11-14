@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:buruhku/domain/models/models.dart';
 import 'package:buruhku/data/repositories/app_state/app_state.dart';
 import 'package:buruhku/ui/core/ui.dart';
+import 'package:latlong2/latlong.dart' show LatLng;
+import 'package:buruhku/utils/geo.dart';
 import 'package:buruhku/ui/account/account_screen.dart';
 import 'package:buruhku/ui/location/location_screen.dart';
 import 'package:buruhku/ui/order/order_screen.dart';
@@ -133,7 +135,11 @@ class _ChatPageState extends State<ChatPage> {
     final s = store;
     await sheet<void>(context, (x) => SafeArea(
           child: Column(mainAxisSize: MainAxisSize.min, children: [
-            ListTile(leading: const Icon(Icons.image_outlined), title: const Text('Kirim foto'), onTap: () { Navigator.pop(x); s.sendMedia(c, 'image', 'Foto lokasi pekerjaan'); }),
+            ListTile(leading: const Icon(Icons.image_outlined), title: const Text('Kirim foto'), onTap: () async {
+              Navigator.pop(x);
+              final path = await pickTempPhoto(context);
+              if (path != null) s.sendMedia(c, 'image', 'Foto lokasi pekerjaan', {'path': path});
+            }),
             ListTile(leading: const Icon(Icons.location_on_outlined), title: const Text('Kirim lokasi'), onTap: () { Navigator.pop(x); s.sendMedia(c, 'location', s.address.isEmpty ? 'Titik lokasi dari peta' : s.address); }),
             ListTile(
               leading: const Icon(Icons.sell_outlined),
@@ -336,10 +342,10 @@ class _BubbleState extends State<_Bubble> {
     Widget body;
     switch (m.type) {
       case 'image':
-        body = Column(crossAxisAlignment: CrossAxisAlignment.start, children: [const Ph(w: 180, h: 130), const SizedBox(height: 4), Text(m.body)]);
+        body = Column(crossAxisAlignment: CrossAxisAlignment.start, children: [TempPhoto(path: m.data['path'] as String?, w: 180, h: 130), const SizedBox(height: 4), Text(m.body)]);
         break;
       case 'location':
-        body = SizedBox(width: 200, child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [const FakeMap(h: 90, pin: Offset(.5, .6)), const SizedBox(height: 4), Text(m.body, style: const TextStyle(fontSize: 12.5))]));
+        body = SizedBox(width: 200, child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [AppMap(height: 90, pin: kMapCenter, zoom: 15, interactive: false), const SizedBox(height: 4), Text(m.body, style: const TextStyle(fontSize: 12.5))]));
         break;
       case 'offer':
         final pt = m.data['ptype'] as String;
@@ -428,7 +434,7 @@ Future<bool?> directOfferSheet(BuildContext context, Chat chat, Agent? agent) {
   String pt = 'lump', sched = 'now';
   String cat = agent == null || agent.cats.isEmpty ? 'other' : agent.cats.first;
   DateTime? when;
-  Offset pin = const Offset(.5, .5);
+  LatLng pin = kMapCenter;
   final key = GlobalKey<FormState>();
   return sheet<bool>(context, (x) => StatefulBuilder(builder: (ctx, set) {
         return SingleChildScrollView(
@@ -483,7 +489,7 @@ Future<bool?> directOfferSheet(BuildContext context, Chat chat, Agent? agent) {
                 s.sendOrderOffer(chat, {
                   'title': title.text.trim(), 'cat': cat, 'desc': desc.text.trim(), 'address': addr.text.trim(),
                   'sched': sched, 'schedAt': sched == 'date' ? when!.toIso8601String() : null,
-                  'when': sched == 'date' ? fdt(when!) : 'Sekarang', 'lat': pin.dx, 'lng': pin.dy,
+                  'when': sched == 'date' ? fdt(when!) : 'Sekarang', 'lat': pin.latitude, 'lng': pin.longitude,
                   'price': money(price.text), 'ptype': pt, 'dur': pt == 'lump' ? 0.0 : double.parse(dur.text),
                 });
                 Navigator.pop(x, true);

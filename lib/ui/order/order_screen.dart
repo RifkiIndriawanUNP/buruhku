@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:buruhku/domain/models/models.dart';
 import 'package:buruhku/data/repositories/app_state/app_state.dart';
 import 'package:buruhku/ui/core/ui.dart';
+import 'package:latlong2/latlong.dart' show LatLng;
+import 'package:buruhku/utils/geo.dart';
 import 'package:buruhku/ui/account/account_screen.dart';
 import 'package:buruhku/ui/agents/agent_detail_screen.dart';
 import 'package:buruhku/ui/chat/chat_screen.dart';
@@ -782,8 +784,12 @@ class _OrderPageState extends State<OrderPage> {
             Live((_) {
               final n = o.nextAt;
               final p = n == null ? 0.0 : (1 - n.difference(DateTime.now()).inMilliseconds / 8000).clamp(0.0, 1.0);
+              final rq = s.reqById(o.reqId);
+              final dest = rq == null ? kMapCenter : LatLng(rq.lat, rq.lng);
+              final from = s.agentById(o.otherId).pos;
+              final here = LatLng(from.latitude + (dest.latitude - from.latitude) * p, from.longitude + (dest.longitude - from.longitude) * p);
               return Column(children: [
-                FakeMap(h: 150, pin: const Offset(.72, .62), marks: [Offset(.12 + .55 * p, .2 + .38 * p)]),
+                AppMap(height: 190, pin: dest, marks: [MapMark.walker(here)], route: [from, dest], fitKey: o.id),
                 const SizedBox(height: 6),
                 Text('${o.otherName} menuju lokasimu. Estimasi tiba ${n == null ? '-' : '${n.difference(DateTime.now()).inSeconds.clamp(0, 99)} dtk (demo)'}', style: const TextStyle(fontSize: 12.5, color: g700)),
               ]);
@@ -1112,6 +1118,7 @@ class _DisputePageState extends State<DisputePage> {
   String type = 'Pekerjaan tidak selesai';
   final desc = TextEditingController();
   int ev = 0;
+  List<String> evPaths = [];
   final key = GlobalKey<FormState>();
 
   @override
@@ -1129,10 +1136,7 @@ class _DisputePageState extends State<DisputePage> {
           DropdownButtonFormField<String>(initialValue: type, decoration: const InputDecoration(labelText: 'Jenis masalah'), items: [for (final t in types) DropdownMenuItem(value: t, child: Text(t))], onChanged: (v) => setState(() => type = v ?? type)),
           const SizedBox(height: 12),
           TF('Ceritakan kronologi', desc, lines: 4, validator: (v) => (v ?? '').trim().length < 20 ? 'Minimal 20 karakter' : null),
-          Wrap(spacing: 8, runSpacing: 8, children: [
-            for (var i = 0; i < ev; i++) const Ph(w: 60, h: 60),
-            if (ev < 5) InkWell(onTap: () => setState(() => ev++), child: Container(width: 60, height: 60, decoration: BoxDecoration(border: Border.all(color: g500), borderRadius: BorderRadius.circular(6)), child: const Icon(Icons.add_a_photo_outlined))),
-          ]),
+          PhotoStrip(paths: evPaths, size: 60, onChanged: (l) => setState(() { evPaths = l; ev = l.length; })),
           const SizedBox(height: 20),
           full(pbtn('Kirim sengketa', () async {
             if (!key.currentState!.validate()) return;

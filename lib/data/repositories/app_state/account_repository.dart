@@ -133,18 +133,18 @@ class AccountRepository extends RepoBase {
   }
 
   // ================= lokasi tersimpan =================
-  void addPlace(String label, String addr, Offset pin) {
-    places.add(SavedLoc(id: nid('PL'), label: label, address: addr, lat: pin.dx, lng: pin.dy));
+  void addPlace(String label, String addr, LatLng pin) {
+    places.add(SavedLoc(id: nid('PL'), label: label, address: addr, lat: pin.latitude, lng: pin.longitude));
     if (address.isEmpty) address = addr;
     notifyListeners();
   }
 
-  void updatePlace(SavedLoc p, String label, String addr, Offset pin) {
+  void updatePlace(SavedLoc p, String label, String addr, LatLng pin) {
     if (address == p.address) address = addr;
     p.label = label;
     p.address = addr;
-    p.lat = pin.dx;
-    p.lng = pin.dy;
+    p.lat = pin.latitude;
+    p.lng = pin.longitude;
     notifyListeners();
   }
 

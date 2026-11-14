@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:buruhku/domain/models/models.dart';
+import 'package:buruhku/utils/geo.dart';
 
 const _fn = ['Budi', 'Agus', 'Joko', 'Slamet', 'Dedi', 'Rudi', 'Eko', 'Hendra', 'Andi', 'Yanto', 'Bayu', 'Fajar',
   'Wawan', 'Iwan', 'Tono', 'Sugeng', 'Ucok', 'Asep', 'Dani', 'Rizal', 'Siti', 'Rina', 'Wati', 'Yuli', 'Ani', 'Dewi',
@@ -47,7 +48,9 @@ List<Req> seedIncoming() {
   final n = DateTime.now();
   Req mk(String id, String cn, String t, String c, String d, int p, String pt, double dur, int w, double dist,
       String area, {List<String> pre = const []}) {
+    final at = areaPoint(area);
     return Req(
+      lat: at.latitude, lng: at.longitude,
       id: id, clientId: 'sim', clientName: cn, title: t, cat: c, desc: d, price: p, ptype: pt, dur: dur, workers: w,
       dist: dist, area: 'Kel. $area', address: 'Jl. Melati No. ${10 + dist.round() * 3}, $area',
       quota: max(5, w + 2), expires: n.add(const Duration(hours: 3)),

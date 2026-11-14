@@ -25,7 +25,7 @@ class AccountTab extends StatelessWidget {
       Padding(
         padding: const EdgeInsets.all(16),
         child: Row(children: [
-          const Avatar(size: 64),
+          const MyAvatar(size: 64),
           const SizedBox(width: 14),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(s.name, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
@@ -96,7 +96,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
         body: Form(
           key: key,
           child: ListView(padding: const EdgeInsets.all(16), children: [
-            const Center(child: Avatar(size: 80)),
+            Center(child: Column(children: [
+              const MyAvatar(size: 80),
+              TextButton.icon(onPressed: () => changeProfilePhoto(context), icon: const Icon(Icons.photo_camera_outlined), label: const Text('Ubah foto profil')),
+            ])),
             const SizedBox(height: 16),
             TF('Nama', n, validator: (v) => (v ?? '').trim().length < 3 ? 'Minimal 3 huruf' : null),
             TF('Nomor HP', TextEditingController(text: context.r.phone), enabled: false),
@@ -257,6 +260,7 @@ class SettingsPage extends StatelessWidget {
           onTap: () async {
             final v = await askText(context, 'Ketik HAPUS untuk konfirmasi', hint: 'HAPUS');
             if (v == 'HAPUS' && context.mounted) {
+              forgetProfilePhoto(context);
               Navigator.of(context).popUntil((r) => r.isFirst);
               s.deleteAccount();
             } else if (v != null && context.mounted) {
@@ -312,6 +316,7 @@ class _ReportPageState extends State<ReportPage> {
   late final desc = TextEditingController(text: widget.prefill);
   late final target = TextEditingController(text: widget.target);
   int ev = 0;
+  List<String> evPaths = [];
   final key = GlobalKey<FormState>();
   @override
   Widget build(BuildContext context) => Scaffold(
@@ -327,10 +332,7 @@ class _ReportPageState extends State<ReportPage> {
             const SizedBox(height: 12),
             TF('Pihak yang dilaporkan', target),
             TF('Kronologi', desc, lines: 5, validator: (v) => (v ?? '').trim().length < 15 ? 'Minimal 15 karakter' : null),
-            Wrap(spacing: 8, runSpacing: 8, children: [
-              for (var i = 0; i < ev; i++) const Ph(w: 60, h: 60),
-              if (ev < 5) InkWell(onTap: () => setState(() => ev++), child: Container(width: 60, height: 60, decoration: BoxDecoration(border: Border.all(color: g500), borderRadius: BorderRadius.circular(6)), child: const Icon(Icons.add_a_photo_outlined))),
-            ]),
+            PhotoStrip(paths: evPaths, size: 60, onChanged: (l) => setState(() { evPaths = l; ev = l.length; })),
             const SizedBox(height: 16),
             const Warn('Kasus pelecehan, kekerasan, atau pidana diprioritaskan dan bisa dieskalasi ke Tim Legal untuk pendampingan laporan polisi.', icon: Icons.shield_outlined),
             const SizedBox(height: 16),

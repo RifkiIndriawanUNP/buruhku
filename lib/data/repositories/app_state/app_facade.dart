@@ -16,8 +16,8 @@ extension AccountRepositoryFacade on AppState {
   void goTab(int i) => accountRepo.goTab(i);
   void touch() => accountRepo.touch();
   void setAddress(String v) => accountRepo.setAddress(v);
-  void addPlace(String label, String addr, Offset pin) => accountRepo.addPlace(label, addr, pin);
-  void updatePlace(SavedLoc p, String label, String addr, Offset pin) => accountRepo.updatePlace(p, label, addr, pin);
+  void addPlace(String label, String addr, LatLng pin) => accountRepo.addPlace(label, addr, pin);
+  void updatePlace(SavedLoc p, String label, String addr, LatLng pin) => accountRepo.updatePlace(p, label, addr, pin);
   void deletePlace(SavedLoc p) => accountRepo.deletePlace(p);
   void submitKyc() => accountRepo.submitKyc();
   void adminKyc(String act, [String reason = '']) => accountRepo.adminKyc(act, reason);
@@ -117,7 +117,7 @@ extension ChatRepositoryFacade on AppState {
   bool looksFraud(String t) => chatRepo.looksFraud(t);
   void _incoming(Chat c, String body, {String type = 'text', Map<String, dynamic>? data, bool silent = false}) => chatRepo._incoming(c, body, type: type, data: data, silent: silent);
   void sendText(Chat c, String text) => chatRepo.sendText(c, text);
-  void sendMedia(Chat c, String type, String body) => chatRepo.sendMedia(c, type, body);
+  void sendMedia(Chat c, String type, String body, [Map<String, dynamic>? data]) => chatRepo.sendMedia(c, type, body, data);
   void shareWa(Chat c, String number) => chatRepo.shareWa(c, number);
   void shareEwallet(Chat c, String wallet, String purpose) => chatRepo.shareEwallet(c, wallet, purpose);
   void blockUser(Chat c) => chatRepo.blockUser(c);

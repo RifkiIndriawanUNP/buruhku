@@ -168,7 +168,7 @@ class ProfileSetup extends StatefulWidget {
 class _ProfileSetupState extends State<ProfileSetup> {
   final key = GlobalKey<FormState>();
   final n = TextEditingController(), a = TextEditingController(), en = TextEditingController(), ep = TextEditingController();
-  bool agree = false, photo = false;
+  bool agree = false;
 
   @override
   Widget build(BuildContext context) => Scaffold(
@@ -178,10 +178,10 @@ class _ProfileSetupState extends State<ProfileSetup> {
           child: ListView(padding: const EdgeInsets.all(20), children: [
             Center(child: Column(children: [
               Stack(children: [
-                const Avatar(size: 88),
-                if (photo) const Positioned(right: 0, bottom: 0, child: Icon(Icons.check_circle, color: g900)),
+                const MyAvatar(size: 88),
+                if (context.s.profilePhoto.isNotEmpty) const Positioned(right: 0, bottom: 0, child: Icon(Icons.check_circle, color: g900)),
               ]),
-              TextButton.icon(onPressed: () => setState(() => photo = true), icon: const Icon(Icons.photo_camera_outlined), label: const Text('Ambil foto')),
+              TextButton.icon(onPressed: () => changeProfilePhoto(context), icon: const Icon(Icons.photo_camera_outlined), label: const Text('Ambil foto')),
             ])),
             TF('Nama lengkap', n, validator: (v) => (v ?? '').trim().length < 3 ? 'Nama minimal 3 huruf' : null),
             TF('Alamat default (opsional)', a, lines: 2,

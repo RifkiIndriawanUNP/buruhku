@@ -5,5 +5,7 @@ export 'package:buruhku/ui/core/input_formatters.dart';
 export 'package:buruhku/ui/core/dialogs.dart';
 export 'package:buruhku/ui/core/widgets.dart';
 export 'package:buruhku/ui/core/fake_visuals.dart';
+export 'package:buruhku/ui/core/app_map.dart';
 export 'package:buruhku/ui/core/bottom_bar.dart';
 export 'package:buruhku/ui/core/store_context.dart';
+export 'package:buruhku/ui/core/photo_widgets.dart';

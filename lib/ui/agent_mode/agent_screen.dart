@@ -458,14 +458,9 @@ class _KycPageState extends State<KycPage> {
     holder.text = k.bankHolder;
   }
 
+  /// Verifikasi wajah demo: buka kamera depan, hasilnya palsu (selalu lolos).
   Future<void> _liveness(Kyc k) async {
-    for (final t in ['Hadap lurus ke kamera...', 'Kedipkan mata...', 'Toleh ke kanan...']) {
-      if (!mounted) return;
-      showDialog<void>(context: context, barrierDismissible: false, builder: (_) => AlertDialog(content: Row(children: [const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2)), const SizedBox(width: 14), Expanded(child: Text(t))])));
-      await Future.delayed(const Duration(milliseconds: 900));
-      if (mounted) Navigator.pop(context);
-    }
-    setState(() => k.selfie = true);
+    if (await runFaceDemo(context) && mounted) setState(() => k.selfie = true);
   }
 
   bool _next(AppState s) {
@@ -477,6 +472,7 @@ class _KycPageState extends State<KycPage> {
         final n = DateTime.now();
         final age = n.year - birth!.year - ((n.month < birth!.month || (n.month == birth!.month && n.day < birth!.day)) ? 1 : 0);
         if (age < 18) { toast(context, 'Usia minimal 18 tahun.'); return false; }
+        if (context.r.profilePhoto.isNotEmpty) k.photo = true;
         if (!k.photo) { toast(context, 'Ambil foto profil dulu.'); return false; }
         k.name = name.text.trim();
         k.nik = nik.text.trim();
@@ -518,7 +514,7 @@ class _KycPageState extends State<KycPage> {
           TF('Alamat sesuai domisili', addr, lines: 2, validator: (v) => (v ?? '').trim().isEmpty ? 'Wajib diisi' : null),
           TF('Nama kontak darurat', emN, validator: (v) => (v ?? '').trim().isEmpty ? 'Wajib diisi' : null),
           TF('No. HP kontak darurat', emP, type: TextInputType.phone, validator: (v) => (v ?? '').trim().length < 9 ? 'Nomor tidak valid' : null),
-          Row(children: [const Avatar(size: 48), const SizedBox(width: 12), Expanded(child: obtn(k.photo ? 'Foto profil siap' : 'Ambil foto profil', () => setState(() => k.photo = true), icon: k.photo ? Icons.check : Icons.photo_camera_outlined))]),
+          Row(children: [const MyAvatar(size: 48), const SizedBox(width: 12), Expanded(child: obtn(context.s.profilePhoto.isNotEmpty ? 'Ganti foto profil' : 'Ambil foto profil', () async { if (await changeProfilePhoto(context)) setState(() => k.photo = context.r.profilePhoto.isNotEmpty); }, icon: context.s.profilePhoto.isNotEmpty ? Icons.check : Icons.photo_camera_outlined))]),
         ]);
         break;
       case 1:
@@ -533,7 +529,7 @@ class _KycPageState extends State<KycPage> {
           const SizedBox(height: 8),
           const Center(child: Avatar(size: 96, icon: Icons.face_outlined)),
           const SizedBox(height: 8),
-          obtn(k.selfie ? 'Liveness lolos, kecocokan wajah 94%' : 'Mulai liveness (kedip + toleh)', () => _liveness(k), icon: k.selfie ? Icons.check : Icons.face_retouching_natural_outlined),
+          obtn(k.selfie ? 'Liveness lolos, kecocokan wajah 94%' : 'Mulai verifikasi wajah (kamera)', () => _liveness(k), icon: k.selfie ? Icons.check : Icons.face_retouching_natural_outlined),
           const SizedBox(height: 12),
           const Warn('Data KTP dan selfie dienkripsi serta hanya dipakai untuk verifikasi identitas.', icon: Icons.lock_outline),
         ]);

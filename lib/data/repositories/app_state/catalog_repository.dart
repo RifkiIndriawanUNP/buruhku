@@ -190,7 +190,7 @@ class CatalogRepository extends RepoBase {
     }
     d.addAll({
       'address': 'Jl. Kenanga No. ${1 + _rnd.nextInt(60)}, ${_pick(areas)}', 'sched': date ? 'date' : 'now',
-      'schedAt': date ? at.toIso8601String() : null, 'when': date ? fdt(at) : 'Sekarang', 'lat': 0.5, 'lng': 0.5,
+      'schedAt': date ? at.toIso8601String() : null, 'when': date ? fdt(at) : 'Sekarang', 'lat': Env.mapLat, 'lng': Env.mapLng,
       'status': 'pending', 'by': 'other',
     });
     c.msgs.add(Msg(id: nid('m'), from: 'other', type: 'order_offer', body: 'Penawaran order', data: d));
