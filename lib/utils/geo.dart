@@ -24,10 +24,12 @@ int _mix(String key) {
 
 /// Titik [km] dari pusat demo dengan arah yang selalu sama untuk [key] yang sama.
 /// Dipakai untuk posisi dummy agen dan request, jadi jarak di peta sama dengan jarak di kartu.
-LatLng pointAt(double km, String key) {
+final Map<String, LatLng> _pointCache = {};
+
+LatLng pointAt(double km, String key) => _pointCache.putIfAbsent('$key|$km', () {
   final bearing = _arcStart + (_mix(key) % 1000) / 1000 * _arcSpan;
   return _dist.offset(kMapCenter, km * 1000, bearing);
-}
+});
 
 double kmBetween(LatLng a, LatLng b) => _dist.distance(a, b) / 1000;
 
@@ -43,11 +45,12 @@ const Map<String, (double, double)> _areaSpots = {
   'Cibodas': (8.5, 120.0),
 };
 
+final Map<String, LatLng> _areaPoints = {
+  for (final e in _areaSpots.entries) e.key: _dist.offset(kMapCenter, e.value.$1 * 1000, e.value.$2),
+};
+
 /// Titik tengah kelurahan dummy (pusat demo jika namanya tidak dikenal).
-LatLng areaPoint(String area) {
-  final s = _areaSpots[area];
-  return s == null ? kMapCenter : _dist.offset(kMapCenter, s.$1 * 1000, s.$2);
-}
+LatLng areaPoint(String area) => _areaPoints[area] ?? kMapCenter;
 
 /// Nama kelurahan dummy terdekat dari [p].
 String nearestArea(LatLng p) {

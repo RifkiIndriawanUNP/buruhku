@@ -5,19 +5,30 @@ import 'package:buruhku/domain/models/models.dart';
 /// Menyiapkan isi Beranda: agen terdekat, terpopuler, jasa sekitar, dan lokasi aktif.
 class HomeViewModel extends ChangeNotifier {
   HomeViewModel({required AppState store}) : _store = store {
-    _store.addListener(notifyListeners);
+    _refresh();
+    _store.addListener(_onStoreChange);
   }
 
   final AppState _store;
+  late List<Agent> _nearbyAgents;
+  late List<Agent> _popularAgents;
+  late List<Svc> _nearbyServices;
 
-  List<Agent> get nearbyAgents => _store.searchAgents(sort: 'jarak').take(8).toList();
-
-  List<Agent> get popularAgents {
+  void _refresh() {
+    _nearbyAgents = _store.searchAgents(sort: 'jarak').take(8).toList();
     final l = [..._store.agents]..sort((a, b) => b.jobs.compareTo(a.jobs));
-    return l.take(8).toList();
+    _popularAgents = l.take(8).toList();
+    _nearbyServices = _store.svcsNear().take(8).toList();
   }
 
-  List<Svc> get nearbyServices => _store.svcsNear().take(8).toList();
+  void _onStoreChange() {
+    _refresh();
+    notifyListeners();
+  }
+
+  List<Agent> get nearbyAgents => _nearbyAgents;
+  List<Agent> get popularAgents => _popularAgents;
+  List<Svc> get nearbyServices => _nearbyServices;
 
   String get address => _store.address;
   int get unreadNotes => _store.unreadNotes;
@@ -28,7 +39,7 @@ class HomeViewModel extends ChangeNotifier {
 
   @override
   void dispose() {
-    _store.removeListener(notifyListeners);
+    _store.removeListener(_onStoreChange);
     super.dispose();
   }
 }

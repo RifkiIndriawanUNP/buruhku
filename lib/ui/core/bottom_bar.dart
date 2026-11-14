@@ -204,9 +204,10 @@ class _BottomBarState extends State<BottomBar> with TickerProviderStateMixin {
     final bottom = MediaQuery.of(context).padding.bottom;
     final bottomPad = bottom > 12 ? bottom - 6 : 14.0;
 
-    return Padding(
-      padding: EdgeInsets.fromLTRB(24, 10, 24, bottomPad),
-      child: LayoutBuilder(builder: (ctx, bc) {
+    return RepaintBoundary(
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(24, 10, 24, bottomPad),
+        child: LayoutBuilder(builder: (ctx, bc) {
         final full = bc.maxWidth;
         final n = widget.items.length;
         final compactW = min(full, _Geo.pad * 2 + n * _slotCompact);
@@ -376,53 +377,65 @@ class _BottomBarState extends State<BottomBar> with TickerProviderStateMixin {
           },
         );
       }),
-    );
+    ));
   }
 }
 
-/// Tekstur smoky halus (blob lembut + grain tipis) — statis, tidak di-repaint.
+/// Tekstur smoky halus (blob lembut + grain tipis) — statis, dioptimalkan untuk performa tinggi.
 class _SmokePainter extends CustomPainter {
+  static final List<({double nx, double ny, double nrad, bool isShade})> _blobs = () {
+    final r = Random(7);
+    return List.generate(16, (_) => (
+      nx: r.nextDouble(),
+      ny: r.nextDouble(),
+      nrad: 20 + r.nextDouble() * 70,
+      isShade: r.nextBool(),
+    ));
+  }();
+
+  static final List<Offset> _dots = () {
+    final r = Random(7);
+    return List.generate(100, (_) => Offset(r.nextDouble(), r.nextDouble()));
+  }();
+
+  static final Paint _dotPaint = Paint()..color = g900.withAlpha(8);
+  static final Paint _wispPaint = Paint()
+    ..style = PaintingStyle.stroke
+    ..strokeWidth = 18
+    ..strokeCap = StrokeCap.round
+    ..color = const Color(0xFF9C9C9C).withAlpha(10);
+
   @override
   void paint(Canvas canvas, Size size) {
     final rect = Offset.zero & size;
     canvas.save();
     canvas.clipRect(rect);
-    final r = Random(7);
 
     // blob lembut (asap)
-    for (var i = 0; i < 16; i++) {
-      final cx = r.nextDouble() * size.width;
-      final cy = r.nextDouble() * size.height;
-      final rad = 20 + r.nextDouble() * 70;
-      final shade = r.nextBool() ? const Color(0xFFB8B8B8) : cW;
+    for (final b in _blobs) {
+      final cx = b.nx * size.width;
+      final cy = b.ny * size.height;
+      final shade = b.isShade ? const Color(0xFFB8B8B8) : cW;
       final paint = Paint()
         ..shader = RadialGradient(
           colors: [shade.withAlpha(28), shade.withAlpha(0)],
           stops: const [0.0, 1.0],
-        ).createShader(Rect.fromCircle(center: Offset(cx, cy), radius: rad));
-      canvas.drawCircle(Offset(cx, cy), rad, paint);
+        ).createShader(Rect.fromCircle(center: Offset(cx, cy), radius: b.nrad));
+      canvas.drawCircle(Offset(cx, cy), b.nrad, paint);
     }
 
     // grain noise tipis
-    final dot = Paint()..color = g900.withAlpha(8);
-    for (var i = 0; i < 160; i++) {
-      final x = r.nextDouble() * size.width;
-      final y = r.nextDouble() * size.height;
-      canvas.drawCircle(Offset(x, y), 0.7, dot);
+    for (final d in _dots) {
+      canvas.drawCircle(Offset(d.dx * size.width, d.dy * size.height), 0.7, _dotPaint);
     }
 
     // garis asap memanjang halus
-    final wisp = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 18
-      ..strokeCap = StrokeCap.round
-      ..color = const Color(0xFF9C9C9C).withAlpha(10);
     final path = Path()..moveTo(-10, size.height * 0.55);
     for (var x = 0.0; x <= size.width + 10; x += 30) {
       final y = size.height * 0.55 + sin(x / 55) * 6;
       path.lineTo(x, y);
     }
-    canvas.drawPath(path, wisp);
+    canvas.drawPath(path, _wispPaint);
 
     canvas.restore();
   }

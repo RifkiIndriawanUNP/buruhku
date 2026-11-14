@@ -82,6 +82,17 @@ class AppMap extends StatefulWidget {
 
 class _AppMapState extends State<AppMap> {
   final _c = MapController();
+
+  // Dibuat SEKALI per peta. Kalau dibuat ulang di setiap build (sekali per detik saat pelacakan),
+  // flutter_map memproses ulang opsi dan lapisan tile sehingga terasa patah-patah.
+  MapOptions? _opts;
+  late final TileLayer _tiles = TileLayer(
+    urlTemplate: Env.tileUrl,
+    userAgentPackageName: Env.tileUserAgent,
+    keepBuffer: 1,
+    panBuffer: widget.interactive ? 1 : 0, // peta pratinjau tidak perlu memuat tile cadangan
+    tileUpdateTransformer: TileUpdateTransformers.throttle(const Duration(milliseconds: 80)),
+  );
   bool _ready = false;
   LatLng? _tapped;
 
@@ -135,7 +146,7 @@ class _AppMapState extends State<AppMap> {
     final map = Stack(children: [
       FlutterMap(
         mapController: _c,
-        options: MapOptions(
+        options: _opts ??= MapOptions(
           initialCenter: start,
           initialZoom: w.zoom ?? Env.mapZoom,
           initialCameraFit: fit ? _fit(pts) : null,
@@ -147,15 +158,15 @@ class _AppMapState extends State<AppMap> {
           onTap: (w.onPick == null && w.onBackgroundTap == null)
               ? null
               : (_, p) {
-                  if (w.onPick != null) {
+                  if (widget.onPick != null) {
                     _tapped = p;
-                    w.onPick!(p);
+                    widget.onPick!(p);
                   }
-                  w.onBackgroundTap?.call(p);
+                  widget.onBackgroundTap?.call(p);
                 },
         ),
         children: [
-          TileLayer(urlTemplate: Env.tileUrl, userAgentPackageName: Env.tileUserAgent),
+          _tiles,
           if (w.route.length >= 2) PolylineLayer(polylines: [Polyline(points: w.route, strokeWidth: 3, color: g500)]),
           if (w.circleCenter != null && w.radiusKm != null)
             CircleLayer(circles: [
@@ -184,7 +195,7 @@ class _AppMapState extends State<AppMap> {
       height: w.height,
       clipBehavior: w.framed ? Clip.antiAlias : Clip.none,
       decoration: w.framed ? BoxDecoration(border: Border.all(color: g300), borderRadius: BorderRadius.circular(8)) : null,
-      child: map,
+      child: RepaintBoundary(child: map),
     );
   }
 }
@@ -210,5 +221,43 @@ class _ZoomBtn extends StatelessWidget {
         elevation: 1,
         borderRadius: BorderRadius.circular(6),
         child: InkWell(borderRadius: BorderRadius.circular(6), onTap: onTap, child: SizedBox(width: 30, height: 30, child: Icon(icon, size: 18, color: g900))),
+      );
+}
+/// Pratinjau peta RINGAN untuk daftar dan chat: tanpa memuat tile dari internet.
+/// Peta sungguhan baru dibuka (satu saja) saat diketuk.
+class MapThumb extends StatelessWidget {
+  final LatLng pin;
+  final double height;
+  final String title;
+  const MapThumb({super.key, required this.pin, this.height = 90, this.title = 'Lokasi'});
+
+  @override
+  Widget build(BuildContext context) => InkWell(
+        borderRadius: BorderRadius.circular(8),
+        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => MapFullPage(pin: pin, title: title))),
+        child: Container(
+          height: height,
+          decoration: BoxDecoration(color: g100, border: Border.all(color: g300), borderRadius: BorderRadius.circular(8)),
+          child: const Center(
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+              Icon(Icons.location_on, size: 30, color: g900),
+              SizedBox(height: 2),
+              Text('Ketuk untuk lihat peta', style: TextStyle(fontSize: 11, color: g700)),
+            ]),
+          ),
+        ),
+      );
+}
+
+/// Halaman peta layar penuh untuk satu titik.
+class MapFullPage extends StatelessWidget {
+  final LatLng pin;
+  final String title;
+  const MapFullPage({super.key, required this.pin, this.title = 'Lokasi'});
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+        appBar: AppBar(title: Text(title)),
+        body: AppMap(height: double.infinity, framed: false, pin: pin, zoom: 15),
       );
 }

@@ -12,8 +12,8 @@ class Agent {
       required this.dist, required this.jobs, required this.level, required this.base,
       required this.verified, required this.online, required this.direct});
   /// Posisi perkiraan (data simulasi): `dist` km dari pusat demo, arah tetap per agen.
-  /// Saat memakai server, ganti dengan lat/lng dari API.
-  LatLng get pos => pointAt(dist, id);
+  /// Dihitung sekali saat pertama kali diakses agar tidak mengulang rumus trigonometri.
+  late final LatLng pos = pointAt(dist, id);
 
   String get short {
     final p = name.split(' ');

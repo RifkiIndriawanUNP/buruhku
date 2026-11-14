@@ -345,7 +345,7 @@ class _BubbleState extends State<_Bubble> {
         body = Column(crossAxisAlignment: CrossAxisAlignment.start, children: [TempPhoto(path: m.data['path'] as String?, w: 180, h: 130), const SizedBox(height: 4), Text(m.body)]);
         break;
       case 'location':
-        body = SizedBox(width: 200, child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [AppMap(height: 90, pin: kMapCenter, zoom: 15, interactive: false), const SizedBox(height: 4), Text(m.body, style: const TextStyle(fontSize: 12.5))]));
+        body = SizedBox(width: 200, child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [MapThumb(pin: kMapCenter, title: m.body), const SizedBox(height: 4), Text(m.body, style: const TextStyle(fontSize: 12.5))]));
         break;
       case 'offer':
         final pt = m.data['ptype'] as String;
