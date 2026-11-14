@@ -6,20 +6,24 @@ import 'package:buruhku/ui/account/account_screen.dart';
 import 'package:buruhku/ui/chat/chat_screen.dart';
 import 'package:buruhku/ui/service/service_screen.dart';
 
+/// Buka chat langsung dengan agen. [offer] true = tampilkan form penawaran order dulu
+/// (dipakai tombol "Order langsung" di profil agen dan di kartu agen).
+Future<void> startAgentChat(BuildContext context, Agent a, {bool offer = false}) async {
+  final s = context.r;
+  final ch = s.chatFor(type: 'direct', refId: '', otherId: a.id, otherName: a.short, otherAgent: true);
+  if (offer) {
+    final ok = await directOfferSheet(context, ch, a);
+    if (ok != true || !context.mounted) return;
+  }
+  if (!context.mounted) return;
+  Navigator.push(context, MaterialPageRoute(builder: (_) => ChatPage(ch.id)));
+}
+
 class AgentDetail extends StatelessWidget {
   final String id;
   const AgentDetail(this.id, {super.key});
 
-  Future<void> _chat(BuildContext context, Agent a, {bool offer = false}) async {
-    final s = context.r;
-    final ch = s.chatFor(type: 'direct', refId: '', otherId: a.id, otherName: a.short, otherAgent: true);
-    if (offer) {
-      final ok = await directOfferSheet(context, ch, a);
-      if (ok != true || !context.mounted) return;
-    }
-    if (!context.mounted) return;
-    Navigator.push(context, MaterialPageRoute(builder: (_) => ChatPage(ch.id)));
-  }
+  Future<void> _chat(BuildContext context, Agent a, {bool offer = false}) => startAgentChat(context, a, offer: offer);
 
   @override
   Widget build(BuildContext context) {

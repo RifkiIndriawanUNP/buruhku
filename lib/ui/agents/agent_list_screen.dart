@@ -57,7 +57,7 @@ class _AgentListPageState extends State<AgentListPage> {
                     SwitchListTile(contentPadding: EdgeInsets.zero, title: const Text('Hanya terverifikasi'), value: vm.verified, onChanged: (v) => vm.verified = v),
                     SwitchListTile(contentPadding: EdgeInsets.zero, title: const Text('Hanya yang online'), value: vm.online, onChanged: (v) => vm.online = v),
                     const Text('Urutkan'),
-                    Wrap(spacing: 8, children: [for (final e in {'relevansi': 'Relevansi', 'jarak': 'Terdekat', 'rating': 'Rating', 'harga': 'Termurah'}.entries) ChoiceChip(label: Text(e.value), selected: vm.sort == e.key, onSelected: (_) => vm.sort = e.key)]),
+                    Wrap(spacing: 8, children: [for (final e in {'relevansi': 'Relevansi', 'jarak': 'Terdekat', 'rating': 'Rating', 'populer': 'Terpopuler', 'harga': 'Termurah'}.entries) ChoiceChip(label: Text(e.value), selected: vm.sort == e.key, onSelected: (_) => vm.sort = e.key)]),
                     const SizedBox(height: 16),
                     full(pbtn('Terapkan', () => Navigator.pop(ctx))),
                   ]),
@@ -69,7 +69,17 @@ class _AgentListPageState extends State<AgentListPage> {
           ? AgentMapView(agents: l, radiusKm: vm.maxDist)
           : l.isEmpty
           ? const Empty(Icons.search_off, 'Tidak ada agen yang cocok. Longgarkan filter atau buat request agar agen yang menghubungimu.')
-          : ListView(padding: const EdgeInsets.fromLTRB(16, 16, 16, kBarSpace), children: [for (final a in l) AgentTile(a)]),
+          : GridView.builder(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, kBarSpace),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 14,
+                mainAxisExtent: AgentCard.gridExtent(context),
+              ),
+              itemCount: l.length,
+              itemBuilder: (_, i) => AgentCard(l[i]),
+            ),
       bottomNavigationBar: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(12),

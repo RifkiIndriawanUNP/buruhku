@@ -41,7 +41,7 @@ class _AgentMapViewState extends State<AgentMapView> {
         right: 12,
         bottom: 8,
         child: picked != null
-            ? Container(color: cW, child: AgentTile(picked))
+            ? AgentCard(picked, wide: true)
             : Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(color: cW, border: Border.all(color: g300), borderRadius: BorderRadius.circular(6)),

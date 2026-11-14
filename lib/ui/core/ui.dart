@@ -9,3 +9,5 @@ export 'package:buruhku/ui/core/app_map.dart';
 export 'package:buruhku/ui/core/bottom_bar.dart';
 export 'package:buruhku/ui/core/store_context.dart';
 export 'package:buruhku/ui/core/photo_widgets.dart';
+export 'package:buruhku/ui/core/cat_icon.dart';
+export 'package:buruhku/ui/core/card_parts.dart';

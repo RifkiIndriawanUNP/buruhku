@@ -10,75 +10,91 @@ import 'package:buruhku/ui/location/location_screen.dart';
 String svcPrice(Svc v) => '${rp(v.price)}${unitOf(v.ptype)}';
 
 // ---------------------------------------------------------------- kartu & baris
+/// Kartu tawaran jasa.
+/// [width] diisi = mode carousel (dipakai di daftar horizontal Beranda; induknya harus
+/// membungkus dengan IntrinsicHeight + stretch supaya tinggi kartu seragam).
+/// [width] kosong = mengisi lebar induk, dipakai di ListView vertikal.
 class ServiceCard extends StatelessWidget {
   final Svc svc;
-  const ServiceCard(this.svc, {super.key});
+  final double? width;
+  const ServiceCard(this.svc, {this.width, super.key});
+
   @override
   Widget build(BuildContext context) {
     final s = context.s;
     final a = s.agentById(svc.agentId);
-    return SizedBox(
-      width: 176,
-      child: Box(
-        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ServiceDetailPage(svc.id))),
+    final c = catOf(svc.cat);
+    final fav = s.favSvc.contains(svc.id);
+    final carousel = width != null;
+    final unit = unitOf(svc.ptype);
+    final card = MediaQuery.withClampedTextScaling(
+      maxScaleFactor: 1.25,
+      child: SoftCard(
+        radius: 22,
         padding: const EdgeInsets.all(10),
+        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ServiceDetailPage(svc.id))),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Row(children: [
-            Icon(catOf(svc.cat).icon, size: 20),
-            const Spacer(),
-            GestureDetector(
-              onTap: () => context.r.toggleFavSvc(svc.id),
-              child: Icon(s.favSvc.contains(svc.id) ? Icons.favorite : Icons.favorite_border, size: 20),
+          Stack(children: [
+            PhotoPlaceholder(height: carousel ? 92 : 128, radius: 14),
+            Positioned(
+              top: 6,
+              right: 6,
+              child: RoundBtn(
+                size: 32,
+                onTap: () => context.r.toggleFavSvc(svc.id),
+                child: Icon(fav ? Icons.favorite : Icons.favorite_border, size: 18, color: Colors.red),
+              ),
             ),
           ]),
+          const SizedBox(height: 8),
+          Text(svc.title, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 15.5, fontWeight: FontWeight.w800, height: 1.2, color: g900)),
           const SizedBox(height: 6),
-          Text(svc.title, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5)),
-          const SizedBox(height: 2),
-          Text('${a.short}  |  ${s.ratingOf(a).toStringAsFixed(1)}', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 11.5, color: g500)),
-          const Spacer(),
-          Text(svcPrice(svc), style: const TextStyle(fontWeight: FontWeight.w800)),
-          Text('~${a.dist.toStringAsFixed(1)} km', style: const TextStyle(fontSize: 11, color: g500)),
+          Wrap(spacing: 4, runSpacing: 4, children: [
+            CatTag(c.name, c.color),
+            CatTag(ptypes[svc.ptype] ?? '', kPeach),
+          ]),
+          const SizedBox(height: 8),
+          Row(children: [
+            const AvatarPh(26),
+            const SizedBox(width: 8),
+            Flexible(child: Text(a.short, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: g900))),
+            if (a.verified) ...[const SizedBox(width: 4), const VerifiedBadge(size: 15)],
+            if (!a.online) ...[const SizedBox(width: 6), const Text('Offline', style: TextStyle(fontSize: 10, color: g500))],
+          ]),
+          const SizedBox(height: 6),
+          Row(children: [
+            const Icon(Icons.star, size: 12, color: kNavy),
+            const SizedBox(width: 3),
+            Text('${s.ratingOf(a).toStringAsFixed(1)} (${a.jobs})', style: const TextStyle(fontSize: 10.5, color: g700)),
+            Container(width: 1, height: 10, margin: const EdgeInsets.symmetric(horizontal: 6), color: g300),
+            Flexible(child: Text('~${a.dist.toStringAsFixed(1)} KM', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 10.5, color: g700))),
+          ]),
+          if (carousel) const Spacer() else const SizedBox(height: 4),
+          const SizedBox(height: 8),
+          Align(
+            alignment: Alignment.centerRight,
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text.rich(TextSpan(
+                text: rpSp(svc.price),
+                style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w800, color: g900),
+                children: [if (unit.isNotEmpty) TextSpan(text: unit, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: g500))],
+              )),
+            ),
+          ),
         ]),
       ),
     );
+    return carousel ? SizedBox(width: width, child: card) : card;
   }
 }
 
+/// Dipakai di semua ListView vertikal (daftar jasa, pencarian, favorit, profil agen).
 class ServiceTile extends StatelessWidget {
   final Svc svc;
   const ServiceTile(this.svc, {super.key});
   @override
-  Widget build(BuildContext context) {
-    final s = context.s;
-    final a = s.agentById(svc.agentId);
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: Box(
-        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ServiceDetailPage(svc.id))),
-        child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Icon(catOf(svc.cat).icon, size: 30),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(svc.title, style: const TextStyle(fontWeight: FontWeight.w700)),
-              const SizedBox(height: 2),
-              Text('${a.short}  |  ${s.ratingOf(a).toStringAsFixed(1)}  |  ~${a.dist.toStringAsFixed(1)} km${a.online ? '' : '  |  Offline'}', style: const TextStyle(fontSize: 12, color: g500)),
-              const SizedBox(height: 6),
-              Wrap(spacing: 6, runSpacing: 4, children: [Tag(catOf(svc.cat).name), Tag(ptypes[svc.ptype] ?? '')]),
-            ]),
-          ),
-          Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-            Text(svcPrice(svc), style: const TextStyle(fontWeight: FontWeight.w800)),
-            IconButton(
-              visualDensity: VisualDensity.compact,
-              onPressed: () => context.r.toggleFavSvc(svc.id),
-              icon: Icon(s.favSvc.contains(svc.id) ? Icons.favorite : Icons.favorite_border),
-            ),
-          ]),
-        ]),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => Padding(padding: const EdgeInsets.only(bottom: 14), child: ServiceCard(svc));
 }
 
 // ---------------------------------------------------------------- daftar tawaran jasa (klien)

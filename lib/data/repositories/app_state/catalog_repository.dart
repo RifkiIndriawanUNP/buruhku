@@ -73,6 +73,8 @@ class CatalogRepository extends RepoBase {
       l.sort((a, b) => ratingOf(b).compareTo(ratingOf(a)));
     } else if (sort == 'harga') {
       l.sort((a, b) => a.base.compareTo(b.base));
+    } else if (sort == 'populer') {
+      l.sort((a, b) => b.jobs.compareTo(a.jobs));
     } else {
       l.sort((a, b) => score(b).compareTo(score(a)));
     }
