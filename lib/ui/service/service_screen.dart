@@ -114,7 +114,7 @@ class _ServiceListPageState extends State<ServiceListPage> {
     final s = context.s;
     final l = s.svcsNear(cat: cat, sort: sort);
     return Scaffold(
-      appBar: AppBar(title: Text(widget.title), actions: [
+      appBar: PageBar(title: Text(widget.title), actions: [
         PopupMenuButton<String>(
           icon: const Icon(Icons.sort),
           tooltip: 'Urutkan',
@@ -132,7 +132,7 @@ class _ServiceListPageState extends State<ServiceListPage> {
             for (final c in cats)
               Padding(
                 padding: const EdgeInsets.only(right: 8),
-                child: ChoiceChip(avatar: Icon(c.icon, size: 16), label: Text(c.name), selected: cat == c.id, onSelected: (_) => setState(() => cat = c.id)),
+                child: ChoiceChip(avatar: CatIcon(c, size: 22), label: Text(c.name), selected: cat == c.id, onSelected: (_) => setState(() => cat = c.id)),
               ),
           ]),
         ),
@@ -154,11 +154,11 @@ class ServiceDetailPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = context.s;
     final v = s.svcById(id);
-    if (v == null) return Scaffold(appBar: AppBar(), body: const Empty(Icons.error_outline, 'Tawaran jasa tidak ditemukan.'));
+    if (v == null) return Scaffold(appBar: PageBar(), body: const Empty(Icons.error_outline, 'Tawaran jasa tidak ditemukan.'));
     final a = s.agentById(v.agentId);
     final others = s.svcsOfAgent(a.id).where((x) => x.id != v.id).toList();
     return Scaffold(
-      appBar: AppBar(title: const Text('Tawaran jasa'), actions: [
+      appBar: PageBar(title: const Text('Tawaran jasa'), actions: [
         IconButton(onPressed: () => s.toggleFavSvc(v.id), icon: Icon(s.favSvc.contains(v.id) ? Icons.favorite : Icons.favorite_border)),
       ]),
       body: ListView(padding: const EdgeInsets.all(16), children: [
@@ -176,12 +176,12 @@ class ServiceDetailPage extends StatelessWidget {
           const SizedBox(height: 14),
         ],
         Row(children: [
-          Icon(catOf(v.cat).icon, size: 32),
+          CatIcon(catOf(v.cat), size: 46),
           const SizedBox(width: 12),
           Expanded(child: Text(v.title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800))),
         ]),
         const SizedBox(height: 10),
-        Wrap(spacing: 6, runSpacing: 6, children: [Tag(catOf(v.cat).name), Tag(ptypes[v.ptype] ?? ''), if (v.dur > 0) Tag('Estimasi ${v.dur % 1 == 0 ? v.dur.toInt() : v.dur} ${v.ptype == 'hourly' ? 'jam' : 'hari'}', icon: Icons.schedule)]),
+        Wrap(spacing: 6, runSpacing: 6, children: [CatTag(catOf(v.cat).name, catOf(v.cat).color), CatTag(ptypes[v.ptype] ?? '', kPeach), if (v.dur > 0) Tag('Estimasi ${v.dur % 1 == 0 ? v.dur.toInt() : v.dur} ${v.ptype == 'hourly' ? 'jam' : 'hari'}', icon: Icons.schedule)]),
         const SizedBox(height: 14),
         Box(color: g100, child: Row(children: [
           const Expanded(child: Text('Harga dari agen', style: TextStyle(color: g500))),
@@ -359,14 +359,14 @@ class MyServicesPage extends StatelessWidget {
     final ok = s.kyc.status == 'approved';
     final l = s.mySvcs;
     return Scaffold(
-      appBar: AppBar(title: const Text('Tawaran jasa saya')),
+      appBar: PageBar(title: const Text('Tawaran jasa saya')),
       body: !ok
           ? const Empty(Icons.how_to_reg_outlined, 'Daftar dan verifikasi sebagai agen dulu untuk membuat tawaran jasa.')
           : l.isEmpty
               ? Empty(Icons.storefront_outlined, 'Belum ada tawaran jasa. Buat tawaran dengan harga yang kamu tentukan, klien tinggal memesan.',
                   action: pbtn('Tambah penawaran jasa', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ServiceEditPage())), icon: Icons.add))
               : ListView(padding: const EdgeInsets.all(16), children: [
-                  const Warn('Tawaran aktif tampil di Beranda klien sekitar dan bisa langsung dipesan. Pesanan masuk ke Order langsung di Home kamu.', icon: Icons.storefront_outlined),
+                  const Warn('Tawaran aktif tampil di Beranda klien sekitar dan bisa langsung dipesan. Pesanan masuk ke Order langsung di Home kamu.', icon: Icons.storefront),
                   const SizedBox(height: 12),
                   for (final v in l)
                     Padding(
@@ -374,7 +374,7 @@ class MyServicesPage extends StatelessWidget {
                       child: Box(
                         onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ServiceEditPage(svc: v))),
                         child: Row(children: [
-                          Icon(catOf(v.cat).icon, size: 28),
+                          CatIcon(catOf(v.cat), size: 41),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -481,7 +481,7 @@ class _ServiceEditPageState extends State<ServiceEditPage> {
     final rec = recRange(cat, ptype);
     final sug = catSuggest[cat] ?? templates;
     return Scaffold(
-      appBar: AppBar(title: Text(widget.svc == null ? 'Tambah penawaran jasa' : 'Ubah tawaran jasa')),
+      appBar: PageBar(title: Text(widget.svc == null ? 'Tambah penawaran jasa' : 'Ubah tawaran jasa')),
       body: Form(
         key: key,
         child: ListView(padding: const EdgeInsets.all(16), children: [

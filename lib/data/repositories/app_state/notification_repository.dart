@@ -16,8 +16,8 @@ class NotificationRepository extends RepoBase {
   String nid(String p) => hub.nid(p);
 
   // ================= notifikasi =================
-  void notify(String t, String b) {
-    final n = Note(id: nid('N'), title: t, body: b);
+  void notify(String t, String b, {String? refType, String? refId}) {
+    final n = Note(id: nid('N'), title: t, body: b, refType: refType, refId: refId);
     notes.insert(0, n);
     toastNote = n;
   }

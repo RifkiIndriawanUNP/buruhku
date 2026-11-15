@@ -35,7 +35,7 @@ class _AgentListPageState extends State<AgentListPage> {
   Widget _content(BuildContext context) {
     final l = vm.agents;
     return Scaffold(
-      appBar: AppBar(title: Text(widget.title), actions: [
+      appBar: PageBar(title: Text(widget.title), actions: [
         IconButton(
           tooltip: _map ? 'Tampilkan daftar' : 'Tampilkan peta',
           icon: Icon(_map ? Icons.view_list_outlined : Icons.map_outlined),

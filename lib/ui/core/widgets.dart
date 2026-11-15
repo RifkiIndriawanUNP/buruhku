@@ -9,25 +9,17 @@ class Box extends StatelessWidget {
   final EdgeInsets padding;
   final Color? color, border;
   final double radius;
-  const Box({required this.child, this.onTap, this.padding = const EdgeInsets.all(12), this.color, this.border, this.radius = 8});
+  const Box({required this.child, this.onTap, this.padding = const EdgeInsets.all(14), this.color, this.border, this.radius = 20});
   @override
-  Widget build(BuildContext context) => Material(
-      color: color ?? cW,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(radius), side: BorderSide(color: border ?? g300)),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(onTap: onTap, child: Padding(padding: padding, child: child)));
-}
-
-class _Cross extends CustomPainter {
-  @override
-  void paint(Canvas c, Size s) {
-    final p = Paint()..color = g300..strokeWidth = 1;
-    c.drawLine(Offset.zero, Offset(s.width, s.height), p);
-    c.drawLine(Offset(s.width, 0), Offset(0, s.height), p);
+  Widget build(BuildContext context) {
+    // Kotak abu-abu lama (g50/g100) diganti putih supaya terbaca di atas latar abu-abu halaman.
+    final fill = (color == null || color == g100 || color == g50) ? cW : color!;
+    return Material(
+        color: fill,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(radius), side: border == null ? BorderSide.none : BorderSide(color: border!)),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(onTap: onTap, child: Padding(padding: padding, child: child)));
   }
-
-  @override
-  bool shouldRepaint(_) => false;
 }
 
 class Ph extends StatelessWidget {
@@ -35,54 +27,34 @@ class Ph extends StatelessWidget {
   final IconData icon;
   final double radius;
   final String? imageUrl;
-  const Ph({this.w, this.h, this.icon = Icons.image_outlined, this.radius = 6, this.imageUrl});
+  const Ph({this.w, this.h, this.icon = Icons.image_outlined, this.radius = 14, this.imageUrl});
   @override
   Widget build(BuildContext context) {
     if (imageUrl != null && imageUrl!.isNotEmpty) {
       return ClipRRect(
         borderRadius: BorderRadius.circular(radius),
-        child: Image.network(
-          imageUrl!,
-          width: w,
-          height: h,
-          fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => _fallback(),
-        ),
+        child: Image.network(imageUrl!, width: w, height: h, fit: BoxFit.cover, errorBuilder: (_, __, ___) => _fallback()),
       );
     }
     return _fallback();
   }
 
   Widget _fallback() => Container(
-      width: w, height: h, clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(color: g100, border: Border.all(color: g300), borderRadius: BorderRadius.circular(radius)),
-      child: Stack(alignment: Alignment.center, children: [
-        Positioned.fill(child: CustomPaint(painter: _Cross())),
-        Container(color: g100, padding: const EdgeInsets.all(2), child: Icon(icon, color: g500)),
-      ]));
+      width: w, height: h, alignment: Alignment.center,
+      decoration: BoxDecoration(color: const Color(0xFFE4E5E9), borderRadius: BorderRadius.circular(radius)),
+      child: Icon(icon, color: const Color(0xFFB4B6BE)));
 }
 
 class Avatar extends StatelessWidget {
   final double size;
   final IconData icon;
   final String? imageUrl;
-  const Avatar({this.size = 44, this.icon = Icons.person_outline, this.imageUrl});
+  const Avatar({this.size = 44, this.icon = Icons.person, this.imageUrl});
   @override
   Widget build(BuildContext context) {
     if (imageUrl != null && imageUrl!.isNotEmpty) {
-      return Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: g400)),
-        child: ClipOval(
-          child: Image.network(
-            imageUrl!,
-            width: size,
-            height: size,
-            fit: BoxFit.cover,
-            errorBuilder: (_, __, ___) => _fallback(),
-          ),
-        ),
+      return ClipOval(
+        child: Image.network(imageUrl!, width: size, height: size, fit: BoxFit.cover, errorBuilder: (_, __, ___) => _fallback()),
       );
     }
     return _fallback();
@@ -90,8 +62,8 @@ class Avatar extends StatelessWidget {
 
   Widget _fallback() => Container(
       width: size, height: size,
-      decoration: BoxDecoration(shape: BoxShape.circle, color: g200, border: Border.all(color: g400)),
-      child: Icon(icon, size: size * .55, color: g700));
+      decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0xFFDADADA)),
+      child: Icon(icon, size: size * .55, color: const Color(0xFFAEB0B8)));
 }
 
 class Tag extends StatelessWidget {
@@ -101,11 +73,11 @@ class Tag extends StatelessWidget {
   const Tag(this.text, {this.icon, this.filled = false});
   @override
   Widget build(BuildContext context) => Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-      decoration: BoxDecoration(color: filled ? g900 : cW, border: Border.all(color: filled ? g900 : g400), borderRadius: BorderRadius.circular(4)),
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+      decoration: BoxDecoration(color: filled ? kGreen : const Color(0xFFEDEEF2), borderRadius: BorderRadius.circular(12)),
       child: Row(mainAxisSize: MainAxisSize.min, children: [
-        if (icon != null) Padding(padding: const EdgeInsets.only(right: 3), child: Icon(icon, size: 12, color: filled ? cW : g700)),
-        Text(text, style: TextStyle(fontSize: 11, color: filled ? cW : g700)),
+        if (icon != null) Padding(padding: const EdgeInsets.only(right: 4), child: Icon(icon, size: 13, color: filled ? cW : g700)),
+        Flexible(child: Text(text, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: filled ? cW : g700))),
       ]));
 }
 
@@ -116,7 +88,7 @@ class Stars extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Row(mainAxisSize: MainAxisSize.min, children: [
         for (var i = 1; i <= 5; i++)
-          Icon(r >= i - 0.25 ? Icons.star : (r >= i - 0.75 ? Icons.star_half : Icons.star_border), size: size, color: g700),
+          Icon(r >= i - 0.25 ? Icons.star : (r >= i - 0.75 ? Icons.star_half : Icons.star_border), size: size, color: const Color(0xFF1A2B5F)),
       ]);
 }
 
@@ -127,7 +99,7 @@ class StarPicker extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Row(mainAxisAlignment: MainAxisAlignment.center, children: [
         for (var i = 1; i <= 5; i++)
-          IconButton(iconSize: 36, onPressed: () => onChanged(i), icon: Icon(i <= value ? Icons.star : Icons.star_border, color: g900)),
+          IconButton(iconSize: 36, onPressed: () => onChanged(i), icon: Icon(i <= value ? Icons.star : Icons.star_border, color: const Color(0xFF1A2B5F))),
       ]);
 }
 
@@ -138,10 +110,10 @@ class Section extends StatelessWidget {
   const Section(this.title, {this.action, this.onAction});
   @override
   Widget build(BuildContext context) => Padding(
-      padding: const EdgeInsets.fromLTRB(0, 18, 0, 8),
+      padding: const EdgeInsets.fromLTRB(4, 20, 4, 10),
       child: Row(children: [
-        Expanded(child: Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700))),
-        if (action != null) TextButton(onPressed: onAction, child: Text(action!)),
+        Expanded(child: Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, height: 1.2, color: g900))),
+        if (action != null) TextButton(onPressed: onAction, style: TextButton.styleFrom(foregroundColor: kGreen), child: Text(action!, style: const TextStyle(fontWeight: FontWeight.w700))),
       ]));
 }
 
@@ -168,9 +140,9 @@ class Empty extends StatelessWidget {
       child: Padding(
           padding: const EdgeInsets.all(32),
           child: Column(mainAxisSize: MainAxisSize.min, children: [
-            Icon(icon, size: 56, color: g300),
-            const SizedBox(height: 12),
-            Text(text, textAlign: TextAlign.center, style: const TextStyle(color: g500)),
+            Container(width: 84, height: 84, decoration: const BoxDecoration(color: cW, shape: BoxShape.circle), child: Icon(icon, size: 40, color: g300)),
+            const SizedBox(height: 14),
+            Text(text, textAlign: TextAlign.center, style: const TextStyle(color: g500, height: 1.4)),
             if (action != null) ...[const SizedBox(height: 16), action!],
           ])));
 }
@@ -178,15 +150,15 @@ class Empty extends StatelessWidget {
 class Warn extends StatelessWidget {
   final String text;
   final IconData icon;
-  const Warn(this.text, {this.icon = Icons.warning_amber_outlined});
+  const Warn(this.text, {this.icon = Icons.warning_amber_rounded});
   @override
   Widget build(BuildContext context) => Container(
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(color: g100, border: Border.all(color: g400), borderRadius: BorderRadius.circular(6)),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(color: const Color(0xFFFFF4E0), borderRadius: BorderRadius.circular(16)),
       child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Icon(icon, size: 18, color: g700),
-        const SizedBox(width: 8),
-        Expanded(child: Text(text, style: const TextStyle(fontSize: 12.5, color: g700))),
+        Icon(icon, size: 20, color: const Color(0xFFF08A00)),
+        const SizedBox(width: 10),
+        Expanded(child: Text(text, style: const TextStyle(fontSize: 12.5, height: 1.35, color: g700))),
       ]));
 }
 
@@ -232,9 +204,9 @@ class Seg extends StatelessWidget {
                   onTap: () => onChanged(e.key),
                   child: Container(
                       alignment: Alignment.center, padding: const EdgeInsets.symmetric(vertical: 11),
-                      margin: const EdgeInsets.only(right: 6),
-                      decoration: BoxDecoration(color: e.key == value ? g900 : cW, border: Border.all(color: e.key == value ? g900 : g300), borderRadius: BorderRadius.circular(6)),
-                      child: Text(e.value, style: TextStyle(fontSize: 13, color: e.key == value ? cW : g900, fontWeight: FontWeight.w600))))),
+                      margin: const EdgeInsets.only(right: 8),
+                      decoration: BoxDecoration(color: e.key == value ? kGreen : cW, border: Border.all(color: e.key == value ? kGreen : kLine), borderRadius: BorderRadius.circular(24)),
+                      child: Text(e.value, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 13, color: e.key == value ? cW : g900, fontWeight: FontWeight.w700))))),
       ]);
 }
 

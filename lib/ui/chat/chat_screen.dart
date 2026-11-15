@@ -45,47 +45,147 @@ class ChatsTab extends StatefulWidget {
 
 class _ChatsTabState extends State<ChatsTab> {
   String seg = 'all';
+  bool searching = false;
+  final q = TextEditingController();
+
+  @override
+  void dispose() {
+    q.dispose();
+    super.dispose();
+  }
+
+  String _date(DateTime d) {
+    final n = DateTime.now();
+    if (d.year == n.year && d.month == n.month && d.day == n.day) return ftime(d);
+    return '${two(d.day)}.${two(d.month)}.${two(d.year % 100)}';
+  }
+
   @override
   Widget build(BuildContext context) {
     final s = context.s;
-    final l = s.chats.where((c) => c.otherAgent == !s.agentMode && (seg == 'all' || c.type == seg)).toList()
+    final kw = q.text.trim().toLowerCase();
+    final l = s.chats
+        .where((c) => c.otherAgent == !s.agentMode && (seg == 'all' || c.type == seg))
+        .where((c) => kw.isEmpty || c.otherName.toLowerCase().contains(kw) || c.title.toLowerCase().contains(kw))
+        .toList()
       ..sort((a, b) => (b.msgs.isEmpty ? DateTime(2000) : b.msgs.last.at).compareTo(a.msgs.isEmpty ? DateTime(2000) : a.msgs.last.at));
-    return Column(children: [
-      Padding(
-        padding: const EdgeInsets.fromLTRB(16, 16, 10, 8),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const Text('Pesan', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
-          const SizedBox(height: 10),
-          Seg(const {'all': 'Semua', 'order': 'Order', 'direct': 'Langsung'}, seg, (v) => setState(() => seg = v)),
+    const none = OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(28)), borderSide: BorderSide.none);
+
+    return MediaQuery.withClampedTextScaling(
+      maxScaleFactor: 1.25,
+      child: Column(children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+          child: Row(children: [
+            const Expanded(child: Text('Pesan', style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800, height: 1.2, color: g900))),
+            RoundBtn(
+              size: 52,
+              onTap: () => setState(() {
+                searching = !searching;
+                if (!searching) q.clear();
+              }),
+              child: Icon(searching ? Icons.close : Icons.search, size: 26, color: g900),
+            ),
+          ]),
+        ),
+        if (searching)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+            child: TextField(
+              controller: q,
+              autofocus: true,
+              onChanged: (_) => setState(() {}),
+              decoration: const InputDecoration(
+                filled: true,
+                fillColor: Color(0xFFF1F1F3),
+                prefixIcon: Icon(Icons.search, color: g900),
+                hintText: 'Cari nama atau judul pekerjaan',
+                hintStyle: TextStyle(fontSize: 14.5, color: g500),
+                border: none,
+                enabledBorder: none,
+                focusedBorder: none,
+                contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+              ),
+            ),
+          ),
+        const SizedBox(height: 16),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Row(children: [
+            FilterPill('Semua', selected: seg == 'all', onTap: () => setState(() => seg = 'all')),
+            const SizedBox(width: 8),
+            FilterPill('Order', selected: seg == 'order', onTap: () => setState(() => seg = 'order')),
+            const SizedBox(width: 8),
+            FilterPill('Pesan Langsung', selected: seg == 'direct', onTap: () => setState(() => seg = 'direct')),
+          ]),
+        )),
+        const SizedBox(height: 16),
+        Expanded(
+          child: l.isEmpty
+              ? Empty(Icons.chat_bubble_outline, kw.isNotEmpty ? 'Tidak ada percakapan yang cocok.' : seg == 'direct' ? 'Chat langsung dimulai dari profil agen.' : seg == 'order' ? 'Chat negosiasi muncul saat ada agen yang ACC requestmu.' : 'Belum ada percakapan.')
+              : ListView(padding: const EdgeInsets.fromLTRB(20, 4, 20, kBarSpace), children: [
+                  SoftCard(radius: 28, padding: const EdgeInsets.fromLTRB(16, 8, 16, 8), child: Column(children: [for (final c in l) _row(context, c)])),
+                ]),
+        ),
+      ]),
+    );
+  }
+
+  Widget _row(BuildContext context, Chat c) {
+    final last = c.msgs.isEmpty ? null : c.msgs.last;
+    final preview = last == null ? 'Belum ada pesan' : _preview(last);
+    final text = c.type == 'order' && c.title.isNotEmpty ? '${c.title} \u2022 $preview' : preview;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ChatPage(c.id))),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 9),
+        child: Row(children: [
+          InitialAvatar(c.otherName, size: 52),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+              Row(children: [
+                Flexible(child: Text(c.otherName, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, height: 1.25, color: g900))),
+                const SizedBox(width: 6),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                  decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), border: Border.all(color: const Color(0xFFD0D1D6))),
+                  child: Text(c.type == 'order' ? 'Order' : 'Langsung', style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w600, height: 1.2, color: g700)),
+                ),
+              ]),
+              const SizedBox(height: 2),
+              Text(text, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 14, height: 1.3, color: g500)),
+            ]),
+          ),
+          const SizedBox(width: 8),
+          Column(crossAxisAlignment: CrossAxisAlignment.end, mainAxisSize: MainAxisSize.min, children: [
+            if (last != null)
+              Row(mainAxisSize: MainAxisSize.min, children: [
+                if (last.from == 'me') ...[const Icon(Icons.done_all, size: 16, color: kGreen), const SizedBox(width: 4)],
+                Text(_date(last.at), style: const TextStyle(fontSize: 12.5, height: 1.2, color: g500)),
+              ]),
+            if (c.unread > 0) ...[
+              const SizedBox(height: 4),
+              Container(
+                constraints: const BoxConstraints(minWidth: 20),
+                height: 20,
+                padding: const EdgeInsets.symmetric(horizontal: 6),
+                alignment: Alignment.center,
+                decoration: BoxDecoration(color: kGreen, borderRadius: BorderRadius.circular(10)),
+                child: Text('${c.unread}', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.white, height: 1.1)),
+              ),
+            ] else if (c.closed) ...[
+              const SizedBox(height: 4),
+              const Icon(Icons.lock_outline, size: 14, color: g500),
+            ],
+          ]),
         ]),
       ),
-      Expanded(
-        child: l.isEmpty
-            ? Empty(Icons.chat_bubble_outline, seg == 'direct' ? 'Chat langsung dimulai dari profil agen.' : seg == 'order' ? 'Chat negosiasi muncul saat ada agen yang ACC requestmu.' : 'Belum ada percakapan.')
-            : ListView.separated(
-                itemCount: l.length, separatorBuilder: (_, __) => const Divider(),
-                itemBuilder: (_, i) {
-                  final c = l[i];
-                  final last = c.msgs.isEmpty ? null : c.msgs.last;
-                  return ListTile(
-                    leading: Avatar(imageUrl: c.otherAgent ? s.agentById(c.otherId).avatarUrl : null),
-                    title: Row(children: [
-                      Flexible(child: Text(c.otherName, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w700))),
-                      if (seg == 'all') ...[const SizedBox(width: 6), Tag(c.type == 'order' ? 'Order' : 'Langsung')],
-                    ]),
-                    subtitle: Text('${c.title.isEmpty ? '' : '${c.title}\n'}${last == null ? 'Belum ada pesan' : _preview(last)}', maxLines: 2, overflow: TextOverflow.ellipsis),
-                    isThreeLine: c.title.isNotEmpty,
-                    trailing: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.end, children: [
-                      if (last != null) Text(ftime(last.at), style: const TextStyle(fontSize: 11, color: g500)),
-                      const SizedBox(height: 4),
-                      if (c.unread > 0) Badge(label: Text('${c.unread}'), backgroundColor: g900) else if (c.closed) const Icon(Icons.lock_outline, size: 14, color: g500),
-                    ]),
-                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ChatPage(c.id))),
-                  );
-                },
-              ),
-      ),
-    ]);
+    );
   }
 }
 
@@ -200,7 +300,7 @@ class _ChatPageState extends State<ChatPage> {
   Widget build(BuildContext context) {
     final s = context.s;
     final c = s.chatById(widget.id);
-    if (c == null) return Scaffold(appBar: AppBar(), body: const Empty(Icons.error_outline, 'Chat tidak ditemukan.'));
+    if (c == null) return Scaffold(appBar: PageBar(), body: const Empty(Icons.error_outline, 'Chat tidak ditemukan.'));
     if (c.unread > 0) WidgetsBinding.instance.addPostFrameCallback((_) => store.markRead(c));
     if (c.msgs.length != last) {
       last = c.msgs.length;
@@ -213,8 +313,7 @@ class _ChatPageState extends State<ChatPage> {
     final pa = _pickable(c, pr);
     final blocked = s.blocked.contains(c.otherId);
     return Scaffold(
-      appBar: AppBar(
-        titleSpacing: 0,
+      appBar: PageBar(
         title: Row(children: [
           Avatar(size: 36, imageUrl: c.otherAgent ? s.agentById(c.otherId).avatarUrl : null),
           const SizedBox(width: 10),

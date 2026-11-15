@@ -195,7 +195,7 @@ class _PlaceEditPageState extends State<PlaceEditPage> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: Text(widget.place == null ? 'Tambah lokasi' : 'Ubah lokasi')),
+        appBar: PageBar(title: Text(widget.place == null ? 'Tambah lokasi' : 'Ubah lokasi')),
         body: Form(
           key: key,
           child: ListView(padding: const EdgeInsets.all(16), children: [

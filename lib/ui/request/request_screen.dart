@@ -21,7 +21,7 @@ class MyRequestsTab extends StatelessWidget {
             padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
             child: Align(alignment: Alignment.centerLeft, child: Text('Request & favorit', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800))),
           ),
-          const TabBar(tabs: [Tab(text: 'Request'), Tab(text: 'Agen favorit'), Tab(text: 'Jasa favorit')]),
+          PillTabBar(const ['Request', 'Agen favorit', 'Jasa favorit']),
           const Expanded(child: TabBarView(children: [_RequestList(), FavAgentsView(), FavServicesView()])),
         ]),
       );
@@ -58,7 +58,7 @@ class _RequestList extends StatelessWidget {
           child: Box(
             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ReqDetailPage(r.id))),
             child: Row(children: [
-              Icon(catOf(r.cat).icon, size: 28),
+              CatIcon(catOf(r.cat), size: 41),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -226,7 +226,7 @@ class _RequestFormPageState extends State<RequestFormPage> {
     final rec = recRange(cat, ptype);
     final total = totalOf(ptype, p, d);
     return Scaffold(
-      appBar: AppBar(title: Text(widget.edit == null ? 'Buat request' : 'Ubah request')),
+      appBar: PageBar(title: Text(widget.edit == null ? 'Buat request' : 'Ubah request')),
       body: Form(
         key: key,
         child: ListView(padding: const EdgeInsets.all(16), children: [
@@ -247,7 +247,7 @@ class _RequestFormPageState extends State<RequestFormPage> {
                       onTap: () => setState(() => _applyTpl(t)),
                       padding: const EdgeInsets.all(10),
                       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                        Icon(catOf(t['c'] as String).icon, size: 18),
+                        CatIcon(catOf(t['c'] as String), size: 26),
                         const SizedBox(height: 4),
                         Text(t['t'] as String, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
                         const Spacer(),
@@ -322,13 +322,13 @@ class ReqDetailPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = context.s;
     final r = s.reqById(id);
-    if (r == null) return Scaffold(appBar: AppBar(), body: const Empty(Icons.error_outline, 'Request tidak ditemukan.'));
+    if (r == null) return Scaffold(appBar: PageBar(), body: const Empty(Icons.error_outline, 'Request tidak ditemukan.'));
     if (r.workers > 1) return GroupOrderPage(r.id);
     final open = ['OPEN', 'HAS_ACCEPTORS', 'FULL'].contains(r.status);
     final accs = r.acc.where((a) => a.status == 'accepted' || a.status == 'selected').toList();
     final orders = s.orders.where((o) => o.reqId == r.id).toList();
     return Scaffold(
-      appBar: AppBar(title: const Text('Detail request'), actions: [
+      appBar: PageBar(title: const Text('Detail request'), actions: [
         if (open || r.status == 'EXPIRED' || r.status == 'IN_REVIEW')
           PopupMenuButton<String>(
             onSelected: (v) async {
@@ -343,12 +343,14 @@ class ReqDetailPage extends StatelessWidget {
       ]),
       body: ListView(padding: const EdgeInsets.all(16), children: [
         Row(children: [
-          Icon(catOf(r.cat).icon, size: 30),
+          CatIcon(catOf(r.cat), size: 44),
           const SizedBox(width: 10),
           Expanded(child: Text(r.title, style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w800))),
         ]),
         const SizedBox(height: 10),
         Wrap(spacing: 6, runSpacing: 6, children: [
+          CatTag(catOf(r.cat).name, catOf(r.cat).color, height: 22),
+          CatTag(ptypes[r.ptype] ?? '', kPeach, height: 22),
           Tag(reqLabels[r.status] ?? r.status, filled: true),
           if (open) Tag('ACC ${s.activeAcc(r).length}/${r.quota}', icon: Icons.group_outlined),
           if (r.direct) const Tag('Order langsung', icon: Icons.bolt_outlined),

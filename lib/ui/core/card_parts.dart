@@ -129,14 +129,13 @@ class VerifiedBadge extends StatelessWidget {
   Widget build(BuildContext context) => Icon(Icons.verified, size: size, color: kBlue);
 }
 
-/// Kartu putih: garis tipis + bayangan lembut. Dipakai oleh kartu jasa, kartu agen, dan tile kategori.
+/// Kartu putih rata (tanpa bayangan dan garis), seperti grup menu Akun; latar abu-abu halaman yang memisahkannya. Dipakai oleh kartu jasa, kartu agen, dan tile kategori.
 class SoftCard extends StatelessWidget {
   final Widget child;
   final EdgeInsetsGeometry padding;
   final double radius;
   final VoidCallback? onTap;
-  final bool shadow;
-  const SoftCard({required this.child, this.padding = const EdgeInsets.all(12), this.radius = 22, this.onTap, this.shadow = true, super.key});
+  const SoftCard({required this.child, this.padding = const EdgeInsets.all(12), this.radius = 22, this.onTap, super.key});
   @override
   Widget build(BuildContext context) => GestureDetector(
         onTap: onTap,
@@ -145,8 +144,6 @@ class SoftCard extends StatelessWidget {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(radius),
-            border: Border.all(color: const Color(0xFFDCDDE1)),
-            boxShadow: shadow ? const [BoxShadow(color: Color(0x14000000), blurRadius: 18, offset: Offset(0, 6))] : null,
           ),
           child: child,
         ),
@@ -158,13 +155,12 @@ class RoundBtn extends StatelessWidget {
   final double size;
   final Widget child;
   final VoidCallback? onTap;
-  final bool shadow;
-  const RoundBtn({required this.size, required this.child, this.onTap, this.shadow = false, super.key});
+  const RoundBtn({required this.size, required this.child, this.onTap, super.key});
   @override
   Widget build(BuildContext context) => SizedBox(
         width: size,
         height: size,
-        child: SoftCard(radius: size / 2, padding: EdgeInsets.zero, onTap: onTap, shadow: shadow, child: Center(child: child)),
+        child: SoftCard(radius: size / 2, padding: EdgeInsets.zero, onTap: onTap, child: Center(child: child)),
       );
 }
 
@@ -181,7 +177,6 @@ class PillBtn extends StatelessWidget {
           radius: height / 2,
           padding: const EdgeInsets.symmetric(horizontal: 8),
           onTap: onTap,
-          shadow: false,
           child: Center(
             child: FittedBox(
               fit: BoxFit.scaleDown,
@@ -189,5 +184,147 @@ class PillBtn extends StatelessWidget {
             ),
           ),
         ),
+      );
+}
+
+/// Foto profil sementara berupa lingkaran gradasi dengan inisial nama.
+class InitialAvatar extends StatelessWidget {
+  final String name;
+  final double size;
+  const InitialAvatar(this.name, {this.size = 52, super.key});
+
+  static const _pal = [
+    [Color(0xFFFF9A6B), Color(0xFFE0533C)],
+    [Color(0xFFA78BFA), Color(0xFF6F58D8)],
+    [Color(0xFF55C8EE), Color(0xFF2E95D6)],
+    [Color(0xFF6ED3A4), Color(0xFF2FA46F)],
+    [Color(0xFFFFB35C), Color(0xFFEF8A2A)],
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final parts = name.trim().split(RegExp(r'\s+')).where((e) => e.isNotEmpty).toList();
+    var ini = parts.isEmpty ? '?' : parts.first[0];
+    if (parts.length > 1) ini += parts.last[0];
+    final c = _pal[name.codeUnits.fold<int>(0, (a, b) => a + b) % _pal.length];
+    return Container(
+      width: size,
+      height: size,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(shape: BoxShape.circle, gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: c)),
+      child: Text(ini.toUpperCase(), style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: size * .36, height: 1.1)),
+    );
+  }
+}
+
+/// Tab berbentuk pil: pilihan aktif diberi latar abu-abu dan teks hijau.
+class PillTabs extends StatelessWidget {
+  final List<String> labels;
+  final int index;
+  final ValueChanged<int> onChanged;
+  const PillTabs({required this.labels, required this.index, required this.onChanged, super.key});
+  @override
+  Widget build(BuildContext context) => Container(
+        height: 54,
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(27), border: Border.all(color: const Color(0xFFDCDDE1))),
+        child: Row(children: [
+          for (var i = 0; i < labels.length; i++)
+            Expanded(
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => onChanged(i),
+                child: Center(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 180),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
+                      decoration: BoxDecoration(color: i == index ? const Color(0xFFEBEBEB) : Colors.transparent, borderRadius: BorderRadius.circular(22)),
+                      child: Text(labels[i], maxLines: 1, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, height: 1.2, color: i == index ? const Color(0xFF3DBE7A) : const Color(0xFF7B7B7B))),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ]),
+      );
+}
+
+/// Chip filter: terpilih = hijau penuh, tidak terpilih = putih berbingkai.
+class FilterPill extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+  const FilterPill(this.label, {required this.selected, required this.onTap, super.key});
+  @override
+  Widget build(BuildContext context) => GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
+          decoration: BoxDecoration(
+            color: selected ? kGreen : Colors.white,
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(color: selected ? kGreen : const Color(0xFFE3E4E8)),
+          ),
+          child: Text(label, maxLines: 1, style: TextStyle(fontSize: 14, fontWeight: selected ? FontWeight.w700 : FontWeight.w600, height: 1.2, color: selected ? Colors.white : g900)),
+        ),
+      );
+}
+
+const kSubGray = Color(0xFF8E8E93);
+
+/// Kartu putih bergaya pengaturan Telegram. Isinya adalah beberapa [SetRow].
+class SetGroup extends StatelessWidget {
+  final List<Widget> children;
+  const SetGroup(this.children, {super.key});
+  @override
+  Widget build(BuildContext context) => Container(
+        margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+        child: Column(children: children),
+      );
+}
+
+/// Satu baris pengaturan: kotak ikon berwarna, judul, subjudul abu-abu, dan widget di kanan (opsional).
+class SetRow extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final String title;
+  final String? sub;
+  final Widget? badge;
+  final Color? titleColor;
+  final VoidCallback? onTap;
+  const SetRow(this.icon, this.color, this.title, this.onTap, {this.sub, this.badge, this.titleColor, super.key});
+  @override
+  Widget build(BuildContext context) => GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
+          child: Row(children: [
+            Container(width: 42, height: 42, decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(13)), child: Icon(icon, size: 23, color: Colors.white)),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+                Text(title, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 16.5, height: 1.25, color: titleColor ?? g900)),
+                if (sub != null) Text(sub!, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 14, height: 1.3, color: kSubGray)),
+              ]),
+            ),
+            if (badge != null) ...[const SizedBox(width: 8), badge!],
+          ]),
+        ),
+      );
+}
+
+/// Judul kecil di atas grup pengaturan.
+class SetTitle extends StatelessWidget {
+  final String text;
+  const SetTitle(this.text, {super.key});
+  @override
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsets.fromLTRB(32, 8, 32, 8),
+        child: Text(text, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: kGreen)),
       );
 }

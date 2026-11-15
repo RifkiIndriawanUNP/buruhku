@@ -29,7 +29,7 @@ class AgentModeRepository extends RepoBase {
   int _round5(num n) => hub._round5(n);
   T _pick<T>(List<T> l) => hub._pick(l);
   void touch() => hub.touch();
-  void notify(String t, String b) => hub.notify(t, b);
+  void notify(String t, String b, {String? refType, String? refId}) => hub.notify(t, b, refType: refType, refId: refId);
   int get myLevel => hub.myLevel;
   List<Acc> activeAcc(Req r) => hub.activeAcc(r);
   void _refreshReq(Req r) => hub._refreshReq(r);
@@ -102,7 +102,7 @@ class AgentModeRepository extends RepoBase {
     orders.insert(0, o);
     final c = _chatOf(r.id, 'c:${r.clientName}');
     if (c != null) _sys(c, '${r.clientName} memilih kamu. Mohon konfirmasi akhir dalam 15 menit.');
-    notify('Klien memilih kamu', '${r.clientName} memilih kamu untuk "${r.title}". Konfirmasi di tab Pekerjaanku.');
+    notify('Klien memilih kamu', 'Klien ${r.clientName} memilih kamu untuk "${r.title}". Konfirmasi di tab Pekerjaanku.', refType: 'order', refId: o.id);
   }
 
   void _spawnSimReq() {

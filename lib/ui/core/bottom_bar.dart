@@ -8,10 +8,11 @@ import 'package:buruhku/ui/core/theme.dart';
 const kBarSpace = 110.0; // ruang kosong di akhir list supaya item terakhir tidak tertutup bar
 // ---------- bottom bar ----------
 class BarItem {
-  final IconData icon;
+  final IconData icon;        // ikon outline (tidak dipilih)
   final String label;
   final int badge;
-  const BarItem(this.icon, this.label, [this.badge = 0]);
+  final IconData? activeIcon; // ikon filled (dipilih), opsional
+  const BarItem(this.icon, this.label, [this.badge = 0, this.activeIcon]);
 }
 
 
@@ -171,7 +172,7 @@ class _BottomBarState extends State<BottomBar> with TickerProviderStateMixin {
     return Column(mainAxisAlignment: MainAxisAlignment.center, children: [
       Badge(
         isLabelVisible: it.badge > 0, label: Text('${it.badge}'), backgroundColor: const Color(0xFFE53935),
-        child: Icon(it.icon, color: col, size: 24),
+        child: Icon(i == widget.index ? (it.activeIcon ?? it.icon) : it.icon, color: col, size: 24),
       ),
       SizedBox(height: 2 * lab),
       // label memudar dan menutup (tinggi menyusut) saat kompak
@@ -269,11 +270,7 @@ class _BottomBarState extends State<BottomBar> with TickerProviderStateMixin {
                       child: DecoratedBox(
                         decoration: BoxDecoration(
                           borderRadius: shellRadius,
-                          border: Border.all(color: cW.withAlpha(2), width: 1.2),
-                          boxShadow: [
-                            BoxShadow(color: const Color(0x1F000000), blurRadius: 28 + 10 * pr, offset: Offset(0, 8 + 3 * pr)),
-                            const BoxShadow(color: Color(0x0A000000), blurRadius: 4, offset: Offset(0, 1)),
-                          ],
+                          border: Border.all(color: const Color(0xFFDCDDE1), width: 1),
                         ),
                         child: ClipRRect(
                           borderRadius: shellRadius,
@@ -336,7 +333,6 @@ class _BottomBarState extends State<BottomBar> with TickerProviderStateMixin {
                                   child: DecoratedBox(
                                     decoration: BoxDecoration(
                                       borderRadius: BorderRadius.circular(lensH / 2),
-                                      boxShadow: const [BoxShadow(color: Color(0x22000000), blurRadius: 18, offset: Offset(0, 6))],
                                     ),
                                     child: ClipRRect(
                                       borderRadius: BorderRadius.circular(lensH / 2),

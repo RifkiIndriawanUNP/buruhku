@@ -29,7 +29,7 @@ class SimulatedBackendService extends RepoBase {
   Random get _rnd => hub._rnd;
   int _round5(num n) => hub._round5(n);
   int _h(String s) => hub._h(s);
-  void notify(String t, String b) => hub.notify(t, b);
+  void notify(String t, String b, {String? refType, String? refId}) => hub.notify(t, b, refType: refType, refId: refId);
   String cancelOrder(Ord o, String reason, {bool forceFull = false}) => hub.cancelOrder(o, reason, forceFull: forceFull);
   void completeOrder(Ord o, {bool auto = false}) => hub.completeOrder(o, auto: auto);
   int get held => hub.held;
@@ -70,7 +70,7 @@ class SimulatedBackendService extends RepoBase {
       _incoming(ch, 'Harga dari saya ${rp(p)}${unitOf(r.ptype)}', type: 'offer', data: {'price': p, 'ptype': r.ptype, 'status': 'pending', 'by': 'other'}, silent: true);
     }
     _refreshReq(r);
-    notify('Ada agen ACC (${activeAcc(r).length}/${r.quota})', '${a.short} tertarik pada "${r.title}" dengan harga ${rp(p)}.');
+    notify('Ada agen ACC (${activeAcc(r).length}/${r.quota})', '${a.short} tertarik pada "${r.title}" dengan harga ${rp(p)}.', refType: 'request', refId: r.id);
     return true;
   }
 

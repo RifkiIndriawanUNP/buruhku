@@ -3,6 +3,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart' show LatLng;
 import 'package:buruhku/config/env.dart';
 import 'package:buruhku/ui/core/theme.dart';
+import 'package:buruhku/ui/core/page_bar.dart';
 import 'package:buruhku/utils/geo.dart';
 
 /// Satu titik di peta (agen, agen yang sedang berjalan, dst.).
@@ -23,7 +24,6 @@ class MapMark {
               color: online ? g900 : g400,
               shape: BoxShape.circle,
               border: Border.all(color: cW, width: selected ? 3 : 2),
-              boxShadow: const [BoxShadow(color: Color(0x40000000), blurRadius: 4)],
             ),
             child: Icon(Icons.person, size: selected ? 22 : 18, color: cW),
           ),
@@ -35,7 +35,7 @@ class MapMark {
   factory MapMark.walker(LatLng p) => MapMark(
         p,
         Container(
-          decoration: const BoxDecoration(color: kGreen, shape: BoxShape.circle, boxShadow: [BoxShadow(color: Color(0x40000000), blurRadius: 4)]),
+          decoration: BoxDecoration(color: kGreen, shape: BoxShape.circle, border: Border.all(color: cW, width: 2)),
           child: const Icon(Icons.directions_walk, size: 20, color: cW),
         ),
         size: 36,
@@ -218,8 +218,8 @@ class _ZoomBtn extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Material(
         color: cW,
-        elevation: 1,
-        borderRadius: BorderRadius.circular(6),
+        elevation: 0,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6), side: const BorderSide(color: g200)),
         child: InkWell(borderRadius: BorderRadius.circular(6), onTap: onTap, child: SizedBox(width: 30, height: 30, child: Icon(icon, size: 18, color: g900))),
       );
 }
@@ -257,7 +257,7 @@ class MapFullPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: Text(title)),
+        appBar: PageBar(title: Text(title)),
         body: AppMap(height: double.infinity, framed: false, pin: pin, zoom: 15),
       );
 }

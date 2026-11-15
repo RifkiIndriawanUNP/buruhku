@@ -22,7 +22,8 @@ class OrderRepository extends RepoBase {
   Random get _rnd => hub._rnd;
   String nid(String p) => hub.nid(p);
   void touch() => hub.touch();
-  void notify(String t, String b) => hub.notify(t, b);
+  void notify(String t, String b, {String? refType, String? refId}) => hub.notify(t, b, refType: refType, refId: refId);
+  String _who(Ord o) => '${o.iAmClient ? 'Agen' : 'Klien'} ${o.otherName}';
   int get held => hub.held;
   Chat? chatOfOrder(Ord o) => hub.chatOfOrder(o);
   Ord? orderById(String id) => hub.orderById(id);
@@ -41,7 +42,7 @@ class OrderRepository extends RepoBase {
     o.addLog('Pembayaran ${rp(o.total + o.fee)} via $method. Dana ditahan (escrow)');
     ledger.insert(0, Led(id: nid('L'), role: 'c', type: 'escrow_hold', amount: -(o.total + o.fee), note: 'Bayar "${o.title}" via $method'));
     _sysFor(o, 'Pembayaran aman, dana ditahan. Agen siap bekerja.');
-    notify('Pembayaran berhasil', 'Dana ${rp(o.total + o.fee)} ditahan sampai pekerjaan selesai.');
+    notify('Pembayaran berhasil', 'Dana ${rp(o.total + o.fee)} untuk "${o.title}" bersama ${_who(o)} ditahan sampai pekerjaan selesai.', refType: 'order', refId: o.id);
     notifyListeners();
   }
 
@@ -56,7 +57,7 @@ class OrderRepository extends RepoBase {
     o.nextAt = _departAt(o);
     o.addLog('Memilih bayar tunai (COD): bayar langsung ke agen setelah pekerjaan selesai. Tanpa perlindungan escrow');
     _sysFor(o, 'Klien memilih bayar tunai (COD). Pembayaran langsung ke agen setelah pekerjaan selesai.');
-    notify('COD dipilih', '"${o.title}" dibayar tunai ke agen setelah pekerjaan selesai.');
+    notify('COD dipilih', '"${o.title}" bersama ${_who(o)} dibayar tunai setelah pekerjaan selesai.', refType: 'order', refId: o.id);
     notifyListeners();
   }
 
@@ -101,7 +102,7 @@ class OrderRepository extends RepoBase {
     o.doneAt = now;
     o.addLog('Dibatalkan: $reason');
     _sysFor(o, 'Order dibatalkan ($reason).');
-    notify('Order dibatalkan', '"${o.title}": $msg');
+    notify('Order dibatalkan', '"${o.title}" bersama ${_who(o)}: $msg', refType: 'order', refId: o.id);
     notifyListeners();
     return msg;
   }
@@ -116,7 +117,7 @@ class OrderRepository extends RepoBase {
     o.escrow = 'partial';
     o.doneAt = DateTime.now();
     o.addLog('Klien tidak hadir 30 menit. Kompensasi 30% dicairkan');
-    notify('Kompensasi diterima', 'Kamu menerima ${rp(comp - c)} karena klien tidak hadir.');
+    notify('Kompensasi diterima', 'Klien ${o.otherName} tidak hadir di "${o.title}". Kamu menerima ${rp(comp - c)} sebagai kompensasi.', refType: 'order', refId: o.id);
     notifyListeners();
   }
 
@@ -218,7 +219,7 @@ class OrderRepository extends RepoBase {
           tags: ['Tepat waktu', 'Rapi'], comment: 'Kerjanya bagus, terima kasih.', pub: false));
     }
     _sysFor(o, o.cod ? 'Pekerjaan selesai. Pembayaran tunai ke agen.' : 'Pekerjaan selesai. Dana dilepas ke agen.');
-    notify('Pekerjaan selesai', o.iAmClient ? '"${o.title}" selesai. Beri rating untuk ${o.otherName}.' : (o.cod ? 'Tunai ${rp(o.total)} diterima dari klien. Komisi ${rp(o.commission)} dipotong dari saldo.' : 'Dana ${rp(o.net)} masuk ke saldo.'));
+    notify('Pekerjaan selesai', o.iAmClient ? '${o.otherName} selesai mengerjakan "${o.title}". Cek hasilnya lalu beri rating.' : (o.cod ? 'Tunai ${rp(o.total)} diterima dari klien ${o.otherName}. Komisi ${rp(o.commission)} dipotong dari saldo.' : 'Dana ${rp(o.net)} dari klien ${o.otherName} masuk ke saldo.'), refType: 'order', refId: o.id);
     notifyListeners();
   }
 
@@ -255,10 +256,10 @@ class OrderRepository extends RepoBase {
         if (_rnd.nextInt(10) < 7) {
           o.extra += amount;
           o.addLog('Klien menyetujui tambahan ${rp(amount)}');
-          notify('Tambahan disetujui', 'Klien menyetujui tambahan ${rp(amount)}.');
+          notify('Tambahan disetujui', '${_who(o)} menyetujui tambahan ${rp(amount)} untuk "${o.title}".', refType: 'order', refId: o.id);
         } else {
           o.addLog('Klien menolak tambahan');
-          notify('Tambahan ditolak', 'Klien menolak permintaan tambahan.');
+          notify('Tambahan ditolak', '${_who(o)} menolak permintaan tambahan untuk "${o.title}".', refType: 'order', refId: o.id);
         }
         o.chg = null;
         notifyListeners();
@@ -285,7 +286,7 @@ class OrderRepository extends RepoBase {
     o.tipped = true;
     ledger.insert(0, Led(id: nid('L'), role: 'c', type: 'tip', amount: -amt, note: 'Tip untuk ${o.otherName}'));
     o.addLog('Tip ${rp(amt)} dikirim');
-    notify('Tip terkirim', '${rp(amt)} untuk ${o.otherName}.');
+    notify('Tip terkirim', 'Tip ${rp(amt)} untuk ${_who(o)} di "${o.title}".', refType: 'order', refId: o.id);
     notifyListeners();
   }
 
@@ -301,7 +302,7 @@ class OrderRepository extends RepoBase {
       if (v.orderId == o.id && v.aboutId == 'me') v.pub = true;
     }
     if (o.theirRev && o.status == 'COMPLETED') o.status = 'REVIEWED';
-    notify('Ulasan terkirim', 'Ulasan dipublikasikan karena kedua pihak sudah menilai.');
+    notify('Ulasan terkirim', 'Ulasan untuk ${_who(o)} dipublikasikan karena kedua pihak sudah menilai.', refType: 'order', refId: o.id);
     notifyListeners();
   }
 
@@ -313,7 +314,7 @@ class OrderRepository extends RepoBase {
     o.disputeId = d.id;
     o.nextAt = null;
     o.addLog('Sengketa diajukan: $type. Dana tetap ditahan');
-    notify('Sengketa diajukan', 'Dana ditahan. Pihak lain punya 48 jam untuk menanggapi.');
+    notify('Sengketa diajukan', 'Sengketa "${o.title}" dengan ${_who(o)} diajukan. Dana ditahan, pihak lain punya 48 jam untuk menanggapi.', refType: 'order', refId: o.id);
     notifyListeners();
     return d;
   }
@@ -340,7 +341,7 @@ class OrderRepository extends RepoBase {
     o.doneAt = DateTime.now();
     final txt = _decText[decision] ?? decision;
     o.addLog('Keputusan admin: $txt');
-    notify('Sengketa diputuskan', '"${o.title}": $txt.');
+    notify('Sengketa diputuskan', '"${o.title}" bersama ${_who(o)}: $txt.', refType: 'order', refId: o.id);
     notifyListeners();
   }
 
@@ -355,7 +356,7 @@ class OrderRepository extends RepoBase {
       if (d.prev == 'IN_PROGRESS' && o.iAmClient) o.nextAt = DateTime.now().add(const Duration(seconds: 12));
       o.addLog('Sengketa dibatalkan. Order dilanjutkan');
     }
-    notify('Sengketa dibatalkan', 'Order dilanjutkan seperti semula.');
+    notify('Sengketa dibatalkan', o == null ? 'Order dilanjutkan seperti semula.' : '"${o.title}" bersama ${_who(o)} dilanjutkan seperti semula.', refType: o == null ? null : 'order', refId: o?.id);
     notifyListeners();
   }
 

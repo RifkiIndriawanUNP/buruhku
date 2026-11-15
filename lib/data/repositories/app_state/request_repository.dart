@@ -20,7 +20,7 @@ class RequestRepository extends RepoBase {
   Random get _rnd => hub._rnd;
   String nid(String p) => hub.nid(p);
   String _pin() => hub._pin();
-  void notify(String t, String b) => hub.notify(t, b);
+  void notify(String t, String b, {String? refType, String? refId}) => hub.notify(t, b, refType: refType, refId: refId);
   String cancelOrder(Ord o, String reason, {bool forceFull = false}) => hub.cancelOrder(o, reason, forceFull: forceFull);
   Agent agentById(String id) => hub.agentById(id);
   Chat chatFor({required String type, required String refId, required String otherId, required String otherName, required bool otherAgent, String title = ''}) => hub.chatFor(type: type, refId: refId, otherId: otherId, otherName: otherName, otherAgent: otherAgent, title: title);
@@ -73,7 +73,7 @@ class RequestRepository extends RepoBase {
     r.reason = m[1];
     reqs.insert(0, r);
     notify(m[0] == 'review' ? 'Request ditinjau admin' : 'Request dipublikasikan',
-        m[0] == 'review' ? '"${r.title}" menunggu tinjauan admin.' : '"${r.title}" dikirim ke agen terdekat.');
+        m[0] == 'review' ? '"${r.title}" menunggu tinjauan admin.' : '"${r.title}" dikirim ke agen terdekat.', refType: 'request', refId: r.id);
     notifyListeners();
     return m;
   }
@@ -85,7 +85,7 @@ class RequestRepository extends RepoBase {
           a.status = 'withdrawn';
           a.note = 'Mundur setelah request diubah';
           final ag = agentById(a.agentId);
-          notify('Agen mundur', '${ag.short} memilih mundur setelah request diubah.');
+          notify('Agen mundur', '${ag.short} memilih mundur dari "${r.title}" setelah request diubah.', refType: 'request', refId: r.id);
         } else {
           final c = _chatOf(r.id, a.agentId);
           if (c != null) _sys(c, 'Klien mengubah request. Agen mempertahankan ACC.');
@@ -115,7 +115,7 @@ class RequestRepository extends RepoBase {
     r.expires = r.created.add(r.sched == 'now' ? const Duration(minutes: 30) : const Duration(hours: 24));
     r.status = 'OPEN';
     _refreshReq(r);
-    notify('Request dibuka lagi', '"${r.title}" disiarkan ulang ke agen.');
+    notify('Request dibuka lagi', '"${r.title}" disiarkan ulang ke agen.', refType: 'request', refId: r.id);
     notifyListeners();
   }
 
@@ -135,13 +135,13 @@ class RequestRepository extends RepoBase {
     r.status = 'OPEN';
     r.created = DateTime.now();
     r.expires = r.created.add(r.sched == 'now' ? const Duration(minutes: 30) : const Duration(hours: 24));
-    notify('Request disetujui', '"${r.title}" lolos tinjauan dan mulai dicari agen.');
+    notify('Request disetujui', '"${r.title}" lolos tinjauan dan mulai dicari agen.', refType: 'request', refId: r.id);
     notifyListeners();
   }
 
   void adminRejectReq(Req r) {
     r.status = 'REJECTED';
-    notify('Request ditolak admin', '"${r.title}" melanggar pedoman komunitas.');
+    notify('Request ditolak admin', '"${r.title}" melanggar pedoman komunitas.', refType: 'request', refId: r.id);
     notifyListeners();
   }
 
@@ -191,7 +191,7 @@ class RequestRepository extends RepoBase {
     }
     if (l.isNotEmpty) {
       if (r.chosen.length >= r.workers) r.status = 'LOCKED';
-      notify('Order dimulai', '${l.length} agen diminta konfirmasi akhir untuk "${r.title}".');
+      notify('Order dimulai', '${l.map((a) => agentById(a.agentId).short).join(', ')} diminta konfirmasi akhir untuk "${r.title}".', refType: 'request', refId: r.id);
     }
     notifyListeners();
     return l.length;
@@ -227,12 +227,12 @@ class RequestRepository extends RepoBase {
         acc.status = 'declined';
         acc.note = 'Menolak tawaran';
         _sys(ch, '${a.short} tidak bisa menerima tawaran ini.');
-        notify('Agen menolak', '${a.short} menolak tawaran "${r.title}".');
+        notify('Agen menolak', '${a.short} menolak tawaran "${r.title}".', refType: 'request', refId: r.id);
       } else {
         acc.status = 'agreed';
         acc.note = '';
         _incoming(ch, 'Baik, saya sepakat mengerjakan "${r.title}".', silent: true);
-        notify('Agen sepakat', '${a.short} sepakat mengerjakan "${r.title}" (${rp(acc.price)}).');
+        notify('Agen sepakat', '${a.short} sepakat mengerjakan "${r.title}" (${rp(acc.price)}).', refType: 'request', refId: r.id);
       }
       _refreshReq(r);
       notifyListeners();

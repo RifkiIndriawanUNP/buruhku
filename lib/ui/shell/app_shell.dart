@@ -86,8 +86,20 @@ class _ShellState extends State<Shell> {
     }
     final agent = _vm.agentMode;
     final items = agent
-        ? [const BarItem(Icons.inbox_outlined, 'Masuk'), const BarItem(Icons.work_outline, 'Pekerjaanku'), BarItem(Icons.chat_bubble_outline, 'Pesan', _vm.unreadChats), const BarItem(Icons.account_balance_wallet_outlined, 'Pendapatan'), const BarItem(Icons.person_outline, 'Akun')]
-        : [const BarItem(Icons.home_outlined, 'Beranda'), const BarItem(Icons.event_note_outlined, 'Aktivitas'), const BarItem(Icons.add, 'Request'), BarItem(Icons.chat_bubble_outline, 'Pesan', _vm.unreadChats), const BarItem(Icons.person_outline, 'Akun')];
+      ? [
+          const BarItem(Icons.inbox_outlined, 'Masuk', 0, Icons.inbox),
+          const BarItem(Icons.work_outline, 'Pekerjaanku', 0, Icons.work),
+          BarItem(Icons.chat_bubble_outline, 'Pesan', _vm.unreadChats, Icons.chat_bubble),
+          const BarItem(Icons.account_balance_wallet_outlined, 'Pendapatan', 0, Icons.account_balance_wallet),
+          const BarItem(Icons.person_outline, 'Akun', 0, Icons.person),
+        ]
+      : [
+          const BarItem(Icons.home_outlined, 'Beranda', 0, Icons.home),
+          const BarItem(Icons.event_note_outlined, 'Aktivitas', 0, Icons.event_note),
+          const BarItem(Icons.add, 'Request'),
+          BarItem(Icons.chat_bubble_outline, 'Pesan', _vm.unreadChats, Icons.chat_bubble),
+          const BarItem(Icons.person_outline, 'Akun', 0, Icons.person),
+        ];
     final pages = agent ? _agentPages : _clientPages;
     final i = _vm.tab;
 

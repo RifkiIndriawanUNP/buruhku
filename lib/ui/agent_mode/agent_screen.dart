@@ -78,7 +78,7 @@ class _IncomingTabState extends State<IncomingTab> {
                 child: Box(
                   onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => IncomingDetailPage(r.id))),
                   child: Row(children: [
-                    Icon(catOf(r.cat).icon, size: 28),
+                    CatIcon(catOf(r.cat), size: 41),
                     const SizedBox(width: 12),
                     Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                       Text(r.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w700)),
@@ -239,14 +239,16 @@ class IncomingDetailPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = context.s;
     final r = s.reqById(id);
-    if (r == null) return Scaffold(appBar: AppBar(), body: const Empty(Icons.error_outline, 'Request tidak ditemukan.'));
+    if (r == null) return Scaffold(appBar: PageBar(), body: const Empty(Icons.error_outline, 'Request tidak ditemukan.'));
     final mine = r.acc.where((a) => a.agentId == 'me').toList();
     final myAcc = mine.isEmpty ? null : mine.last;
     final rec = recRange(r.cat, r.ptype);
     return Scaffold(
-      appBar: AppBar(title: const Text('Detail request')),
+      appBar: PageBar(title: const Text('Detail request')),
       body: ListView(padding: const EdgeInsets.all(16), children: [
-        Row(children: [Icon(catOf(r.cat).icon, size: 30), const SizedBox(width: 10), Expanded(child: Text(r.title, style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w800)))]),
+        Row(children: [CatIcon(catOf(r.cat), size: 44), const SizedBox(width: 10), Expanded(child: Text(r.title, style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w800)))]),
+        const SizedBox(height: 8),
+        Wrap(spacing: 6, runSpacing: 6, children: [CatTag(catOf(r.cat).name, catOf(r.cat).color, height: 22), CatTag(ptypes[r.ptype] ?? '', kPeach, height: 22)]),
         const SizedBox(height: 10),
         Text(r.desc, style: const TextStyle(height: 1.4)),
         const SizedBox(height: 10),
@@ -301,7 +303,7 @@ class JobsTab extends StatelessWidget {
       length: 2,
       child: Column(children: [
         const Padding(padding: EdgeInsets.fromLTRB(16, 16, 16, 8), child: Align(alignment: Alignment.centerLeft, child: Text('Pekerjaanku', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800)))),
-        const TabBar(tabs: [Tab(text: 'Aktif'), Tab(text: 'Selesai')]),
+        PillTabBar(const ['Aktif', 'Selesai']),
         Expanded(
           child: TabBarView(children: [
             (act.isEmpty && waiting.isEmpty)
@@ -552,7 +554,7 @@ class _KycPageState extends State<KycPage> {
           Wrap(spacing: 8, runSpacing: 8, children: [
             for (final c in cats)
               FilterChip(
-                avatar: Icon(c.icon, size: 16), label: Text(c.name), selected: k.cats.contains(c.id),
+                avatar: CatIcon(c, size: 22), label: Text(c.name), selected: k.cats.contains(c.id),
                 onSelected: (v) => setState(() {
                   if (v && k.cats.length >= 5) { toast(context, 'Maksimal 5 keahlian.'); return; }
                   v ? k.cats.add(c.id) : k.cats.remove(c.id);
@@ -584,7 +586,7 @@ class _KycPageState extends State<KycPage> {
         ]);
     }
     return Scaffold(
-      appBar: AppBar(title: Text('Daftar agen: ${steps[step]}')),
+      appBar: PageBar(title: Text('Daftar agen: ${steps[step]}')),
       body: Column(children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
@@ -627,7 +629,7 @@ class AgentSettingsPage extends StatelessWidget {
     final s = context.s;
     final k = s.kyc;
     return Scaffold(
-      appBar: AppBar(title: const Text('Pengaturan agen')),
+      appBar: PageBar(title: const Text('Pengaturan agen')),
       body: ListView(padding: const EdgeInsets.all(16), children: [
         SwitchListTile(contentPadding: EdgeInsets.zero, title: const Text('Status online'), value: k.online, onChanged: s.kyc.status == 'approved' ? (v) => s.setOnline(v) : null),
         SwitchListTile(contentPadding: EdgeInsets.zero, title: const Text('Terima chat dan order langsung'), value: k.directOk, onChanged: (v) { k.directOk = v; s.notifyListeners(); }),
@@ -635,7 +637,7 @@ class AgentSettingsPage extends StatelessWidget {
         Wrap(spacing: 8, runSpacing: 8, children: [
           for (final c in cats)
             FilterChip(
-              avatar: Icon(c.icon, size: 16), label: Text(c.name), selected: k.cats.contains(c.id),
+              avatar: CatIcon(c, size: 22), label: Text(c.name), selected: k.cats.contains(c.id),
               onSelected: (v) {
                 if (v && k.cats.length >= 5) { toast(context, 'Maksimal 5 keahlian.'); return; }
                 if (!v && k.cats.length == 1) { toast(context, 'Minimal 1 keahlian.'); return; }

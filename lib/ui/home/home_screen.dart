@@ -87,7 +87,6 @@ class _HomeTabState extends State<HomeTab> {
           const SizedBox(width: 12),
           RoundBtn(
             size: 52,
-            shadow: true,
             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NotifPage())),
             child: Badge(
               isLabelVisible: vm.unreadNotes > 0,
@@ -124,8 +123,11 @@ class _HomeTabState extends State<HomeTab> {
         textInputAction: TextInputAction.search,
         decoration: const InputDecoration(
           filled: true,
-          fillColor: Color(0xFFF1F1F3),
-          prefixIcon: Icon(Icons.search, size: 26, color: g900),
+          fillColor: Color(0xFFFFFFFF),
+          prefixIcon: Padding(
+            padding: EdgeInsets.only(left: 12),
+            child: Icon(Icons.search, size: 26, color: g900),
+          ),
           hintText: 'Cari jasa atau agen (contoh. Setrika baju)',
           hintStyle: TextStyle(fontSize: 14.5, color: g500),
           border: none,

@@ -303,7 +303,7 @@ class GlassCard extends StatelessWidget {
     this.radius = 32,
     this.onTap,
     this.blur = 24,
-    this.shadow = true,
+    this.shadow = false,
   });
 
   Widget _maybeBlur(Widget w) => blur <= 0

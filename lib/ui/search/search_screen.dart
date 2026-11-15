@@ -21,11 +21,11 @@ class SearchPage extends StatelessWidget {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
-        appBar: AppBar(title: Text('"$q"'), bottom: const TabBar(tabs: [Tab(text: 'Jasa'), Tab(text: 'Agen')])),
+        appBar: PageBar(title: Text('"$q"'), bottom: PillTabBar(const ['Jasa', 'Agen'])),
         body: TabBarView(children: [
           ListView(padding: const EdgeInsets.fromLTRB(16, 16, 16, kBarSpace), children: [
             for (final c in cs)
-              ListTile(leading: Icon(c.icon), title: Text(c.name), trailing: const Icon(Icons.chevron_right), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => AgentListPage(cat: c.id, title: c.name)))),
+              ListTile(leading: CatIcon(c, size: 34), title: Text(c.name), trailing: const Icon(Icons.chevron_right), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => AgentListPage(cat: c.id, title: c.name)))),
             for (final t in ts)
               ListTile(
                 leading: const Icon(Icons.bolt_outlined), title: Text(t['t'] as String), subtitle: const Text('Template order cepat'),

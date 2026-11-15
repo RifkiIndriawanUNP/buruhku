@@ -25,7 +25,7 @@ extension AccountRepositoryFacade on AppState {
 }
 
 extension NotificationRepositoryFacade on AppState {
-  void notify(String t, String b) => notificationRepo.notify(t, b);
+  void notify(String t, String b, {String? refType, String? refId}) => notificationRepo.notify(t, b, refType: refType, refId: refId);
   int get unreadNotes => notificationRepo.unreadNotes;
   int get unreadChats => notificationRepo.unreadChats;
   void readAllNotes() => notificationRepo.readAllNotes();

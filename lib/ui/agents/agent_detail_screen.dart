@@ -32,8 +32,8 @@ class AgentDetail extends StatelessWidget {
     final revs = s.reviewsOf(a.id);
     final lvl = {1: 'L1 Baru', 2: 'L2 Terpercaya', 3: 'L3 Premium'}[a.level]!;
     return Scaffold(
-      appBar: AppBar(title: const Text('Profil agen'), actions: [
-        IconButton(onPressed: () => s.toggleFav(a.id), icon: Icon(s.favs.contains(a.id) ? Icons.favorite : Icons.favorite_border)),
+      appBar: PageBar(title: const Text('Profil agen'), actions: [
+        IconButton(onPressed: () => s.toggleFav(a.id), icon: Icon(s.favs.contains(a.id) ? Icons.favorite : Icons.favorite_border, color: Colors.red)),
         IconButton(onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ReportPage(target: a.short, targetId: a.id))), icon: const Icon(Icons.flag_outlined)),
       ]),
       body: ListView(padding: const EdgeInsets.fromLTRB(16, 16, 16, kBarSpace), children: [
@@ -64,7 +64,7 @@ class AgentDetail extends StatelessWidget {
         const Padding(padding: EdgeInsets.only(top: 4), child: Text('Lokasi perkiraan agen, bukan titik tepat.', style: TextStyle(fontSize: 11.5, color: g500))),
         Kv('Tarif mulai', '${rp(a.base)} per pekerjaan kecil'),
         const Section('Keahlian'),
-        Wrap(spacing: 6, runSpacing: 6, children: [for (final c in a.cats) Tag(catOf(c).name, icon: catOf(c).icon)]),
+        Wrap(spacing: 6, runSpacing: 6, children: [for (final c in a.cats) CatTag(catOf(c).name, catOf(c).color)]),
         if (s.svcsOfAgent(a.id).isNotEmpty) ...[
           const Section('Tawaran jasa'),
           for (final v in s.svcsOfAgent(a.id)) ServiceTile(v),

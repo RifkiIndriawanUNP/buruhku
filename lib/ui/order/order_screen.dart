@@ -21,7 +21,7 @@ class OrderTile extends StatelessWidget {
         child: Box(
           onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => OrderPage(o.id))),
           child: Row(children: [
-            Icon(catOf(o.cat).icon, size: 28),
+            CatIcon(catOf(o.cat), size: 41),
             const SizedBox(width: 12),
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -158,7 +158,7 @@ class HistoryTab extends StatelessWidget {
       length: 2,
       child: Column(children: [
         const Padding(padding: EdgeInsets.fromLTRB(16, 16, 16, 8), child: Align(alignment: Alignment.centerLeft, child: Text('Aktivitas', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800)))),
-        const TabBar(tabs: [Tab(text: 'Aktif'), Tab(text: 'Riwayat')]),
+        PillTabBar(const ['Aktif', 'Riwayat']),
         Expanded(
           child: TabBarView(children: [
             _ActiveView(act),
@@ -235,7 +235,7 @@ class GroupOrderPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = context.s;
     final r = s.reqById(reqId);
-    if (r == null) return Scaffold(appBar: AppBar(), body: const Empty(Icons.error_outline, 'Request tidak ditemukan.'));
+    if (r == null) return Scaffold(appBar: PageBar(), body: const Empty(Icons.error_outline, 'Request tidak ditemukan.'));
     final subs = s.orders.where((o) => o.reqId == reqId && o.iAmClient).toList();
     final started = r.chosen.isNotEmpty;
     bool hadOrder(Acc a) => subs.any((o) => o.otherId == a.agentId);
@@ -256,7 +256,7 @@ class GroupOrderPage extends StatelessWidget {
     final anyLive = subs.any((o) => ['SCHEDULED', 'ON_THE_WAY', 'ARRIVED', 'IN_PROGRESS'].contains(o.status));
     final enough = r.chosen.length + agreed >= r.workers;
     return Scaffold(
-      appBar: AppBar(title: Text('Order ${r.workers} agen'), actions: [
+      appBar: PageBar(title: Text('Order ${r.workers} agen'), actions: [
         if (editable)
           PopupMenuButton<String>(
             onSelected: (v) async {
@@ -271,12 +271,14 @@ class GroupOrderPage extends StatelessWidget {
       ]),
       body: ListView(padding: const EdgeInsets.all(16), children: [
         Row(children: [
-          Icon(catOf(r.cat).icon, size: 30),
+          CatIcon(catOf(r.cat), size: 44),
           const SizedBox(width: 10),
           Expanded(child: Text(r.title, style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w800))),
         ]),
         const SizedBox(height: 8),
         Wrap(spacing: 6, runSpacing: 6, children: [
+          CatTag(catOf(r.cat).name, catOf(r.cat).color, height: 22),
+          CatTag(ptypes[r.ptype] ?? '', kPeach, height: 22),
           Tag(reqLabels[r.status] ?? r.status, filled: true),
           Tag('${started ? r.chosen.length : agreed}/${r.workers} agen ${started ? 'dimulai' : 'sepakat'}', icon: Icons.groups_outlined),
         ]),
@@ -605,7 +607,7 @@ class _OrderPageState extends State<OrderPage> {
   Widget build(BuildContext context) {
     final s = context.s;
     final o = s.orderById(widget.id);
-    if (o == null) return Scaffold(appBar: AppBar(), body: const Empty(Icons.error_outline, 'Order tidak ditemukan.'));
+    if (o == null) return Scaffold(appBar: PageBar(), body: const Empty(Icons.error_outline, 'Order tidak ditemukan.'));
     final cli = o.iAmClient;
     final st = _step(o);
     final chat = s.chatOfOrder(o);
@@ -614,7 +616,7 @@ class _OrderPageState extends State<OrderPage> {
     final grp = rq != null && rq.workers > 1 && cli;
     final disp = s.disputeOf(o.disputeId);
     return Scaffold(
-      appBar: AppBar(title: const Text('Detail order'), actions: [
+      appBar: PageBar(title: const Text('Detail order'), actions: [
         if (o.active || o.status == 'COMPLETED' || o.status == 'REVIEWED')
           PopupMenuButton<String>(
             icon: const Icon(Icons.science_outlined),
@@ -635,12 +637,14 @@ class _OrderPageState extends State<OrderPage> {
       ]),
       body: ListView(padding: const EdgeInsets.all(16), children: [
         Row(children: [
-          Icon(catOf(o.cat).icon, size: 30),
+          CatIcon(catOf(o.cat), size: 44),
           const SizedBox(width: 10),
           Expanded(child: Text(o.title, style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w800))),
         ]),
         const SizedBox(height: 8),
-        Wrap(spacing: 6, children: [
+        Wrap(spacing: 6, runSpacing: 6, children: [
+          CatTag(catOf(o.cat).name, catOf(o.cat).color, height: 22),
+          CatTag(ptypes[o.ptype] ?? '', kPeach, height: 22),
           Tag(ordLabels[o.status] ?? o.status, filled: true),
           Tag(cli ? 'Kamu klien' : 'Kamu agen', icon: Icons.badge_outlined),
           if (o.cod) const Tag('COD', icon: Icons.payments_outlined),
@@ -1019,14 +1023,14 @@ class _PaymentPageState extends State<PaymentPage> {
   Widget build(BuildContext context) {
     final s = context.s;
     final os = widget.ids.map(s.orderById).whereType<Ord>().where((o) => o.status == 'AGREED').toList();
-    if (os.isEmpty) return Scaffold(appBar: AppBar(title: const Text('Pembayaran')), body: const Empty(Icons.info_outline, 'Tidak ada order yang menunggu pembayaran.'));
+    if (os.isEmpty) return Scaffold(appBar: PageBar(title: const Text('Pembayaran')), body: const Empty(Icons.info_outline, 'Tidak ada order yang menunggu pembayaran.'));
     final cod = method == 'COD';
     final total = os.fold<int>(0, (a, o) => a + o.total);
     final fee = os.fold<int>(0, (a, o) => a + o.fee);
     final due = os.map((o) => o.payBy).reduce((a, b) => a.isBefore(b) ? a : b);
     final seed = os.first.id.codeUnits.fold(0, (a, b) => a + b);
     return Scaffold(
-      appBar: AppBar(title: const Text('Pembayaran')),
+      appBar: PageBar(title: const Text('Pembayaran')),
       body: ListView(padding: const EdgeInsets.all(16), children: [
         Box(child: Column(children: [
           Kv('Pekerjaan', os.first.title),
@@ -1110,7 +1114,7 @@ class _RatingPageState extends State<RatingPage> {
     final o = s.orderById(widget.id)!;
     final tags = o.iAmClient ? ['Tepat waktu', 'Rapi', 'Sopan', 'Kuat'] : ['Ramah', 'Deskripsi jelas', 'Bayar cepat'];
     return Scaffold(
-      appBar: AppBar(title: Text(o.iAmClient ? 'Nilai agen' : 'Nilai klien')),
+      appBar: PageBar(title: Text(o.iAmClient ? 'Nilai agen' : 'Nilai klien')),
       body: ListView(padding: const EdgeInsets.all(16), children: [
         Center(child: Column(children: [const Avatar(size: 64), const SizedBox(height: 6), Text(o.otherName, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700))])),
         StarPicker(rating, (v) => setState(() => rating = v)),
@@ -1152,7 +1156,7 @@ class _DisputePageState extends State<DisputePage> {
     final o = s.orderById(widget.id)!;
     final types = ['Pekerjaan tidak selesai', 'Kualitas buruk', 'Kerusakan atau barang hilang', 'Tidak hadir', 'Harga tambahan sepihak', 'Lainnya'];
     return Scaffold(
-      appBar: AppBar(title: const Text('Ajukan masalah')),
+      appBar: PageBar(title: const Text('Ajukan masalah')),
       body: Form(
         key: key,
         child: ListView(padding: const EdgeInsets.all(16), children: [
@@ -1185,7 +1189,7 @@ class InvoicePage extends StatelessWidget {
     final o = s.orderById(id)!;
     final cli = o.iAmClient;
     return Scaffold(
-      appBar: AppBar(title: const Text('Invoice')),
+      appBar: PageBar(title: const Text('Invoice')),
       body: ListView(padding: const EdgeInsets.all(16), children: [
         Box(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           const Text('BURUHKU', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, letterSpacing: 2)),

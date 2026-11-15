@@ -11,3 +11,4 @@ export 'package:buruhku/ui/core/store_context.dart';
 export 'package:buruhku/ui/core/photo_widgets.dart';
 export 'package:buruhku/ui/core/cat_icon.dart';
 export 'package:buruhku/ui/core/card_parts.dart';
+export 'package:buruhku/ui/core/page_bar.dart';

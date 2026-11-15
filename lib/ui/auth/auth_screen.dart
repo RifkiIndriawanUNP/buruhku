@@ -124,7 +124,7 @@ class _OtpPageState extends State<OtpPage> {
   Widget build(BuildContext context) {
     final s = context.s;
     return Scaffold(
-      appBar: AppBar(title: const Text('Verifikasi OTP')),
+      appBar: PageBar(title: const Text('Verifikasi OTP')),
       body: ListView(padding: const EdgeInsets.all(24), children: [
         Text('Kode dikirim ke ${s.pendingPhone}', style: const TextStyle(fontSize: 16)),
         const SizedBox(height: 12),
@@ -172,7 +172,7 @@ class _ProfileSetupState extends State<ProfileSetup> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: const Text('Lengkapi profil')),
+        appBar: PageBar(title: const Text('Lengkapi profil')),
         body: Form(
           key: key,
           child: ListView(padding: const EdgeInsets.all(20), children: [

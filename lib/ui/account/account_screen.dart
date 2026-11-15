@@ -7,73 +7,113 @@ import 'package:buruhku/data/repositories/app_state/app_state.dart';
 import 'package:buruhku/ui/core/ui.dart';
 import 'package:buruhku/ui/agent_mode/agent_screen.dart';
 import 'package:buruhku/ui/location/location_screen.dart';
+import 'package:buruhku/ui/chat/chat_screen.dart';
 import 'package:buruhku/ui/order/order_screen.dart';
+import 'package:buruhku/ui/request/request_screen.dart';
 import 'package:buruhku/ui/service/service_screen.dart';
 
 void _go(BuildContext c, Widget w) => Navigator.push(c, MaterialPageRoute(builder: (_) => w));
 
 // ---------------------------------------------------------------- tab Akun
+const _bgGray = kBgGray;
+const _subGray = kSubGray;
+
 class AccountTab extends StatelessWidget {
   const AccountTab({super.key});
   @override
   Widget build(BuildContext context) {
     final s = context.s;
     final k = s.kyc;
-    Widget tile(IconData i, String t, Widget page, {String? sub}) =>
-        ListTile(leading: Icon(i), title: Text(t), subtitle: sub == null ? null : Text(sub), trailing: const Icon(Icons.chevron_right), onTap: () => _go(context, page));
-    return ListView(children: [
-      Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(children: [
-          const MyAvatar(size: 64),
-          const SizedBox(width: 14),
-          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(s.name, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
-            Text(s.phone, style: const TextStyle(color: g500)),
-            const SizedBox(height: 6),
-            Tag(s.agentMode ? 'Mode agen' : 'Mode klien', icon: s.agentMode ? Icons.handyman_outlined : Icons.person_outline, filled: true),
-          ])),
+    final unread = s.unreadNotes;
+
+    final agentCard = Container(
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+      child: k.status == 'approved'
+          ? full(pbtn(s.agentMode ? 'Beralih ke mode klien' : 'Beralih ke mode agen', () => s.setMode(!s.agentMode), icon: Icons.swap_horiz))
+          : Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              const Text('Jadi agen Buruhku', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+              const SizedBox(height: 4),
+              Text({'none': 'Dapatkan penghasilan dari pekerjaan harian di sekitarmu.', 'pending': 'Pendaftaran sedang direview admin.', 'rejected': 'Ditolak: ${k.reason}', 'needs_more': 'Perlu data tambahan: ${k.reason}'}[k.status]!, style: const TextStyle(fontSize: 13.5, color: _subGray)),
+              if (k.status == 'none' || k.status == 'needs_more' || (k.status == 'rejected' && k.tries < 3)) ...[
+                const SizedBox(height: 10),
+                full(pbtn(k.status == 'none' ? 'Daftar sekarang' : 'Lengkapi pendaftaran', () => _go(context, const KycPage()), icon: Icons.how_to_reg_outlined)),
+              ],
+            ]),
+    );
+
+    return ColoredBox(
+      color: _bgGray,
+      child: MediaQuery.withClampedTextScaling(
+        maxScaleFactor: 1.25,
+        child: ListView(padding: const EdgeInsets.only(top: 20, bottom: kBarSpace), children: [
+          // ---- kepala profil
+          Center(
+            child: GestureDetector(
+              onTap: () => _go(context, const EditProfilePage()),
+              child: Stack(clipBehavior: Clip.none, children: [
+                Container(
+                  padding: const EdgeInsets.all(5),
+                  decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                  child: const MyAvatar(size: 100),
+                ),
+                Positioned(
+                  right: 0,
+                  bottom: 2,
+                  child: Container(
+                    width: 34,
+                    height: 34,
+                    decoration: BoxDecoration(color: kBlue, shape: BoxShape.circle, border: Border.all(color: _bgGray, width: 3)),
+                    child: const Icon(Icons.camera_alt, size: 17, color: Colors.white),
+                  ),
+                ),
+              ]),
+            ),
+          ),
+          const SizedBox(height: 14),
+          Padding(padding: const EdgeInsets.symmetric(horizontal: 24), child: Text(s.name, textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 27, fontWeight: FontWeight.w800, height: 1.2, color: g900))),
+          const SizedBox(height: 4),
+          Padding(padding: const EdgeInsets.symmetric(horizontal: 24), child: Text('${s.phone} \u2022 ${s.agentMode ? 'Mode agen' : 'Mode klien'}', textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 15, color: _subGray))),
+          const SizedBox(height: 20),
+          agentCard,
+
+          // ---- akun
+          SetGroup([
+            SetRow(Icons.person, const Color(0xFF2F9BF0), 'Profil dan alamat', () => _go(context, const EditProfilePage()), sub: 'Nama, nomor HP, alamat'),
+            if (k.status == 'approved') SetRow(Icons.storefront, const Color(0xFFF5A12B), 'Tawaran jasa saya', () => _go(context, const MyServicesPage()), sub: '${s.mySvcs.length} tawaran'),
+            SetRow(Icons.account_balance_wallet, const Color(0xFF34B866), 'Dompet dan metode bayar', () => _go(context, const WalletPage()), sub: 'Saldo, e-wallet, rekening'),
+          ]),
+
+          // ---- pengaturan
+          SetGroup([
+            SetRow(Icons.notifications, const Color(0xFFEF4F5F), 'Notifikasi', () => _go(context, const NotifPage()), sub: unread > 0 ? '$unread belum dibaca' : 'Order dan sistem', badge: unread > 0 ? Badge(label: Text('$unread'), backgroundColor: kGreen) : null),
+            SetRow(Icons.shield, const Color(0xFF8A63E8), 'Keamanan dan SOS', () => _go(context, const SafetyPage()), sub: 'Kontak darurat, tombol SOS'),
+            SetRow(Icons.flag, const Color(0xFFFF7A45), 'Laporan saya', () => _go(context, const MyReportsPage()), sub: 'Laporan dan tindak lanjut'),
+            SetRow(Icons.settings, const Color(0xFF8E8E93), 'Pengaturan', () => _go(context, const SettingsPage()), sub: 'PIN, biometrik, privasi, data'),
+          ]),
+
+          // ---- bantuan
+          SetGroup([
+            SetRow(Icons.help, const Color(0xFF22B8CF), 'Pusat bantuan', () => _go(context, const HelpPage()), sub: 'Pertanyaan umum dan kontak'),
+            SetRow(Icons.description, const Color(0xFF4C6EF5), 'Kebijakan dan ketentuan', () => _go(context, const PolicyListPage()), sub: 'Syarat layanan dan privasi'),
+            SetRow(Icons.admin_panel_settings, const Color(0xFFD6409F), 'Panel Admin (Simulasi)', () => _go(context, const AdminPage()), sub: 'Setujui KYC, moderasi, sengketa, laporan'),
+          ]),
+
+          // ---- keluar
+          SetGroup([
+            SetRow(Icons.logout, const Color(0xFFEF4F5F), 'Keluar', titleColor: const Color(0xFFE5484D), () async {
+              if (await confirm(context, 'Keluar?', 'Data di perangkat ini tetap tersimpan untuk nomor yang sama.', ok: 'Keluar') && context.mounted) {
+                Navigator.of(context).popUntil((r) => r.isFirst);
+                context.r.logout();
+              }
+            }),
+          ]),
+          const SizedBox(height: 8),
+          const Center(child: Text('Buruhku v1.0 (prototype lokal)', style: TextStyle(color: g400, fontSize: 12))),
         ]),
       ),
-      Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: k.status == 'approved'
-            ? full(pbtn(s.agentMode ? 'Beralih ke mode klien' : 'Beralih ke mode agen', () => s.setMode(!s.agentMode), icon: Icons.swap_horiz))
-            : Box(color: g100, child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                const Text('Jadi agen Buruhku', style: TextStyle(fontWeight: FontWeight.w700)),
-                const SizedBox(height: 4),
-                Text({'none': 'Dapatkan penghasilan dari pekerjaan harian di sekitarmu.', 'pending': 'Pendaftaran sedang direview admin.', 'rejected': 'Ditolak: ${k.reason}', 'needs_more': 'Perlu data tambahan: ${k.reason}'}[k.status]!, style: const TextStyle(fontSize: 12.5, color: g700)),
-                const SizedBox(height: 8),
-                if (k.status == 'none' || k.status == 'needs_more' || (k.status == 'rejected' && k.tries < 3)) full(pbtn(k.status == 'none' ? 'Daftar sekarang' : 'Lengkapi pendaftaran', () => _go(context, const KycPage()), icon: Icons.how_to_reg_outlined)),
-              ])),
-      ),
-      const SizedBox(height: 8),
-      tile(Icons.person_outline, 'Profil dan alamat', const EditProfilePage()),
-      if (k.status == 'approved') tile(Icons.storefront_outlined, 'Tawaran jasa saya', const MyServicesPage(), sub: '${s.mySvcs.length} tawaran'),
-      tile(Icons.account_balance_wallet_outlined, 'Dompet dan metode bayar', const WalletPage()),
-      ListTile(
-        leading: Badge(isLabelVisible: s.unreadNotes > 0, label: Text('${s.unreadNotes}'), backgroundColor: g900, child: const Icon(Icons.notifications_none)),
-        title: const Text('Notifikasi'), trailing: const Icon(Icons.chevron_right), onTap: () => _go(context, const NotifPage()),
-      ),
-      tile(Icons.shield_outlined, 'Keamanan dan SOS', const SafetyPage()),
-      tile(Icons.flag_outlined, 'Laporan saya', const MyReportsPage()),
-      tile(Icons.settings_outlined, 'Pengaturan', const SettingsPage()),
-      tile(Icons.help_outline, 'Pusat bantuan', const HelpPage()),
-      tile(Icons.description_outlined, 'Kebijakan dan ketentuan', const PolicyListPage()),
-      tile(Icons.admin_panel_settings_outlined, 'Panel Admin (Simulasi)', const AdminPage(), sub: 'Setujui KYC, moderasi, sengketa, laporan'),
-      ListTile(
-        leading: const Icon(Icons.logout), title: const Text('Keluar'),
-        onTap: () async {
-          if (await confirm(context, 'Keluar?', 'Data di perangkat ini tetap tersimpan untuk nomor yang sama.', ok: 'Keluar') && context.mounted) {
-            Navigator.of(context).popUntil((r) => r.isFirst);
-            context.r.logout();
-          }
-        },
-      ),
-      const SizedBox(height: 24),
-      const Center(child: Text('Buruhku v1.0 (prototype lokal)', style: TextStyle(color: g400, fontSize: 12))),
-      const SizedBox(height: 24),
-    ]);
+    );
   }
 }
 
@@ -92,7 +132,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   final key = GlobalKey<FormState>();
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: const Text('Profil dan alamat')),
+        appBar: PageBar(title: const Text('Profil dan alamat')),
         body: Form(
           key: key,
           child: ListView(padding: const EdgeInsets.all(16), children: [
@@ -128,7 +168,7 @@ class WalletPage extends StatelessWidget {
     final s = context.s;
     final led = WalletViewModel(s).clientLedger;
     return Scaffold(
-      appBar: AppBar(title: const Text('Dompet dan metode bayar')),
+      appBar: PageBar(title: const Text('Dompet dan metode bayar')),
       body: ListView(padding: const EdgeInsets.all(16), children: [
         const Warn('Pembayaran order selalu lewat escrow. Refund dikembalikan ke metode bayar asal.', icon: Icons.lock_outline),
         Section('E-wallet tersimpan', action: 'Tambah', onAction: () async {
@@ -173,29 +213,132 @@ class NotifPage extends StatefulWidget {
 }
 
 class _NotifPageState extends State<NotifPage> {
+  int tab = 0; // 0 semua, 1 order, 2 sistem
+  late final Set<String> _fresh; // notifikasi yang belum dibaca saat halaman dibuka
+
   @override
   void initState() {
     super.initState();
     final s = context.r;
+    _fresh = s.notes.where((n) => !n.read).map((n) => n.id).toSet();
     WidgetsBinding.instance.addPostFrameCallback((_) => s.readAllNotes());
+  }
+
+  String _day(DateTime d) {
+    final n = DateTime.now();
+    final diff = DateTime(n.year, n.month, n.day).difference(DateTime(d.year, d.month, d.day)).inDays;
+    return diff <= 0 ? 'Hari ini' : (diff == 1 ? 'Kemarin' : 'Lebih lama');
+  }
+
+  /// Notifikasi order membuka order terkait. Notifikasi request membuka order bila sudah
+  /// terbentuk (grup bila lebih dari satu agen), kalau belum membuka detail request.
+  void _open(Note n) {
+    final s = context.r;
+    final id = n.refId ?? '';
+    Widget? page;
+    switch (n.refType) {
+      case 'order':
+        if (s.orderById(id) != null) page = OrderPage(id);
+        break;
+      case 'request':
+        if (s.reqById(id) != null) {
+          final os = s.orders.where((o) => o.reqId == id && o.iAmClient).toList();
+          page = os.length > 1 ? GroupOrderPage(id) : (os.length == 1 ? OrderPage(os.first.id) : ReqDetailPage(id));
+        }
+        break;
+      case 'chat':
+        if (s.chats.any((c) => c.id == id)) page = ChatPage(id);
+        break;
+    }
+    if (page == null) {
+      toast(context, 'Data terkait sudah tidak tersedia.');
+      return;
+    }
+    final p = page;
+    Navigator.push(context, MaterialPageRoute(builder: (_) => p));
   }
 
   @override
   Widget build(BuildContext context) {
     final s = context.s;
+    final list = s.notes.where((n) => tab == 0 || (tab == 1 ? n.isOrder : !n.isOrder)).toList();
+    final rows = <Widget>[];
+    String? last;
+    for (final n in list) {
+      final d = _day(n.at);
+      if (d != last) {
+        last = d;
+        rows.add(Padding(padding: EdgeInsets.only(bottom: 12, top: rows.isEmpty ? 0 : 4), child: Text(d, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Color(0xFF3DBE7A)))));
+      }
+      rows.add(_NoteRow(n, fresh: _fresh.contains(n.id), onTap: n.isOrder ? () => _open(n) : null));
+    }
     return Scaffold(
-      appBar: AppBar(title: const Text('Notifikasi')),
-      body: s.notes.isEmpty
-          ? const Empty(Icons.notifications_none, 'Belum ada notifikasi.')
-          : ListView.separated(
-              itemCount: s.notes.length, separatorBuilder: (_, __) => const Divider(),
-              itemBuilder: (_, i) {
-                final n = s.notes[i];
-                return ListTile(leading: const Icon(Icons.notifications_none), title: Text(n.title, style: const TextStyle(fontWeight: FontWeight.w700)), subtitle: Text(n.body), trailing: Text(ago(n.at), style: const TextStyle(fontSize: 11, color: g500)));
-              },
+      body: SafeArea(
+        child: MediaQuery.withClampedTextScaling(
+          maxScaleFactor: 1.25,
+          child: ListView(padding: const EdgeInsets.fromLTRB(20, 12, 20, 32), children: [
+            Row(children: [
+              RoundBtn(size: 48, onTap: () => Navigator.maybePop(context), child: const Icon(Icons.arrow_back_ios_new_rounded, size: 20, color: g900)),
+              const Expanded(child: Center(child: Text('Notifikasi', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, height: 1.2, color: g900)))),
+              const SizedBox(width: 48),
+            ]),
+            const SizedBox(height: 18),
+            PillTabs(labels: const ['Semua', 'Order', 'Sistem'], index: tab, onChanged: (i) => setState(() => tab = i)),
+            const SizedBox(height: 16),
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 260),
+              switchInCurve: Curves.easeOutCubic,
+              switchOutCurve: Curves.easeIn,
+              layoutBuilder: (current, previous) => Stack(alignment: Alignment.topCenter, fit: StackFit.passthrough, children: [...previous, if (current != null) current]),
+              transitionBuilder: (child, anim) => FadeTransition(opacity: anim, child: SlideTransition(position: Tween<Offset>(begin: const Offset(0.05, 0), end: Offset.zero).animate(anim), child: child)),
+              child: SoftCard(
+              key: ValueKey(tab),
+              radius: 28,
+              padding: const EdgeInsets.fromLTRB(18, 16, 18, 6),
+              child: list.isEmpty
+                  ? Padding(padding: const EdgeInsets.only(bottom: 12), child: Empty(Icons.notifications_none, tab == 1 ? 'Belum ada notifikasi order.' : (tab == 2 ? 'Belum ada notifikasi sistem.' : 'Belum ada notifikasi.')))
+                  : Column(crossAxisAlignment: CrossAxisAlignment.start, children: rows),
+              ),
             ),
+          ]),
+        ),
+      ),
     );
   }
+}
+
+class _NoteRow extends StatelessWidget {
+  final Note n;
+  final bool fresh;
+  final VoidCallback? onTap;
+  const _NoteRow(this.n, {required this.fresh, this.onTap});
+  @override
+  Widget build(BuildContext context) => GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.only(bottom: 14),
+          child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            n.isOrder
+                ? const AvatarPh(46)
+                : Container(width: 46, height: 46, decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0xFFDADADA)), child: const Icon(Icons.notifications_none, size: 24, color: Color(0xFF9A9CA5))),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Row(children: [
+                  Flexible(child: Text(n.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 15.5, fontWeight: FontWeight.w800, height: 1.25, color: g900))),
+                  if (fresh) ...[const SizedBox(width: 6), Container(width: 8, height: 8, decoration: const BoxDecoration(color: kGreen, shape: BoxShape.circle))],
+                ]),
+                const SizedBox(height: 2),
+                Text.rich(TextSpan(style: const TextStyle(fontSize: 14, height: 1.3, color: g900), children: [
+                  TextSpan(text: n.body),
+                  TextSpan(text: ' \u2022 ${ago(n.at)}', style: const TextStyle(color: g500)),
+                ])),
+              ]),
+            ),
+          ]),
+        ),
+      );
 }
 
 // ---------------------------------------------------------------- pengaturan
@@ -204,18 +347,19 @@ class SettingsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final s = context.s;
+    Widget sw(bool v, ValueChanged<bool> f) => Switch(value: v, onChanged: f);
     return Scaffold(
-      appBar: AppBar(title: const Text('Pengaturan')),
-      body: ListView(children: [
-        const Padding(padding: EdgeInsets.fromLTRB(16, 16, 16, 0), child: Text('Notifikasi', style: TextStyle(fontWeight: FontWeight.w800))),
-        SwitchListTile(title: const Text('Status order dan pembayaran'), value: s.nOrder, onChanged: (v) { s.nOrder = v; s.notifyListeners(); }),
-        SwitchListTile(title: const Text('Pesan chat'), value: s.nChat, onChanged: (v) { s.nChat = v; s.notifyListeners(); }),
-        SwitchListTile(title: const Text('Promo dan info'), value: s.nPromo, onChanged: (v) { s.nPromo = v; s.notifyListeners(); }),
-        const Divider(),
-        const Padding(padding: EdgeInsets.fromLTRB(16, 12, 16, 0), child: Text('Keamanan', style: TextStyle(fontWeight: FontWeight.w800))),
-        ListTile(
-          leading: const Icon(Icons.pin_outlined), title: Text(s.pin.isEmpty ? 'Buat PIN transaksi' : 'Ubah PIN transaksi'), subtitle: const Text('Dipakai untuk menarik saldo'),
-          onTap: () async {
+      appBar: PageBar(title: const Text('Pengaturan')),
+      body: ListView(padding: const EdgeInsets.only(bottom: 32), children: [
+        const SetTitle('Notifikasi'),
+        SetGroup([
+          SetRow(Icons.shopping_bag, const Color(0xFFF5A12B), 'Status order dan pembayaran', null, badge: sw(s.nOrder, (v) { s.nOrder = v; s.notifyListeners(); })),
+          SetRow(Icons.chat_bubble, const Color(0xFF2F9BF0), 'Pesan chat', null, badge: sw(s.nChat, (v) { s.nChat = v; s.notifyListeners(); })),
+          SetRow(Icons.campaign, const Color(0xFFEF4F5F), 'Promo dan info', null, badge: sw(s.nPromo, (v) { s.nPromo = v; s.notifyListeners(); })),
+        ]),
+        const SetTitle('Keamanan'),
+        SetGroup([
+          SetRow(Icons.pin, const Color(0xFF8A63E8), s.pin.isEmpty ? 'Buat PIN transaksi' : 'Ubah PIN transaksi', () async {
             final p = await askText(context, 'PIN baru (4-6 digit)', number: true, obscure: true);
             if (p == null) return;
             if (p.length < 4 || p.length > 6) {
@@ -225,25 +369,22 @@ class SettingsPage extends StatelessWidget {
             s.pin = p;
             s.notifyListeners();
             if (context.mounted) toast(context, 'PIN disimpan.');
-          },
-        ),
-        SwitchListTile(
-          secondary: const Icon(Icons.fingerprint), title: const Text('Biometrik (simulasi)'), value: s.biometric,
-          onChanged: (v) async {
-            if (!v || await confirm(context, 'Aktifkan biometrik?', 'Pada aplikasi rilis ini memakai sidik jari atau wajah perangkat.', ok: 'Aktifkan')) {
-              s.biometric = v;
-              s.notifyListeners();
-            }
-          },
-        ),
-        const Divider(),
-        const Padding(padding: EdgeInsets.fromLTRB(16, 12, 16, 0), child: Text('Umum', style: TextStyle(fontWeight: FontWeight.w800))),
-        const ListTile(leading: Icon(Icons.language), title: Text('Bahasa'), subtitle: Text('Indonesia (English segera hadir)')),
-        const Divider(),
-        const Padding(padding: EdgeInsets.fromLTRB(16, 12, 16, 0), child: Text('Privasi dan data', style: TextStyle(fontWeight: FontWeight.w800))),
-        ListTile(
-          leading: const Icon(Icons.download_outlined), title: const Text('Ekspor data saya'), subtitle: const Text('Salinan data akun dalam format JSON'),
-          onTap: () {
+          }, sub: 'Dipakai untuk menarik saldo'),
+          SetRow(Icons.fingerprint, const Color(0xFF34B866), 'Biometrik (simulasi)', null,
+              badge: sw(s.biometric, (v) async {
+                if (!v || await confirm(context, 'Aktifkan biometrik?', 'Pada aplikasi rilis ini memakai sidik jari atau wajah perangkat.', ok: 'Aktifkan')) {
+                  s.biometric = v;
+                  s.notifyListeners();
+                }
+              })),
+        ]),
+        const SetTitle('Umum'),
+        SetGroup([
+          SetRow(Icons.language, const Color(0xFF22B8CF), 'Bahasa', null, sub: 'Indonesia (English segera hadir)'),
+        ]),
+        const SetTitle('Privasi dan data'),
+        SetGroup([
+          SetRow(Icons.download, const Color(0xFF4C6EF5), 'Ekspor data saya', () {
             final j = s.exportJson();
             showDialog<void>(
               context: context,
@@ -253,11 +394,8 @@ class SettingsPage extends StatelessWidget {
                 actions: [TextButton(onPressed: () { Clipboard.setData(ClipboardData(text: j)); toast(d, 'JSON disalin.'); }, child: const Text('Salin')), FilledButton(onPressed: () => Navigator.pop(d), child: const Text('Tutup'))],
               ),
             );
-          },
-        ),
-        ListTile(
-          leading: const Icon(Icons.delete_forever_outlined), title: const Text('Hapus akun'), subtitle: const Text('Menghapus semua data di perangkat ini'),
-          onTap: () async {
+          }, sub: 'Salinan data akun dalam format JSON'),
+          SetRow(Icons.delete_forever, const Color(0xFFEF4F5F), 'Hapus akun', titleColor: kRed, () async {
             final v = await askText(context, 'Ketik HAPUS untuk konfirmasi', hint: 'HAPUS');
             if (v == 'HAPUS' && context.mounted) {
               forgetProfilePhoto(context);
@@ -266,8 +404,8 @@ class SettingsPage extends StatelessWidget {
             } else if (v != null && context.mounted) {
               toast(context, 'Konfirmasi tidak cocok.');
             }
-          },
-        ),
+          }, sub: 'Menghapus semua data di perangkat ini'),
+        ]),
       ]),
     );
   }
@@ -280,7 +418,7 @@ class SafetyPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = context.s;
     return Scaffold(
-      appBar: AppBar(title: const Text('Keamanan dan SOS')),
+      appBar: PageBar(title: const Text('Keamanan dan SOS')),
       body: ListView(padding: const EdgeInsets.all(16), children: [
         const SosButton(),
         const SizedBox(height: 8),
@@ -320,7 +458,7 @@ class _ReportPageState extends State<ReportPage> {
   final key = GlobalKey<FormState>();
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: const Text('Buat laporan')),
+        appBar: PageBar(title: const Text('Buat laporan')),
         body: Form(
           key: key,
           child: ListView(padding: const EdgeInsets.all(16), children: [
@@ -353,7 +491,7 @@ class MyReportsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = context.s;
     return Scaffold(
-      appBar: AppBar(title: const Text('Laporan saya'), actions: [IconButton(icon: const Icon(Icons.add), onPressed: () => _go(context, const ReportPage()))]),
+      appBar: PageBar(title: const Text('Laporan saya'), actions: [IconButton(icon: const Icon(Icons.add), onPressed: () => _go(context, const ReportPage()))]),
       body: s.reports.isEmpty
           ? const Empty(Icons.flag_outlined, 'Belum ada laporan. Laporkan pengguna atau pesan yang mencurigakan.')
           : ListView(padding: const EdgeInsets.all(16), children: [
@@ -390,7 +528,7 @@ class HelpPage extends StatelessWidget {
     final s = context.s;
     final sub = TextEditingController(), body = TextEditingController();
     return Scaffold(
-      appBar: AppBar(title: const Text('Pusat bantuan')),
+      appBar: PageBar(title: const Text('Pusat bantuan')),
       body: ListView(padding: const EdgeInsets.all(16), children: [
         Box(color: g100, child: const Row(children: [Icon(Icons.sos_outlined, size: 28), SizedBox(width: 12), Expanded(child: Text('Darurat: Polisi 110, Ambulans 118, Darurat 112. Di aplikasi pakai tombol SOS.'))])),
         const Section('Pertanyaan umum'),
@@ -439,8 +577,8 @@ class PolicyListPage extends StatelessWidget {
   const PolicyListPage({super.key});
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: const Text('Kebijakan dan ketentuan')),
-        body: ListView(children: [for (final k in _policies.keys) ListTile(title: Text(k), trailing: const Icon(Icons.chevron_right), onTap: () => _go(context, PolicyPage(k)))]),
+        appBar: PageBar(title: const Text('Kebijakan dan ketentuan')),
+        body: ListView(children: [SetGroup([for (final k in _policies.keys) SetRow(Icons.description, const Color(0xFF4C6EF5), k, () => _go(context, PolicyPage(k)), badge: const Icon(Icons.chevron_right, color: g400))])]),
       );
 }
 
@@ -449,7 +587,7 @@ class PolicyPage extends StatelessWidget {
   const PolicyPage(this.title, {super.key});
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: Text(title)),
+        appBar: PageBar(title: Text(title)),
         body: ListView(padding: const EdgeInsets.all(16), children: [Text(_policies[title] ?? '', style: const TextStyle(height: 1.5)), const SizedBox(height: 16), const Text('Versi prototype: isi final perlu ditinjau konsultan hukum.', style: TextStyle(color: g500, fontSize: 12))]),
       );
 }
@@ -468,7 +606,7 @@ class AdminPage extends StatelessWidget {
     return DefaultTabController(
       length: 6,
       child: Scaffold(
-        appBar: AppBar(title: const Text('Panel Admin (Simulasi)'), bottom: const TabBar(isScrollable: true, tabs: [Tab(text: 'KYC'), Tab(text: 'Moderasi'), Tab(text: 'Laporan'), Tab(text: 'Sengketa'), Tab(text: 'SOS'), Tab(text: 'Statistik')])),
+        appBar: PageBar(title: const Text('Panel Admin (Simulasi)'), bottom: const TabBar(isScrollable: true, tabs: [Tab(text: 'KYC'), Tab(text: 'Moderasi'), Tab(text: 'Laporan'), Tab(text: 'Sengketa'), Tab(text: 'SOS'), Tab(text: 'Statistik')])),
         body: TabBarView(children: [
           // KYC
           (k.status == 'pending' || k.status == 'needs_more')

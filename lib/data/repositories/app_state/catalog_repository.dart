@@ -35,7 +35,7 @@ class CatalogRepository extends RepoBase {
   String nid(String p) => hub.nid(p);
   T _pick<T>(List<T> l) => hub._pick(l);
   void touch() => hub.touch();
-  void notify(String t, String b) => hub.notify(t, b);
+  void notify(String t, String b, {String? refType, String? refId}) => hub.notify(t, b, refType: refType, refId: refId);
   int get myLevel => hub.myLevel;
   Chat chatFor({required String type, required String refId, required String otherId, required String otherName, required bool otherAgent, String title = ''}) => hub.chatFor(type: type, refId: refId, otherId: otherId, otherName: otherName, otherAgent: otherAgent, title: title);
   void respondOffer(Chat c, Msg m, String act, {int? counter}) => hub.respondOffer(c, m, act, counter: counter);
@@ -197,6 +197,6 @@ class CatalogRepository extends RepoBase {
     });
     c.msgs.add(Msg(id: nid('m'), from: 'other', type: 'order_offer', body: 'Penawaran order', data: d));
     c.unread++;
-    notify('Order langsung baru', '$name memesan "${d['title']}" (${rp(d['price'] as int)}).');
+    notify('Order langsung baru', 'Klien $name memesan "${d['title']}" (${rp(d['price'] as int)}).', refType: 'chat', refId: c.id);
   }
 }
