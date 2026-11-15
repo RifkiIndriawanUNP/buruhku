@@ -30,6 +30,18 @@ class TempPhoto extends StatelessWidget {
   Widget build(BuildContext context) {
     final p = path;
     if (p == null || p.isEmpty) return Ph(w: w, h: h);
+    if (p.startsWith('http://') || p.startsWith('https://')) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(6),
+        child: Image.network(
+          p,
+          width: w,
+          height: h,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => Ph(w: w, h: h),
+        ),
+      );
+    }
     return ClipRRect(borderRadius: BorderRadius.circular(6), child: Image.file(File(p), width: w, height: h, fit: BoxFit.cover, errorBuilder: (_, __, ___) => Ph(w: w, h: h)));
   }
 }

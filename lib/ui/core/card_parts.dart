@@ -11,16 +11,54 @@ const kPeach = Color(0xFFFFCCBC); // tag jenis harga
 const kPh = Color(0xFFE4E5E9); // latar placeholder foto
 const kPhIcon = Color(0xFFB4B6BE);
 
+// Jarak baku. Pakai konstanta ini, jangan angka lepas, supaya semua kartu terasa sama rapatnya.
+const kGapXs = 4.0; // antar baris teks kecil
+const kGapSm = 8.0; // antar elemen dalam satu kartu
+const kGapMd = 12.0; // antar blok dalam satu kartu
+const kCardGap = 12.0; // antar kartu putih (SoftCard) di daftar vertikal
+const kTileGap = 10.0; // antar kartu garis (Box) di daftar vertikal
+
 /// Rupiah dengan spasi: "Rp 63.000".
 String rpSp(num n) => rp(n).replaceFirst('Rp', 'Rp ');
 
-/// Foto jasa sementara (placeholder abu-abu). Ganti dengan Image saat foto sudah ada.
+/// Foto jasa sementara (placeholder abu-abu) atau foto online jika url tersedia.
 class PhotoPlaceholder extends StatelessWidget {
   final double height;
   final double radius;
-  const PhotoPlaceholder({required this.height, this.radius = 14, super.key});
+  final String? url;
+  const PhotoPlaceholder({required this.height, this.radius = 14, this.url, super.key});
   @override
-  Widget build(BuildContext context) => Container(
+  Widget build(BuildContext context) {
+    if (url != null && url!.isNotEmpty) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(radius),
+        child: Image.network(
+          url!,
+          height: height,
+          width: double.infinity,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => _fallback(),
+          loadingBuilder: (ctx, child, progress) =>
+              progress == null ? child : _loading(),
+        ),
+      );
+    }
+    return _fallback();
+  }
+
+  Widget _loading() => Container(
+        height: height,
+        width: double.infinity,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(color: kPh, borderRadius: BorderRadius.circular(radius)),
+        child: const SizedBox(
+          width: 22,
+          height: 22,
+          child: CircularProgressIndicator(strokeWidth: 2, color: kNavy),
+        ),
+      );
+
+  Widget _fallback() => Container(
         height: height,
         width: double.infinity,
         alignment: Alignment.center,
@@ -29,13 +67,33 @@ class PhotoPlaceholder extends StatelessWidget {
       );
 }
 
-/// Foto profil sementara (lingkaran abu-abu polos).
+/// Foto profil sementara (lingkaran) atau avatar online jika url tersedia.
 class AvatarPh extends StatelessWidget {
   final double size;
-  const AvatarPh(this.size, {super.key});
+  final String? url;
+  const AvatarPh(this.size, {this.url, super.key});
   @override
-  Widget build(BuildContext context) =>
-      Container(width: size, height: size, decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0xFFDADADA)));
+  Widget build(BuildContext context) {
+    if (url != null && url!.isNotEmpty) {
+      return ClipOval(
+        child: Image.network(
+          url!,
+          width: size,
+          height: size,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => _fallback(),
+        ),
+      );
+    }
+    return _fallback();
+  }
+
+  Widget _fallback() => Container(
+        width: size,
+        height: size,
+        decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0xFFDADADA)),
+        child: Icon(Icons.person, size: size * 0.6, color: Colors.white70),
+      );
 }
 
 /// Pil kecil untuk kategori / jenis harga. Tinggi tetap, teks satu baris.

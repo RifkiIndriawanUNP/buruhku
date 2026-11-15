@@ -9,6 +9,7 @@ import 'package:buruhku/ui/account/account_screen.dart';
 import 'package:buruhku/ui/agents/agent_detail_screen.dart';
 import 'package:buruhku/ui/chat/chat_screen.dart';
 import 'package:buruhku/ui/request/request_screen.dart';
+import 'package:buruhku/data/services/online_photos.dart';
 
 // ---------------------------------------------------------------- riwayat & favorit
 class OrderTile extends StatelessWidget {
@@ -16,7 +17,7 @@ class OrderTile extends StatelessWidget {
   const OrderTile(this.o, {super.key});
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.only(bottom: kTileGap),
         child: Box(
           onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => OrderPage(o.id))),
           child: Row(children: [
@@ -90,7 +91,7 @@ class GroupTile extends StatelessWidget {
       counts[l] = (counts[l] ?? 0) + 1;
     }
     return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.only(bottom: kTileGap),
       child: Box(
         onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => GroupOrderPage(reqId))),
         child: Row(children: [
@@ -325,8 +326,8 @@ class GroupOrderPage extends StatelessWidget {
           // terus mencari sampai 5/5; jika ada yang dipilih atau ditolak, agen baru dicari lagi
           if (open && interest.length < AppState.kSearchTarget)
             Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: Box(
+              padding: const EdgeInsets.only(bottom: kTileGap),
+        child: Box(
                 child: Row(children: [
                   const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: g700)),
                   const SizedBox(width: 12),
@@ -380,7 +381,7 @@ class _Candidate extends StatelessWidget {
     final acc = a;
     final unit = unitOf(r.ptype);
     return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.only(bottom: kTileGap),
       child: Box(
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           InkWell(
@@ -451,7 +452,7 @@ class _GroupAcc extends StatelessWidget {
     Widget tag(Widget t) => Expanded(child: Align(alignment: Alignment.centerLeft, child: t));
     final cancelled = a.status == 'declined' || a.status == 'withdrawn';
     return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.only(bottom: kTileGap),
       child: Box(
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           InkWell(
@@ -719,7 +720,7 @@ class _OrderPageState extends State<OrderPage> {
         Box(
           onTap: cli && o.otherId.startsWith('a') ? () => Navigator.push(context, MaterialPageRoute(builder: (_) => AgentDetail(o.otherId))) : null,
           child: Row(children: [
-            const Avatar(size: 44),
+            Avatar(size: 44, imageUrl: cli && o.otherId.startsWith('a') ? s.agentById(o.otherId).avatarUrl : null),
             const SizedBox(width: 10),
             Expanded(child: Text(o.otherName, style: const TextStyle(fontWeight: FontWeight.w700))),
             if (chat != null) obtn('Chat', () => Navigator.push(context, MaterialPageRoute(builder: (_) => ChatPage(chat.id))), icon: Icons.chat_bubble_outline),
@@ -870,7 +871,31 @@ class _OrderPageState extends State<OrderPage> {
           return [
             const Text('Foto hasil dari agen', style: TextStyle(fontWeight: FontWeight.w700)),
             const SizedBox(height: 6),
-            const Row(children: [Expanded(child: Ph(h: 90)), SizedBox(width: 8), Expanded(child: Ph(h: 90))]),
+            Row(children: [
+              Expanded(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.network(
+                    OnlinePhotos.proofPhotos[0],
+                    height: 100,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => const Ph(h: 100),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.network(
+                    OnlinePhotos.proofPhotos[1],
+                    height: 100,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => const Ph(h: 100),
+                  ),
+                ),
+              ),
+            ]),
             const SizedBox(height: 8),
             Live((_) => Text('Konfirmasi otomatis dalam ${clock(Duration(hours: 24) - DateTime.now().difference(o.finishedAt ?? DateTime.now()))}', style: const TextStyle(fontSize: 12.5, color: g500))),
             const SizedBox(height: 10),

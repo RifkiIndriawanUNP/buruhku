@@ -35,7 +35,7 @@ class ServiceCard extends StatelessWidget {
         onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ServiceDetailPage(svc.id))),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Stack(children: [
-            PhotoPlaceholder(height: carousel ? 92 : 128, radius: 14),
+            PhotoPlaceholder(height: carousel ? 92 : 128, radius: 14, url: svc.imageUrl),
             Positioned(
               top: 6,
               right: 6,
@@ -55,7 +55,7 @@ class ServiceCard extends StatelessWidget {
           ]),
           const SizedBox(height: 8),
           Row(children: [
-            const AvatarPh(26),
+            AvatarPh(26, url: a.avatarUrl),
             const SizedBox(width: 8),
             Flexible(child: Text(a.short, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: g900))),
             if (a.verified) ...[const SizedBox(width: 4), const VerifiedBadge(size: 15)],
@@ -94,7 +94,7 @@ class ServiceTile extends StatelessWidget {
   final Svc svc;
   const ServiceTile(this.svc, {super.key});
   @override
-  Widget build(BuildContext context) => Padding(padding: const EdgeInsets.only(bottom: 14), child: ServiceCard(svc));
+  Widget build(BuildContext context) => Padding(padding: const EdgeInsets.only(bottom: kCardGap), child: ServiceCard(svc));
 }
 
 // ---------------------------------------------------------------- daftar tawaran jasa (klien)
@@ -162,6 +162,19 @@ class ServiceDetailPage extends StatelessWidget {
         IconButton(onPressed: () => s.toggleFavSvc(v.id), icon: Icon(s.favSvc.contains(v.id) ? Icons.favorite : Icons.favorite_border)),
       ]),
       body: ListView(padding: const EdgeInsets.all(16), children: [
+        if (v.imageUrl != null && v.imageUrl!.isNotEmpty) ...[
+          ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: Image.network(
+              v.imageUrl!,
+              height: 200,
+              width: double.infinity,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+            ),
+          ),
+          const SizedBox(height: 14),
+        ],
         Row(children: [
           Icon(catOf(v.cat).icon, size: 32),
           const SizedBox(width: 12),
@@ -176,6 +189,32 @@ class ServiceDetailPage extends StatelessWidget {
         ])),
         const Section('Deskripsi'),
         Text(v.desc, style: const TextStyle(height: 1.4)),
+        if (v.photos.isNotEmpty) ...[
+          const Section('Foto Jasa & Dokumentasi'),
+          SizedBox(
+            height: 100,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: v.photos.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 8),
+              itemBuilder: (ctx, idx) => ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: Image.network(
+                  v.photos[idx],
+                  width: 130,
+                  height: 100,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => Container(
+                    width: 130,
+                    height: 100,
+                    color: g200,
+                    child: const Icon(Icons.image_outlined, color: g500),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
         const Section('Cara order'),
         const Warn('Pilih lokasi dan jadwal, harga sudah terisi. Kamu bisa menawar harga. Agen menyetujui, menawar balik, atau menolak, lalu bayar lewat escrow atau COD.', icon: Icons.bolt_outlined),
         const Section('Ditawarkan oleh'),

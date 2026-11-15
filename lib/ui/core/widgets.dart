@@ -34,9 +34,26 @@ class Ph extends StatelessWidget {
   final double? w, h;
   final IconData icon;
   final double radius;
-  const Ph({this.w, this.h, this.icon = Icons.image_outlined, this.radius = 6});
+  final String? imageUrl;
+  const Ph({this.w, this.h, this.icon = Icons.image_outlined, this.radius = 6, this.imageUrl});
   @override
-  Widget build(BuildContext context) => Container(
+  Widget build(BuildContext context) {
+    if (imageUrl != null && imageUrl!.isNotEmpty) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(radius),
+        child: Image.network(
+          imageUrl!,
+          width: w,
+          height: h,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => _fallback(),
+        ),
+      );
+    }
+    return _fallback();
+  }
+
+  Widget _fallback() => Container(
       width: w, height: h, clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(color: g100, border: Border.all(color: g300), borderRadius: BorderRadius.circular(radius)),
       child: Stack(alignment: Alignment.center, children: [
@@ -48,9 +65,30 @@ class Ph extends StatelessWidget {
 class Avatar extends StatelessWidget {
   final double size;
   final IconData icon;
-  const Avatar({this.size = 44, this.icon = Icons.person_outline});
+  final String? imageUrl;
+  const Avatar({this.size = 44, this.icon = Icons.person_outline, this.imageUrl});
   @override
-  Widget build(BuildContext context) => Container(
+  Widget build(BuildContext context) {
+    if (imageUrl != null && imageUrl!.isNotEmpty) {
+      return Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: g400)),
+        child: ClipOval(
+          child: Image.network(
+            imageUrl!,
+            width: size,
+            height: size,
+            fit: BoxFit.cover,
+            errorBuilder: (_, __, ___) => _fallback(),
+          ),
+        ),
+      );
+    }
+    return _fallback();
+  }
+
+  Widget _fallback() => Container(
       width: size, height: size,
       decoration: BoxDecoration(shape: BoxShape.circle, color: g200, border: Border.all(color: g400)),
       child: Icon(icon, size: size * .55, color: g700));

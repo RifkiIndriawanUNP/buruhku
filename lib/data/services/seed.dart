@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:buruhku/domain/models/models.dart';
 import 'package:buruhku/utils/geo.dart';
+import 'package:buruhku/data/services/online_photos.dart';
 
 const _fn = ['Budi', 'Agus', 'Joko', 'Slamet', 'Dedi', 'Rudi', 'Eko', 'Hendra', 'Andi', 'Yanto', 'Bayu', 'Fajar',
   'Wawan', 'Iwan', 'Tono', 'Sugeng', 'Ucok', 'Asep', 'Dani', 'Rizal', 'Siti', 'Rina', 'Wati', 'Yuli', 'Ani', 'Dewi',
@@ -26,11 +27,12 @@ List<Agent> buildAgents() {
     }
     final jobs = r.nextInt(220);
     final rating = double.parse((3.6 + r.nextInt(15) / 10).toStringAsFixed(1));
+    final catList = cs.toList();
     list.add(Agent(
       id: 'a${i + 1}',
       name: '${_fn[i % _fn.length]} ${_ln[r.nextInt(_ln.length)]}',
       bio: _bios[r.nextInt(_bios.length)],
-      cats: cs.toList(),
+      cats: catList,
       rating: rating,
       jobs: jobs,
       dist: double.parse((0.4 + r.nextDouble() * 13).toStringAsFixed(1)),
@@ -39,6 +41,8 @@ List<Agent> buildAgents() {
       verified: r.nextDouble() < 0.9,
       online: r.nextDouble() < 0.65,
       direct: r.nextDouble() < 0.85,
+      avatarUrl: OnlinePhotos.agentAvatar(i),
+      portfolio: OnlinePhotos.portfolioForCats(catList),
     ));
   }
   return list;
@@ -95,6 +99,8 @@ List<Rev> genReviews(Agent a) {
       tags: [['Tepat waktu', 'Rapi', 'Sopan', 'Kuat'][r.nextInt(4)]],
       comment: _revText[r.nextInt(_revText.length)],
       at: DateTime.now().subtract(Duration(days: 3 + r.nextInt(60))),
+      avatarUrl: OnlinePhotos.reviewerAvatar(r.nextInt(OnlinePhotos.reviewerAvatars.length)),
+      photoUrl: r.nextDouble() < 0.6 ? OnlinePhotos.proofPhotos[r.nextInt(OnlinePhotos.proofPhotos.length)] : null,
     ));
   }
   return out;
@@ -121,7 +127,10 @@ List<Svc> buildServices(List<Agent> agents) {
       final pt = t['pt'] as String;
       out.add(Svc(
           id: 'S${++n}', agentId: a.id, title: title, cat: cid, desc: t['d'] as String, ptype: pt, price: p,
-          dur: pt == 'lump' ? 0.0 : (pt == 'hourly' ? 3.0 : 1.0)));
+          dur: pt == 'lump' ? 0.0 : (pt == 'hourly' ? 3.0 : 1.0),
+          imageUrl: OnlinePhotos.photoForTitle(cid, title, n),
+          photos: OnlinePhotos.photosForTitle(cid, title),
+      ));
     }
   }
   return out;

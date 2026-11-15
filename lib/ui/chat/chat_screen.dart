@@ -68,7 +68,7 @@ class _ChatsTabState extends State<ChatsTab> {
                   final c = l[i];
                   final last = c.msgs.isEmpty ? null : c.msgs.last;
                   return ListTile(
-                    leading: const Avatar(),
+                    leading: Avatar(imageUrl: c.otherAgent ? s.agentById(c.otherId).avatarUrl : null),
                     title: Row(children: [
                       Flexible(child: Text(c.otherName, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w700))),
                       if (seg == 'all') ...[const SizedBox(width: 6), Tag(c.type == 'order' ? 'Order' : 'Langsung')],
@@ -216,7 +216,7 @@ class _ChatPageState extends State<ChatPage> {
       appBar: AppBar(
         titleSpacing: 0,
         title: Row(children: [
-          const Avatar(size: 36),
+          Avatar(size: 36, imageUrl: c.otherAgent ? s.agentById(c.otherId).avatarUrl : null),
           const SizedBox(width: 10),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(c.otherName, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700), maxLines: 1, overflow: TextOverflow.ellipsis),

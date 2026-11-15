@@ -54,7 +54,7 @@ class _RequestList extends StatelessWidget {
       if (l.isEmpty) const Padding(padding: EdgeInsets.only(top: 40), child: Empty(Icons.assignment_outlined, 'Belum ada request. Tulis pekerjaan apa saja, agen terdekat akan menghubungimu.')),
       for (final r in l)
         Padding(
-          padding: const EdgeInsets.only(bottom: 10),
+          padding: const EdgeInsets.only(bottom: kTileGap),
           child: Box(
             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ReqDetailPage(r.id))),
             child: Row(children: [
@@ -413,13 +413,13 @@ class _AccCard extends StatelessWidget {
     final selected = a.status == 'selected';
     final canPick = !selected && r.chosen.length < r.workers && ['OPEN', 'HAS_ACCEPTORS', 'FULL'].contains(r.status);
     return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.only(bottom: kTileGap),
       child: Box(
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           InkWell(
             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => AgentDetail(ag.id))),
             child: Row(children: [
-              const Avatar(size: 46),
+              Avatar(size: 46, imageUrl: ag.avatarUrl),
               const SizedBox(width: 10),
               Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Row(children: [Text(ag.short, style: const TextStyle(fontWeight: FontWeight.w700)), const SizedBox(width: 6), if (ag.verified) const Icon(Icons.verified_outlined, size: 16)]),

@@ -46,7 +46,7 @@ class AgentCard extends StatelessWidget {
     final Widget head;
     if (wide) {
       head = Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        const AvatarPh(56),
+        AvatarPh(56, url: a.avatarUrl),
         const SizedBox(width: 12),
         Expanded(
           child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -59,7 +59,7 @@ class AgentCard extends StatelessWidget {
       ]);
     } else {
       head = Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        const AvatarPh(_avatar),
+        AvatarPh(_avatar, url: a.avatarUrl),
         const SizedBox(height: 8),
         name,
         const SizedBox(height: 1),
@@ -130,5 +130,5 @@ class AgentTile extends StatelessWidget {
   final Agent a;
   const AgentTile(this.a, {super.key});
   @override
-  Widget build(BuildContext context) => Padding(padding: const EdgeInsets.only(bottom: 14), child: AgentCard(a, wide: true));
+  Widget build(BuildContext context) => Padding(padding: const EdgeInsets.only(bottom: kCardGap), child: AgentCard(a, wide: true));
 }

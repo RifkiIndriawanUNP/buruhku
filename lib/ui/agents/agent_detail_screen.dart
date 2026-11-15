@@ -38,7 +38,7 @@ class AgentDetail extends StatelessWidget {
       ]),
       body: ListView(padding: const EdgeInsets.fromLTRB(16, 16, 16, kBarSpace), children: [
         Row(children: [
-          const Avatar(size: 76),
+          Avatar(size: 76, imageUrl: a.avatarUrl),
           const SizedBox(width: 14),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(a.short, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
@@ -70,17 +70,67 @@ class AgentDetail extends StatelessWidget {
           for (final v in s.svcsOfAgent(a.id)) ServiceTile(v),
         ],
         const Section('Portofolio'),
-        const Row(children: [Expanded(child: Ph(h: 80)), SizedBox(width: 8), Expanded(child: Ph(h: 80)), SizedBox(width: 8), Expanded(child: Ph(h: 80))]),
+        if (a.portfolio.isNotEmpty)
+          SizedBox(
+            height: 95,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: a.portfolio.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 8),
+              itemBuilder: (ctx, idx) => ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: Image.network(
+                  a.portfolio[idx],
+                  width: 125,
+                  height: 95,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => const Ph(w: 125, h: 95),
+                ),
+              ),
+            ),
+          )
+        else
+          const Row(children: [Expanded(child: Ph(h: 80)), SizedBox(width: 8), Expanded(child: Ph(h: 80)), SizedBox(width: 8), Expanded(child: Ph(h: 80))]),
         Section('Ulasan (${revs.length})'),
         if (revs.isEmpty) const Text('Belum ada ulasan.', style: TextStyle(color: g500)),
         for (final v in revs.take(5))
           Padding(
             padding: const EdgeInsets.only(bottom: 8),
             child: Box(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Row(children: [Text(v.from, style: const TextStyle(fontWeight: FontWeight.w600)), const Spacer(), Stars(v.rating.toDouble(), size: 13)]),
+              Row(children: [
+                if (v.avatarUrl != null && v.avatarUrl!.isNotEmpty) ...[
+                  ClipOval(
+                    child: Image.network(
+                      v.avatarUrl!,
+                      width: 28,
+                      height: 28,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => const Icon(Icons.person, size: 28, color: g400),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                ],
+                Text(v.from, style: const TextStyle(fontWeight: FontWeight.w600)),
+                const Spacer(),
+                Stars(v.rating.toDouble(), size: 13),
+              ]),
               if (v.tags.isNotEmpty) Padding(padding: const EdgeInsets.only(top: 4), child: Wrap(spacing: 4, children: [for (final t in v.tags) Tag(t)])),
               const SizedBox(height: 4),
               Text(v.comment),
+              if (v.photoUrl != null && v.photoUrl!.isNotEmpty) ...[
+                const SizedBox(height: 6),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.network(
+                    v.photoUrl!,
+                    height: 80,
+                    width: 120,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                  ),
+                ),
+              ],
+              const SizedBox(height: 4),
               Text(ago(v.at), style: const TextStyle(fontSize: 11, color: g500)),
             ])),
           ),
