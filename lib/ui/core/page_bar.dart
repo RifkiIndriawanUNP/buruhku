@@ -120,3 +120,75 @@ class _PillTabBarState extends State<PillTabBar> {
         child: PillTabs(labels: widget.labels, index: _c?.index ?? 0, onChanged: (i) => _c?.animateTo(i)),
       );
 }
+
+/// Bar atas bergaya chat: tombol kembali bulat, kapsul putih berisi foto + nama + keterangan
+/// (bisa diketuk, misalnya untuk membuka profil), dan tombol aksi bulat di kanan.
+class ProfileBar extends StatelessWidget implements PreferredSizeWidget {
+  final Widget avatar;
+  final String title;
+  final String? subtitle;
+  final VoidCallback? onTap;
+  final List<Widget> actions;
+  const ProfileBar({required this.avatar, required this.title, this.subtitle, this.onTap, this.actions = const [], super.key});
+
+  static const _d = 56.0;
+
+  @override
+  Size get preferredSize => const Size.fromHeight(_d + 16);
+
+  @override
+  Widget build(BuildContext context) {
+    final canBack = Navigator.of(context).canPop();
+    return Material(
+      color: Theme.of(context).scaffoldBackgroundColor,
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+          child: Row(children: [
+            if (canBack) ...[
+              RoundBtn(size: _d, onTap: () => Navigator.maybePop(context), child: const Icon(Icons.arrow_back_ios_new_rounded, size: 20, color: g900)),
+              const SizedBox(width: 8),
+            ],
+            Expanded(
+              child: Material(
+                color: cW,
+                shape: const StadiumBorder(),
+                clipBehavior: Clip.antiAlias,
+                child: InkWell(
+                  onTap: onTap,
+                  child: SizedBox(
+                    height: _d,
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(6, 0, 16, 0),
+                      child: Row(children: [
+                        avatar,
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.start, children: [
+                            Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800, height: 1.2, color: g900)),
+                            if (subtitle != null) Text(subtitle!, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13.5, height: 1.2, color: g500)),
+                          ]),
+                        ),
+                      ]),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            for (final a in actions) ...[
+              const SizedBox(width: 8),
+              Container(
+                width: _d,
+                height: _d,
+                alignment: Alignment.center,
+                decoration: const BoxDecoration(color: cW, shape: BoxShape.circle),
+                child: IconTheme(data: const IconThemeData(size: 24, color: g900), child: a),
+              ),
+            ],
+          ]),
+        ),
+      ),
+    );
+  }
+}

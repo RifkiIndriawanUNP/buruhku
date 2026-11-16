@@ -43,37 +43,23 @@ class AgentCard extends StatelessWidget {
     ]);
     final status = Text(a.online ? 'Online' : 'Offline', maxLines: 1, style: const TextStyle(fontSize: 11.5, height: _lh, color: g500));
 
-    final Widget head;
-    if (wide) {
-      head = Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        AvatarPh(56, url: a.avatarUrl),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-            name,
-            status,
-            const SizedBox(height: 6),
-            Wrap(spacing: 4, runSpacing: 4, children: [for (final id in a.cats.take(3)) CatTag(catOf(id).name, catOf(id).color, fontSize: 9.5, height: _tag)]),
-          ]),
-        ),
-      ]);
-    } else {
-      head = Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        AvatarPh(_avatar, url: a.avatarUrl),
-        const SizedBox(height: 8),
-        name,
-        const SizedBox(height: 1),
-        status,
-        const SizedBox(height: 6),
-        // Satu baris, maksimal dua tag. Teks tag dipotong dengan elipsis bila sempit.
-        Row(children: [
-          for (var i = 0; i < a.cats.length && i < 2; i++) ...[
-            if (i > 0) const SizedBox(width: 4),
-            Flexible(child: CatTag(catOf(a.cats[i]).name, catOf(a.cats[i]).color, fontSize: 9, height: _tag)),
-          ],
-        ]),
-      ]);
-    }
+    if (wide) return _wide(context, name, fav, rating);
+
+    final head = Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      AvatarPh(_avatar, url: a.avatarUrl),
+      const SizedBox(height: 8),
+      name,
+      const SizedBox(height: 1),
+      status,
+      const SizedBox(height: 6),
+      // Satu baris, maksimal dua tag. Teks tag dipotong dengan elipsis bila sempit.
+      Row(children: [
+        for (var i = 0; i < a.cats.length && i < 2; i++) ...[
+          if (i > 0) const SizedBox(width: 4),
+          Flexible(child: CatTag(catOf(a.cats[i]).name, catOf(a.cats[i]).color, fontSize: 9, height: _tag)),
+        ],
+      ]),
+    ]);
 
     final card = MediaQuery.withClampedTextScaling(
       maxScaleFactor: _maxScale,
@@ -109,6 +95,76 @@ class AgentCard extends StatelessWidget {
       ),
     );
     return width == null ? card : SizedBox(width: width, child: card);
+  }
+
+  /// Mode lebar: padat dan minimalis. Foto + nama + satu baris info + tag, tombol aksi satu baris di bawah.
+  /// Status online ditandai titik di foto, jadi tidak butuh baris teks sendiri.
+  Widget _wide(BuildContext context, Widget name, bool fav, double rating) {
+    void open() => Navigator.push(context, MaterialPageRoute(builder: (_) => AgentDetail(a.id)));
+    return MediaQuery.withClampedTextScaling(
+      maxScaleFactor: _maxScale,
+      child: SoftCard(
+        radius: 22,
+        padding: const EdgeInsets.all(_pad),
+        onTap: open,
+        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Stack(clipBehavior: Clip.none, children: [
+              AvatarPh(_avatar, url: a.avatarUrl),
+              Positioned(
+                right: 0,
+                bottom: 0,
+                child: Container(width: 13, height: 13, decoration: BoxDecoration(color: a.online ? kGreen : g400, shape: BoxShape.circle, border: Border.all(color: cW, width: 2))),
+              ),
+            ]),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+                name,
+                const SizedBox(height: 2),
+                Row(children: [
+                  const Icon(Icons.star, size: 14, color: kNavy),
+                  const SizedBox(width: 3),
+                  Flexible(
+                    child: Text(
+                      '${rating.toStringAsFixed(1)}  \u00b7  ~${a.dist.toStringAsFixed(1)} km  \u00b7  ${a.jobs} order',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 12.5, height: _lh, color: g700),
+                    ),
+                  ),
+                ]),
+                const SizedBox(height: 6),
+                Wrap(spacing: 4, runSpacing: 4, children: [for (final id in a.cats.take(3)) CatTag(catOf(id).name, catOf(id).color, fontSize: 9.5, height: _tag)]),
+              ]),
+            ),
+            GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => context.r.toggleFav(a.id),
+              child: Padding(
+                padding: const EdgeInsets.only(left: 8, bottom: 8),
+                child: Icon(fav ? Icons.favorite : Icons.favorite_border, size: 22, color: Colors.red),
+              ),
+            ),
+          ]),
+          const SizedBox(height: 10),
+          // Abu-abu muda supaya tombol terlihat di atas kartu putih yang rata.
+          Material(
+            color: cBg,
+            borderRadius: BorderRadius.circular(_btn / 2),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(_btn / 2),
+              onTap: () => a.direct ? startAgentChat(context, a, offer: true) : open(),
+              child: SizedBox(
+                height: _btn,
+                width: double.infinity,
+                child: Center(child: Text(a.direct ? 'Order Langsung' : 'Lihat Profil', style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700, color: g900))),
+              ),
+            ),
+          ),
+        ]),
+      ),
+    );
   }
 
   Widget _stat(String value, String label, [IconData? icon]) => Expanded(

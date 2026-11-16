@@ -5,6 +5,7 @@ import 'package:buruhku/ui/core/ui.dart';
 import 'package:latlong2/latlong.dart' show LatLng;
 import 'package:buruhku/utils/geo.dart';
 import 'package:buruhku/ui/account/account_screen.dart';
+import 'package:buruhku/ui/agents/agent_detail_screen.dart';
 import 'package:buruhku/ui/location/location_screen.dart';
 import 'package:buruhku/ui/order/order_screen.dart';
 import 'package:buruhku/ui/request/request_screen.dart';
@@ -313,15 +314,12 @@ class _ChatPageState extends State<ChatPage> {
     final pa = _pickable(c, pr);
     final blocked = s.blocked.contains(c.otherId);
     return Scaffold(
-      appBar: PageBar(
-        title: Row(children: [
-          Avatar(size: 36, imageUrl: c.otherAgent ? s.agentById(c.otherId).avatarUrl : null),
-          const SizedBox(width: 10),
-          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(c.otherName, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700), maxLines: 1, overflow: TextOverflow.ellipsis),
-            Text(c.type == 'order' ? (c.title.isEmpty ? 'Chat order' : c.title) : 'Chat langsung', style: const TextStyle(fontSize: 11.5, color: g500), maxLines: 1, overflow: TextOverflow.ellipsis),
-          ])),
-        ]),
+      appBar: ProfileBar(
+        avatar: Avatar(size: 44, imageUrl: c.otherAgent ? s.agentById(c.otherId).avatarUrl : null),
+        title: c.otherName,
+        subtitle: c.type == 'order' ? (c.title.isEmpty ? 'Chat order' : c.title) : 'Chat langsung',
+        // Lawan chat agen: ketuk kapsul untuk membuka profilnya.
+        onTap: c.otherAgent ? () => Navigator.push(context, MaterialPageRoute(builder: (_) => AgentDetail(c.otherId))) : null,
         actions: [
           PopupMenuButton<String>(
             onSelected: (v) async {

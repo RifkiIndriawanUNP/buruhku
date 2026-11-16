@@ -307,38 +307,91 @@ class _NotifPageState extends State<NotifPage> {
   }
 }
 
+/// Ikon dan warna notifikasi sistem (tanpa foto), gaya sama dengan baris di Pengaturan.
+(IconData, Color) _sysStyle(String title) {
+  final t = title.toLowerCase();
+  bool has(List<String> k) => k.any(t.contains);
+  if (has(['selamat datang'])) return (Icons.waving_hand, const Color(0xFFF5A12B));
+  if (has(['verifikasi', 'pendaftaran', 'data tambahan', 'skck'])) return (Icons.verified_user, const Color(0xFF8A63E8));
+  if (has(['penarikan', 'saldo'])) return (Icons.account_balance_wallet, const Color(0xFF34B866));
+  if (has(['pembayaran', 'cod'])) return (Icons.payments, const Color(0xFF34B866));
+  if (has(['tiket', 'tanggapan'])) return (Icons.support_agent, const Color(0xFF22B8CF));
+  if (has(['sengketa'])) return (Icons.gavel, const Color(0xFFD6409F));
+  if (has(['offline'])) return (Icons.power_settings_new, const Color(0xFF8E8E93));
+  if (has(['pekerjaan selesai'])) return (Icons.task_alt, const Color(0xFF34B866));
+  if (has(['tawaran jasa'])) return (Icons.storefront, const Color(0xFFFF7A45));
+  if (has(['request'])) return (Icons.assignment, const Color(0xFF4C6EF5));
+  if (has(['agen', 'klien'])) return (Icons.person, const Color(0xFF2F9BF0));
+  return (Icons.notifications, const Color(0xFFEF4F5F));
+}
+
 class _NoteRow extends StatelessWidget {
   final Note n;
   final bool fresh;
   final VoidCallback? onTap;
   const _NoteRow(this.n, {required this.fresh, this.onTap});
+
+  /// Foto agen yang terkait dengan notifikasi order, atau null kalau tidak ada (mis. lawannya klien).
+  String? _agentPhoto(AppState s) {
+    String? agentId;
+    switch (n.refType) {
+      case 'order':
+        final o = s.orderById(n.refId ?? '');
+        if (o != null && o.iAmClient) agentId = o.otherId;
+      case 'request':
+        final r = s.reqById(n.refId ?? '');
+        if (r != null) {
+          final acc = s.activeAcc(r);
+          agentId = acc.isNotEmpty ? acc.last.agentId : (r.chosen.isNotEmpty ? r.chosen.last : null);
+        }
+      case 'chat':
+        final c = s.chatById(n.refId ?? '');
+        if (c != null && c.otherAgent) agentId = c.otherId;
+    }
+    if (agentId == null) return null;
+    final ag = s.agentById(agentId); // jatuh ke agen pertama bila id tidak ada, jadi dicek ulang
+    return ag.id == agentId ? ag.avatarUrl : null;
+  }
+
   @override
-  Widget build(BuildContext context) => GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.only(bottom: 14),
-          child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            n.isOrder
-                ? const AvatarPh(46)
-                : Container(width: 46, height: 46, decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0xFFDADADA)), child: const Icon(Icons.notifications_none, size: 24, color: Color(0xFF9A9CA5))),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Row(children: [
-                  Flexible(child: Text(n.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 15.5, fontWeight: FontWeight.w800, height: 1.25, color: g900))),
-                  if (fresh) ...[const SizedBox(width: 6), Container(width: 8, height: 8, decoration: const BoxDecoration(color: kGreen, shape: BoxShape.circle))],
-                ]),
-                const SizedBox(height: 2),
-                Text.rich(TextSpan(style: const TextStyle(fontSize: 14, height: 1.3, color: g900), children: [
-                  TextSpan(text: n.body),
-                  TextSpan(text: ' \u2022 ${ago(n.at)}', style: const TextStyle(color: g500)),
-                ])),
-              ]),
-            ),
-          ]),
-        ),
+  Widget build(BuildContext context) {
+    final Widget lead;
+    if (n.isOrder) {
+      lead = AvatarPh(46, url: _agentPhoto(context.s));
+    } else {
+      final (icon, color) = _sysStyle(n.title);
+      lead = Container(
+        width: 46,
+        height: 46,
+        decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(14)),
+        child: Icon(icon, size: 25, color: Colors.white),
       );
+    }
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 14),
+        child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          lead,
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Row(children: [
+                Flexible(child: Text(n.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 15.5, fontWeight: FontWeight.w800, height: 1.25, color: g900))),
+                if (fresh) ...[const SizedBox(width: 6), Container(width: 8, height: 8, decoration: const BoxDecoration(color: kGreen, shape: BoxShape.circle))],
+              ]),
+              const SizedBox(height: 2),
+              Text.rich(TextSpan(style: const TextStyle(fontSize: 14, height: 1.3, color: g900), children: [
+                TextSpan(text: n.body),
+                TextSpan(text: ' \u2022 ${ago(n.at)}', style: const TextStyle(color: g500)),
+              ])),
+            ]),
+          ),
+        ]),
+      ),
+    );
+  }
 }
 
 // ---------------------------------------------------------------- pengaturan

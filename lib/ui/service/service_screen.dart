@@ -27,6 +27,7 @@ class ServiceCard extends StatelessWidget {
     final fav = s.favSvc.contains(svc.id);
     final carousel = width != null;
     final unit = unitOf(svc.ptype);
+    if (!carousel) return _wide(context, s, a, c, fav, unit);
     final card = MediaQuery.withClampedTextScaling(
       maxScaleFactor: 1.25,
       child: SoftCard(
@@ -85,7 +86,82 @@ class ServiceCard extends StatelessWidget {
         ]),
       ),
     );
-    return carousel ? SizedBox(width: width, child: card) : card;
+    return SizedBox(width: width, child: card);
+  }
+
+  /// Mode memanjang: foto kecil di kiri, info rapat di kanan. Tinggi mengikuti isi, tanpa ruang kosong.
+  Widget _wide(BuildContext context, AppState s, Agent a, Cat c, bool fav, String unit) {
+    Widget ph() => Container(color: kPh, child: const Center(child: Icon(Icons.image_outlined, color: kPhIcon, size: 28)));
+    final url = svc.imageUrl;
+    return MediaQuery.withClampedTextScaling(
+      maxScaleFactor: 1.25,
+      child: SoftCard(
+        radius: 22,
+        padding: const EdgeInsets.all(10),
+        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ServiceDetailPage(svc.id))),
+        child: IntrinsicHeight(
+          child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            SizedBox(
+              width: 108,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(14),
+                // Hanya anak Positioned, jadi foto mengikuti tinggi kolom teks (tidak memaksa baris lebih tinggi).
+                child: Stack(children: [
+                  Positioned.fill(child: (url != null && url.isNotEmpty) ? Image.network(url, fit: BoxFit.cover, errorBuilder: (_, __, ___) => ph()) : ph()),
+                  Positioned(
+                    top: 4,
+                    right: 4,
+                    child: RoundBtn(
+                      size: 28,
+                      onTap: () => context.r.toggleFavSvc(svc.id),
+                      child: Icon(fav ? Icons.favorite : Icons.favorite_border, size: 16, color: Colors.red),
+                    ),
+                  ),
+                ]),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(svc.title, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 15.5, fontWeight: FontWeight.w800, height: 1.2, color: g900)),
+                const SizedBox(height: 6),
+                Wrap(spacing: 4, runSpacing: 4, children: [CatTag(c.name, c.color), CatTag(ptypes[svc.ptype] ?? '', kPeach)]),
+                const SizedBox(height: 8),
+                Row(children: [
+                  Expanded(
+                    child: Row(children: [
+                      AvatarPh(20, url: a.avatarUrl),
+                      const SizedBox(width: 6),
+                      Flexible(child: Text(a.short, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: g900))),
+                      if (a.verified) ...[const SizedBox(width: 4), const VerifiedBadge(size: 14)],
+                      if (!a.online) ...[const SizedBox(width: 6), const Text('Offline', style: TextStyle(fontSize: 10, color: g500))],
+                    ]),
+                  ),
+                  const Icon(Icons.star, size: 13, color: kNavy),
+                  const SizedBox(width: 3),
+                  Text(s.ratingOf(a).toStringAsFixed(1), style: const TextStyle(fontSize: 12, color: g700)),
+                ]),
+                const SizedBox(height: 6),
+                Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
+                  Expanded(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text.rich(TextSpan(
+                        text: rpSp(svc.price),
+                        style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: g900),
+                        children: [if (unit.isNotEmpty) TextSpan(text: unit, style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: g500))],
+                      )),
+                    ),
+                  ),
+                  Text('~${a.dist.toStringAsFixed(1)} km', style: const TextStyle(fontSize: 11.5, color: g500)),
+                ]),
+              ]),
+            ),
+          ]),
+        ),
+      ),
+    );
   }
 }
 
@@ -366,7 +442,7 @@ class MyServicesPage extends StatelessWidget {
               ? Empty(Icons.storefront_outlined, 'Belum ada tawaran jasa. Buat tawaran dengan harga yang kamu tentukan, klien tinggal memesan.',
                   action: pbtn('Tambah penawaran jasa', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ServiceEditPage())), icon: Icons.add))
               : ListView(padding: const EdgeInsets.all(16), children: [
-                  const Warn('Tawaran aktif tampil di Beranda klien sekitar dan bisa langsung dipesan. Pesanan masuk ke Order langsung di Home kamu.', icon: Icons.storefront),
+                  const Warn('Tawaran aktif tampil di Beranda klien sekitar dan bisa langsung dipesan. Pesanan masuk ke Order langsung di Home kamu.', icon: Icons.storefront_outlined),
                   const SizedBox(height: 12),
                   for (final v in l)
                     Padding(
