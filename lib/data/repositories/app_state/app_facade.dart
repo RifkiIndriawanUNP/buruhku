@@ -68,6 +68,8 @@ extension CatalogRepositoryFacade on AppState {
   Agent agentById(String id) => catalogRepo.agentById(id);
   double ratingOf(Agent a) => catalogRepo.ratingOf(a);
   List<Rev> reviewsOf(String id) => catalogRepo.reviewsOf(id);
+  List<Rev> reviewsOfSvc(String svcId) => catalogRepo.reviewsOfSvc(svcId);
+  double ratingOfSvc(Svc v) => catalogRepo.ratingOfSvc(v);
   List<Agent> searchAgents({String? cat, String q = '', double maxDist = 15, double minRating = 0, bool verified = false, bool online = false, int maxBase = 999999, String sort = 'relevansi'}) => catalogRepo.searchAgents(cat: cat, q: q, maxDist: maxDist, minRating: minRating, verified: verified, online: online, maxBase: maxBase, sort: sort);
   void toggleFav(String id) => catalogRepo.toggleFav(id);
   Svc? svcById(String id) => catalogRepo.svcById(id);

@@ -42,18 +42,65 @@ class CatalogRepository extends RepoBase {
 
   // ================= agen & katalog =================
   Agent agentById(String id) => agents.firstWhere((a) => a.id == id, orElse: () => agents.first);
+  /// Rating agen = rata-rata rating semua jasanya. Ulasan nyata yang tidak terikat jasa
+  /// (mis. dari order lewat request) ikut dihitung sebagai satu suara tiap ulasan.
+  /// Agen tanpa jasa memakai rumus lama (rating awal dicampur ulasan nyata).
   double ratingOf(Agent a) {
+    final vs = svcsOfAgent(a.id);
+    if (vs.isNotEmpty) {
+      var sum = 0.0, n = 0;
+      for (final v in vs) {
+        final r = ratingOfSvc(v);
+        if (r > 0) {
+          sum += r;
+          n++;
+        }
+      }
+      for (final v in revs) {
+        if (v.aboutId == a.id && v.pub && v.svcId.isEmpty) {
+          sum += v.rating;
+          n++;
+        }
+      }
+      if (n > 0) return sum / n;
+    }
     final l = rate[a.id];
     if (l == null || l[1] == 0) return a.rating;
     final j = max(a.jobs, 1);
     return (a.rating * j + l[0]) / (j + l[1]);
   }
 
+  final Map<String, List<Rev>> _svcGen = {};
+
+  /// Ulasan simulasi satu jasa (dibuat sekali lalu disimpan di memori supaya stabil).
+  List<Rev> _genOfSvc(Svc v) => _svcGen.putIfAbsent(v.id, () => genSvcReviews(v, agentById(v.agentId)));
+
+  /// Semua ulasan agen: gabungan ulasan seluruh jasanya (plus ulasan umum dari order lewat request).
   List<Rev> reviewsOf(String id) {
     final a = agents.firstWhere((x) => x.id == id, orElse: () => agents.first);
-    final l = [...revs.where((v) => v.aboutId == id && v.pub), ...genReviews(a)];
+    final vs = svcsOfAgent(id);
+    final gen = vs.isEmpty ? genReviews(a) : [for (final v in vs) ..._genOfSvc(v)];
+    final l = [...revs.where((v) => v.aboutId == id && v.pub), ...gen];
     l.sort((x, y) => y.at.compareTo(x.at));
     return l;
+  }
+
+  /// Ulasan khusus satu jasa.
+  List<Rev> reviewsOfSvc(String svcId) {
+    final v = svcById(svcId);
+    final l = [
+      ...revs.where((r) => r.svcId == svcId && r.pub),
+      if (v != null && simSvcs.any((x) => x.id == svcId)) ..._genOfSvc(v),
+    ];
+    l.sort((x, y) => y.at.compareTo(x.at));
+    return l;
+  }
+
+  /// Rata-rata rating satu jasa. 0 = belum ada ulasan.
+  double ratingOfSvc(Svc v) {
+    final l = reviewsOfSvc(v.id);
+    if (l.isEmpty) return 0;
+    return l.fold<int>(0, (s, r) => s + r.rating) / l.length;
   }
 
   List<Agent> searchAgents({String? cat, String q = '', double maxDist = 15, double minRating = 0,

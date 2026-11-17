@@ -3,6 +3,7 @@ import 'package:buruhku/domain/models/models.dart';
 import 'package:buruhku/data/repositories/app_state/app_state.dart';
 import 'package:buruhku/ui/core/ui.dart';
 import 'package:buruhku/utils/geo.dart';
+import 'package:buruhku/ui/agents/agent_detail_screen.dart';
 import 'package:buruhku/ui/agents/agent_widgets.dart';
 import 'package:buruhku/ui/chat/chat_screen.dart';
 import 'package:buruhku/ui/location/location_screen.dart';
@@ -25,68 +26,92 @@ class ServiceCard extends StatelessWidget {
     final a = s.agentById(svc.agentId);
     final c = catOf(svc.cat);
     final fav = s.favSvc.contains(svc.id);
-    final carousel = width != null;
     final unit = unitOf(svc.ptype);
-    if (!carousel) return _wide(context, s, a, c, fav, unit);
-    final card = MediaQuery.withClampedTextScaling(
-      maxScaleFactor: 1.25,
-      child: SoftCard(
-        radius: 22,
-        padding: const EdgeInsets.all(10),
-        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ServiceDetailPage(svc.id))),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Stack(children: [
-            PhotoPlaceholder(height: carousel ? 92 : 128, radius: 14, url: svc.imageUrl),
-            Positioned(
-              top: 6,
-              right: 6,
-              child: RoundBtn(
-                size: 32,
-                onTap: () => context.r.toggleFavSvc(svc.id),
-                child: Icon(fav ? Icons.favorite : Icons.favorite_border, size: 18, color: Colors.red),
+    if (width == null) return _wide(context, s, a, c, fav, unit);
+    return _square(context, s, a, c, fav, unit);
+  }
+
+  /// Mode kotak (carousel): foto di atas, tag, judul, penjual, rating, lalu tarif dan tombol Order satu baris.
+  Widget _square(BuildContext context, AppState s, Agent a, Cat c, bool fav, String unit) {
+    final w = width!;
+    final photoH = ((w - 20) * .56).clamp(90.0, 150.0).toDouble();
+    final n = s.reviewsOfSvc(svc.id).length;
+    final rating = s.ratingOfSvc(svc);
+    final eta = (5 + a.dist * 4).round();
+    void detail() => Navigator.push(context, MaterialPageRoute(builder: (_) => ServiceDetailPage(svc.id)));
+    Future<void> order() async {
+      final cid = await orderServiceSheet(context, svc);
+      if (cid != null && context.mounted) Navigator.push(context, MaterialPageRoute(builder: (_) => ChatPage(cid)));
+    }
+
+    return SizedBox(
+      width: w,
+      child: MediaQuery.withClampedTextScaling(
+        maxScaleFactor: 1.25,
+        child: SoftCard(
+          radius: 22,
+          padding: const EdgeInsets.all(10),
+          onTap: detail,
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Stack(children: [
+              PhotoPlaceholder(height: photoH, radius: 16, url: svc.imageUrl),
+              if (a.online) Positioned(top: 8, left: 8, child: _EtaChip('Kilat ~$eta mnt')),
+              Positioned(
+                top: 6,
+                right: 6,
+                child: RoundBtn(
+                  size: 32,
+                  onTap: () => context.r.toggleFavSvc(svc.id),
+                  child: Icon(fav ? Icons.favorite : Icons.favorite_border, size: 18, color: Colors.red),
+                ),
               ),
-            ),
+            ]),
+            const SizedBox(height: 10),
+            Wrap(spacing: 4, runSpacing: 4, children: [CatTag(c.name, c.color), CatTag(ptypes[svc.ptype] ?? '', kPeach)]),
+            const SizedBox(height: 8),
+            Text(svc.title, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, height: 1.2, color: g900)),
+            const SizedBox(height: 8),
+            Row(children: [
+              AvatarPh(24, url: a.avatarUrl),
+              const SizedBox(width: 6),
+              Flexible(child: Text(a.short, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: g900))),
+              if (a.verified) ...[const SizedBox(width: 4), const VerifiedBadge(size: 15)],
+              if (!a.online) ...[const SizedBox(width: 6), const Text('Offline', style: TextStyle(fontSize: 10, color: g500))],
+            ]),
+            const SizedBox(height: 6),
+            Row(children: [
+              const Icon(Icons.star, size: 14, color: kNavy),
+              const SizedBox(width: 3),
+              Text(n == 0 ? 'Baru' : '${rating.toStringAsFixed(1)} ($n)', style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: g900)),
+              const Spacer(),
+              Flexible(child: Text('\u2022 ~${a.dist.toStringAsFixed(1)} km', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 11.5, color: g500))),
+            ]),
+            const Spacer(),
+            const SizedBox(height: 10),
+            const Divider(height: 1, thickness: 1, color: kLine),
+            const SizedBox(height: 10),
+            Row(children: [
+              Expanded(
+                child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  const Text('Tarif mulai', style: TextStyle(fontSize: 11, color: g500)),
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Text.rich(TextSpan(
+                      text: rpSp(svc.price),
+                      style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: g900),
+                      children: [if (unit.isNotEmpty) TextSpan(text: unit, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: g500))],
+                    )),
+                  ),
+                ]),
+              ),
+              const SizedBox(width: 8),
+              _OrderChip(onTap: order),
+            ]),
           ]),
-          const SizedBox(height: 8),
-          Text(svc.title, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 15.5, fontWeight: FontWeight.w800, height: 1.2, color: g900)),
-          const SizedBox(height: 6),
-          Wrap(spacing: 4, runSpacing: 4, children: [
-            CatTag(c.name, c.color),
-            CatTag(ptypes[svc.ptype] ?? '', kPeach),
-          ]),
-          const SizedBox(height: 8),
-          Row(children: [
-            AvatarPh(26, url: a.avatarUrl),
-            const SizedBox(width: 8),
-            Flexible(child: Text(a.short, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: g900))),
-            if (a.verified) ...[const SizedBox(width: 4), const VerifiedBadge(size: 15)],
-            if (!a.online) ...[const SizedBox(width: 6), const Text('Offline', style: TextStyle(fontSize: 10, color: g500))],
-          ]),
-          const SizedBox(height: 6),
-          Row(children: [
-            const Icon(Icons.star, size: 12, color: kNavy),
-            const SizedBox(width: 3),
-            Text('${s.ratingOf(a).toStringAsFixed(1)} (${a.jobs})', style: const TextStyle(fontSize: 10.5, color: g700)),
-            Container(width: 1, height: 10, margin: const EdgeInsets.symmetric(horizontal: 6), color: g300),
-            Flexible(child: Text('~${a.dist.toStringAsFixed(1)} KM', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 10.5, color: g700))),
-          ]),
-          if (carousel) const Spacer() else const SizedBox(height: 4),
-          const SizedBox(height: 8),
-          Align(
-            alignment: Alignment.centerRight,
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Text.rich(TextSpan(
-                text: rpSp(svc.price),
-                style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w800, color: g900),
-                children: [if (unit.isNotEmpty) TextSpan(text: unit, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: g500))],
-              )),
-            ),
-          ),
-        ]),
+        ),
       ),
     );
-    return SizedBox(width: width, child: card);
   }
 
   /// Mode memanjang: foto kecil di kiri, info rapat di kanan. Tinggi mengikuti isi, tanpa ruang kosong.
@@ -139,7 +164,7 @@ class ServiceCard extends StatelessWidget {
                   ),
                   const Icon(Icons.star, size: 13, color: kNavy),
                   const SizedBox(width: 3),
-                  Text(s.ratingOf(a).toStringAsFixed(1), style: const TextStyle(fontSize: 12, color: g700)),
+                  Text(s.ratingOfSvc(svc) > 0 ? s.ratingOfSvc(svc).toStringAsFixed(1) : 'Baru', style: const TextStyle(fontSize: 12, color: g700)),
                 ]),
                 const SizedBox(height: 6),
                 Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
@@ -163,6 +188,41 @@ class ServiceCard extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Lencana estimasi waktu di atas foto kartu jasa.
+class _EtaChip extends StatelessWidget {
+  final String text;
+  const _EtaChip(this.text);
+  @override
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(color: const Color(0xE6FFFFFF), borderRadius: BorderRadius.circular(12)),
+        child: Row(mainAxisSize: MainAxisSize.min, children: [
+          const Icon(Icons.bolt, size: 13, color: Color(0xFFF5A12B)),
+          const SizedBox(width: 2),
+          Text(text, style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w800, color: g900)),
+        ]),
+      );
+}
+
+/// Tombol "Order" hijau muda di baris tarif kartu jasa.
+class _OrderChip extends StatelessWidget {
+  final VoidCallback onTap;
+  const _OrderChip({required this.onTap});
+  @override
+  Widget build(BuildContext context) => Material(
+        color: kGreenBg,
+        shape: const StadiumBorder(side: BorderSide(color: Color(0x661FA75A), width: 1.2)),
+        child: InkWell(
+          customBorder: const StadiumBorder(),
+          onTap: onTap,
+          child: const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+            child: Text('Order', style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w800, color: Color(0xFF0B7A41))),
+          ),
+        ),
+      );
 }
 
 /// Dipakai di semua ListView vertikal (daftar jasa, pencarian, favorit, profil agen).
@@ -226,88 +286,175 @@ class _ServiceListPageState extends State<ServiceListPage> {
 class ServiceDetailPage extends StatelessWidget {
   final String id;
   const ServiceDetailPage(this.id, {super.key});
+
   @override
   Widget build(BuildContext context) {
     final s = context.s;
     final v = s.svcById(id);
     if (v == null) return Scaffold(appBar: PageBar(), body: const Empty(Icons.error_outline, 'Tawaran jasa tidak ditemukan.'));
     final a = s.agentById(v.agentId);
+    final c = catOf(v.cat);
+    final revs = s.reviewsOfSvc(v.id);
+    final rating = s.ratingOfSvc(v);
     final others = s.svcsOfAgent(a.id).where((x) => x.id != v.id).toList();
+    final fav = s.favSvc.contains(v.id);
+    final unit = unitOf(v.ptype);
+    final size = MediaQuery.sizeOf(context);
+    final top = MediaQuery.paddingOf(context).top;
+    final svcW = (size.width * .564).clamp(200.0, 260.0).toDouble();
+    // Semua foto jasa jadi satu slider di bagian atas (foto utama dulu).
+    final urls = <String>[
+      if (v.imageUrl != null && v.imageUrl!.isNotEmpty) v.imageUrl!,
+      ...v.photos.where((p) => p.isNotEmpty && p != v.imageUrl),
+    ];
+    void openAgent() => Navigator.push(context, MaterialPageRoute(builder: (_) => AgentDetail(a.id)));
+    Future<void> order() async {
+      final cid = await orderServiceSheet(context, v);
+      if (cid != null && context.mounted) Navigator.push(context, MaterialPageRoute(builder: (_) => ChatPage(cid)));
+    }
+
     return Scaffold(
-      appBar: PageBar(title: const Text('Tawaran jasa'), actions: [
-        IconButton(onPressed: () => s.toggleFavSvc(v.id), icon: Icon(s.favSvc.contains(v.id) ? Icons.favorite : Icons.favorite_border)),
-      ]),
-      body: ListView(padding: const EdgeInsets.all(16), children: [
-        if (v.imageUrl != null && v.imageUrl!.isNotEmpty) ...[
+      body: ListView(padding: EdgeInsets.zero, children: [
+        Stack(children: [
           ClipRRect(
-            borderRadius: BorderRadius.circular(16),
-            child: Image.network(
-              v.imageUrl!,
-              height: 200,
-              width: double.infinity,
-              fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+            borderRadius: const BorderRadius.vertical(bottom: Radius.circular(24)),
+            child: PhotoSlider(urls: urls, height: (size.width * .85).clamp(260.0, 400.0).toDouble(), emptyIcon: Icons.cleaning_services_outlined),
+          ),
+          Positioned(
+            top: top + 8,
+            left: 16,
+            child: RoundBtn(size: 44, onTap: () => Navigator.maybePop(context), child: const Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: g900)),
+          ),
+          Positioned(
+            top: top + 8,
+            right: 16,
+            child: RoundBtn(
+              size: 44,
+              onTap: () => s.toggleFavSvc(v.id),
+              child: Icon(fav ? Icons.favorite : Icons.favorite_border, size: 22, color: Colors.red),
             ),
           ),
-          const SizedBox(height: 14),
-        ],
-        Row(children: [
-          CatIcon(catOf(v.cat), size: 46),
-          const SizedBox(width: 12),
-          Expanded(child: Text(v.title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800))),
         ]),
-        const SizedBox(height: 10),
-        Wrap(spacing: 6, runSpacing: 6, children: [CatTag(catOf(v.cat).name, catOf(v.cat).color), CatTag(ptypes[v.ptype] ?? '', kPeach), if (v.dur > 0) Tag('Estimasi ${v.dur % 1 == 0 ? v.dur.toInt() : v.dur} ${v.ptype == 'hourly' ? 'jam' : 'hari'}', icon: Icons.schedule)]),
-        const SizedBox(height: 14),
-        Box(color: g100, child: Row(children: [
-          const Expanded(child: Text('Harga dari agen', style: TextStyle(color: g500))),
-          Text(svcPrice(v), style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900)),
-        ])),
-        const Section('Deskripsi'),
-        Text(v.desc, style: const TextStyle(height: 1.4)),
-        if (v.photos.isNotEmpty) ...[
-          const Section('Foto Jasa & Dokumentasi'),
-          SizedBox(
-            height: 100,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: v.photos.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 8),
-              itemBuilder: (ctx, idx) => ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: Image.network(
-                  v.photos[idx],
-                  width: 130,
-                  height: 100,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Container(
-                    width: 130,
-                    height: 100,
-                    color: g200,
-                    child: const Icon(Icons.image_outlined, color: g500),
-                  ),
+        const SizedBox(height: 12),
+        // Harga, judul, rating
+        DetailCard(
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text.rich(TextSpan(
+              text: rpSp(v.price),
+              style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: g900),
+              children: [if (unit.isNotEmpty) TextSpan(text: unit, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: g500))],
+            )),
+            const SizedBox(height: 6),
+            Text(v.title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, height: 1.25, color: g900)),
+            const SizedBox(height: 8),
+            Row(children: [
+              const Icon(Icons.star, size: 16, color: kNavy),
+              const SizedBox(width: 4),
+              Text(revs.isEmpty ? 'Belum ada ulasan' : '${rating.toStringAsFixed(1)}  (${revs.length} ulasan)', style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600, color: g900)),
+              const Spacer(),
+              const Icon(Icons.place_outlined, size: 15, color: g500),
+              const SizedBox(width: 2),
+              Text('~${a.dist.toStringAsFixed(1)} km', style: const TextStyle(fontSize: 13, color: g500)),
+            ]),
+            const SizedBox(height: 10),
+            Wrap(spacing: 4, runSpacing: 4, children: [
+              CatTag(c.name, c.color),
+              CatTag(ptypes[v.ptype] ?? '', kPeach),
+              if (v.dur > 0) Tag('Estimasi ${v.dur % 1 == 0 ? v.dur.toInt() : v.dur} ${v.ptype == 'hourly' ? 'jam' : 'hari'}', icon: Icons.schedule),
+            ]),
+          ]),
+        ),
+        // Penjual
+        DetailCard(
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: openAgent,
+            child: Row(children: [
+              AvatarPh(52, url: a.avatarUrl),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Row(children: [
+                    Flexible(child: Text(a.short, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 15.5, fontWeight: FontWeight.w800, color: g900))),
+                    if (a.verified) ...[const SizedBox(width: 4), const VerifiedBadge()],
+                  ]),
+                  const SizedBox(height: 2),
+                  Text(a.online ? 'Online' : 'Offline', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: a.online ? kGreen : g500)),
+                  const SizedBox(height: 2),
+                  Text('\u2605 ${s.ratingOf(a).toStringAsFixed(1)}  \u00b7  ${a.jobs} order selesai', style: const TextStyle(fontSize: 12, color: g500)),
+                ]),
+              ),
+              const SizedBox(width: 8),
+              Material(
+                color: cBg,
+                shape: const StadiumBorder(),
+                child: InkWell(
+                  customBorder: const StadiumBorder(),
+                  onTap: openAgent,
+                  child: const Padding(padding: EdgeInsets.symmetric(horizontal: 14, vertical: 9), child: Text('Kunjungi', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: g900))),
                 ),
               ),
-            ),
+            ]),
           ),
-        ],
-        const Section('Cara order'),
-        const Warn('Pilih lokasi dan jadwal, harga sudah terisi. Kamu bisa menawar harga. Agen menyetujui, menawar balik, atau menolak, lalu bayar lewat escrow atau COD.', icon: Icons.bolt_outlined),
-        const Section('Ditawarkan oleh'),
-        AgentTile(a),
+        ),
+        // Detail jasa
+        DetailCard(
+          title: 'Detail jasa',
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Kv('Kategori', c.name),
+            Kv('Tipe harga', ptypes[v.ptype] ?? ''),
+            if (v.dur > 0) Kv('Estimasi', '${v.dur % 1 == 0 ? v.dur.toInt() : v.dur} ${v.ptype == 'hourly' ? 'jam' : 'hari'}'),
+            const Padding(padding: EdgeInsets.symmetric(vertical: 8), child: Divider(height: 1, thickness: 1, color: kLine)),
+            const Text('Deskripsi', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: g500)),
+            const SizedBox(height: 4),
+            Text(v.desc, style: const TextStyle(fontSize: 14.5, height: 1.45, color: g900)),
+          ]),
+        ),
+        // Cara order
+        DetailCard(
+          title: 'Cara order',
+          child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            const Icon(Icons.bolt, size: 20, color: kGreen),
+            const SizedBox(width: 8),
+            const Expanded(
+              child: Text('Pilih lokasi dan jadwal, harga sudah terisi. Kamu bisa menawar harga. Agen menyetujui, menawar balik, atau menolak, lalu bayar lewat escrow atau COD.', style: TextStyle(fontSize: 13.5, height: 1.4, color: g700)),
+            ),
+          ]),
+        ),
+        // Ulasan khusus jasa ini
+        DetailCard(
+          title: 'Ulasan jasa',
+          action: revs.length > 3 ? 'Lihat semua' : null,
+          onAction: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ReviewListPage(title: 'Ulasan jasa', rating: rating, revs: revs))),
+          child: revs.isEmpty
+              ? const Text('Belum ada ulasan untuk jasa ini.', style: TextStyle(color: g500))
+              : Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  ReviewSummary(rating: rating, revs: revs),
+                  const Padding(padding: EdgeInsets.symmetric(vertical: 14), child: Divider(height: 1, thickness: 1, color: kLine)),
+                  ReviewList(revs.take(3).toList()),
+                ]),
+        ),
         if (others.isNotEmpty) ...[
-          const Section('Tawaran lain dari agen ini'),
-          for (final x in others) ServiceTile(x),
+          const DetailHead('Tawaran lain dari agen ini'),
+          HScroll([for (final x in others) ServiceCard(x, width: svcW)]),
         ],
-        const SizedBox(height: 70),
+        const SizedBox(height: 8),
       ]),
-      bottomNavigationBar: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: full(pbtn('Order jasa ini', () async {
-            final cid = await orderServiceSheet(context, v);
-            if (cid != null && context.mounted) Navigator.push(context, MaterialPageRoute(builder: (_) => ChatPage(cid)));
-          }, icon: Icons.shopping_bag_outlined)),
+      bottomNavigationBar: Container(
+        decoration: const BoxDecoration(color: cW, borderRadius: BorderRadius.vertical(top: Radius.circular(22))),
+        child: SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+            child: Row(children: [
+              GestureDetector(
+                onTap: () => startAgentChat(context, a),
+                child: Container(width: 48, height: 48, decoration: const BoxDecoration(color: cBg, shape: BoxShape.circle), child: const Icon(Icons.chat_bubble_outline, size: 22, color: g900)),
+              ),
+              const SizedBox(width: 12),
+              Expanded(child: pbtn('Order jasa ini', order, icon: Icons.shopping_bag_outlined)),
+            ]),
+          ),
         ),
       ),
     );

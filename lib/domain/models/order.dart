@@ -2,6 +2,8 @@ import 'package:buruhku/utils/json.dart';
 
 class Ord {
   String id, reqId, title, cat, address, area, status, ptype, otherId, otherName, pin, escrow, payMethod, disputeId;
+  /// Jasa asal order (kosong kalau order berasal dari request). Dipakai supaya ulasan masuk ke jasa yang tepat.
+  String svcId;
   bool iAmClient, myRev, theirRev, tipped, cod;
   int unit, price, fee, extra;
   DateTime created, payBy;
@@ -12,7 +14,7 @@ class Ord {
       this.area = '', this.status = 'AWAIT_AGENT', this.ptype = 'lump', required this.otherId, required this.otherName,
       required this.pin, this.escrow = 'none', this.payMethod = '', this.disputeId = '', required this.iAmClient,
       this.myRev = false, this.theirRev = false, this.tipped = false, this.cod = false, this.unit = 0, required this.price,
-      this.fee = 0, this.extra = 0, DateTime? created, DateTime? payBy, this.schedAt, this.paidAt, this.startedAt,
+      this.fee = 0, this.extra = 0, this.svcId = '', DateTime? created, DateTime? payBy, this.schedAt, this.paidAt, this.startedAt,
       this.arrivedAt, this.finishedAt, this.nextAt, this.doneAt, List<String>? log, this.chg})
       : created = created ?? DateTime.now(),
         payBy = payBy ?? DateTime.now().add(const Duration(minutes: 30)),
@@ -28,13 +30,13 @@ class Ord {
         'oi': otherId, 'on': otherName, 'pin': pin, 'es': escrow, 'pm': payMethod, 'di': disputeId, 'ic': iAmClient,
         'mr': myRev, 'tr': theirRev, 'tp': tipped, 'cod': cod, 'un': unit, 'pr': price, 'fe': fee, 'ex': extra, 'cr': jDateStr(created),
         'pb': jDateStr(payBy), 'sa': jDateStr(schedAt), 'pa': jDateStr(paidAt), 'sd': jDateStr(startedAt), 'ai': jDateStr(arrivedAt),
-        'fi': jDateStr(finishedAt), 'nx': jDateStr(nextAt), 'dn': jDateStr(doneAt), 'lg': log, 'chg': chg,
+        'fi': jDateStr(finishedAt), 'nx': jDateStr(nextAt), 'dn': jDateStr(doneAt), 'lg': log, 'chg': chg, 'sv': svcId,
       };
   factory Ord.fromJson(Map<String, dynamic> j) => Ord(
         id: j['id'], reqId: j['rq'], title: j['ti'], cat: j['ca'], address: j['ad'], area: j['ar'], status: j['st'],
         ptype: j['pt'], otherId: j['oi'], otherName: j['on'], pin: j['pin'], escrow: j['es'], payMethod: j['pm'],
         disputeId: j['di'], iAmClient: j['ic'], myRev: j['mr'], theirRev: j['tr'], tipped: j['tp'], cod: j['cod'] ?? false, unit: j['un'],
-        price: j['pr'], fee: j['fe'], extra: j['ex'], created: jDate(j['cr']), payBy: jDate(j['pb']), schedAt: jDate(j['sa']),
+        price: j['pr'], fee: j['fe'], extra: j['ex'], svcId: j['sv'] ?? '', created: jDate(j['cr']), payBy: jDate(j['pb']), schedAt: jDate(j['sa']),
         paidAt: jDate(j['pa']), startedAt: jDate(j['sd']), arrivedAt: jDate(j['ai']), finishedAt: jDate(j['fi']),
         nextAt: jDate(j['nx']), doneAt: jDate(j['dn']), log: List<String>.from(j['lg'] ?? []),
         chg: j['chg'] == null ? null : jMap(j['chg']),

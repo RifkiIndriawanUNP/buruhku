@@ -18,17 +18,20 @@ class AgentCard extends StatelessWidget {
   const AgentCard(this.a, {this.width, this.wide = false, super.key});
 
   static const _pad = 12.0;
-  static const _avatar = 52.0;
-  static const _btn = 38.0;
+  static const _avatar = 52.0; // dipakai mode lebar
+  static const _avatarSq = 56.0; // mode kotak
+  static const _btn = 38.0; // tombol mode lebar
+  static const _buy = 42.0; // tombol mode kotak
   static const _tag = 18.0;
   static const _maxScale = 1.2;
   static const _lh = 1.2; // tinggi baris tetap supaya perhitungan akurat
 
-  /// Tinggi kartu mode vertikal. Pakai sebagai `mainAxisExtent` di GridView.
+  /// Tinggi kartu mode kotak. Pakai sebagai `mainAxisExtent` di GridView.
+  /// Urutan isi: foto+hati, nama, status, tag, kotak statistik (angka lalu label), tombol.
   static double gridExtent(BuildContext context) {
     final ts = MediaQuery.textScalerOf(context).clamp(maxScaleFactor: _maxScale);
     double t(double fs) => ts.scale(fs) * _lh;
-    return _pad * 2 + _avatar + 8 + t(15) + 1 + t(11.5) + 6 + _tag + 10 + t(13) + t(11) + 10 + _btn + 2 /* garis tepi kartu */ + 4 /* pembulatan tinggi teks */;
+    return _pad * 2 + _avatarSq + 8 + t(15) + 2 + t(12) + 6 + _tag + 8 + (16 + t(13) + t(11)) + 10 + _buy + 8 /* cadangan pembulatan */;
   }
 
   @override
@@ -41,56 +44,73 @@ class AgentCard extends StatelessWidget {
       Flexible(child: Text(a.short, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, height: _lh, color: g900))),
       if (a.verified) ...[const SizedBox(width: 4), const VerifiedBadge()],
     ]);
-    final status = Text(a.online ? 'Online' : 'Offline', maxLines: 1, style: const TextStyle(fontSize: 11.5, height: _lh, color: g500));
 
     if (wide) return _wide(context, name, fav, rating);
 
-    final head = Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      AvatarPh(_avatar, url: a.avatarUrl),
-      const SizedBox(height: 8),
-      name,
-      const SizedBox(height: 1),
-      status,
-      const SizedBox(height: 6),
-      // Satu baris, maksimal dua tag. Teks tag dipotong dengan elipsis bila sempit.
-      Row(children: [
-        for (var i = 0; i < a.cats.length && i < 2; i++) ...[
-          if (i > 0) const SizedBox(width: 4),
-          Flexible(child: CatTag(catOf(a.cats[i]).name, catOf(a.cats[i]).color, fontSize: 9, height: _tag)),
-        ],
-      ]),
-    ]);
-
+    void open() => Navigator.push(context, MaterialPageRoute(builder: (_) => AgentDetail(a.id)));
     final card = MediaQuery.withClampedTextScaling(
       maxScaleFactor: _maxScale,
       child: SoftCard(
         radius: 22,
         padding: const EdgeInsets.all(_pad),
-        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => AgentDetail(a.id))),
+        onTap: open,
         child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-          head,
-          const SizedBox(height: 10),
-          Row(children: [
-            _stat(rating.toStringAsFixed(1), 'Rating', Icons.star),
-            _stat('~${a.dist.toStringAsFixed(1)} KM', 'Jarak'),
-            _stat('${a.jobs}', 'Order', Icons.person),
-          ]),
-          const SizedBox(height: 10),
-          Row(children: [
-            Expanded(
-              child: PillBtn(
-                a.direct ? 'Order Langsung' : 'Lihat Profil',
-                height: _btn,
-                onTap: () => a.direct ? startAgentChat(context, a, offer: true) : Navigator.push(context, MaterialPageRoute(builder: (_) => AgentDetail(a.id))),
+          // Foto bulat dengan titik status, hati polos di kanan atas.
+          Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Stack(clipBehavior: Clip.none, children: [
+              AvatarPh(_avatarSq, url: a.avatarUrl),
+              Positioned(
+                right: 0,
+                bottom: 0,
+                child: Container(width: 14, height: 14, decoration: BoxDecoration(color: a.online ? kGreen : g400, shape: BoxShape.circle, border: Border.all(color: cW, width: 2))),
+              ),
+            ]),
+            const Spacer(),
+            GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => context.r.toggleFav(a.id),
+              child: Padding(
+                padding: const EdgeInsets.only(left: 8, bottom: 8),
+                child: Icon(fav ? Icons.favorite : Icons.favorite_border, size: 24, color: fav ? Colors.red : g500),
               ),
             ),
-            const SizedBox(width: 6),
-            RoundBtn(
-              size: _btn,
-              onTap: () => context.r.toggleFav(a.id),
-              child: Icon(fav ? Icons.favorite : Icons.favorite_border, size: 20, color: Colors.red),
-            ),
           ]),
+          const SizedBox(height: 8),
+          name,
+          const SizedBox(height: 2),
+          Text(
+            a.online ? 'Online' : 'Offline',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, height: _lh, color: a.online ? kGreen : g500),
+          ),
+          const SizedBox(height: 6),
+          // Satu baris, maksimal dua tag. Teks tag dipotong dengan elipsis bila sempit.
+          Row(children: [
+            for (var i = 0; i < a.cats.length && i < 2; i++) ...[
+              if (i > 0) const SizedBox(width: 4),
+              Flexible(child: CatTag(catOf(a.cats[i]).name, catOf(a.cats[i]).color, fontSize: 9, height: _tag)),
+            ],
+          ]),
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+            decoration: BoxDecoration(color: cBg, borderRadius: BorderRadius.circular(14)),
+            child: Row(children: [
+              _stat(rating.toStringAsFixed(1), 'Rating', Icons.star),
+              _stat('~${a.dist.toStringAsFixed(1)} KM', 'Jarak'),
+              _stat('${a.jobs}', 'Order'),
+            ]),
+          ),
+          const SizedBox(height: 10),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton(
+              style: FilledButton.styleFrom(minimumSize: const Size(0, _buy), padding: const EdgeInsets.symmetric(horizontal: 8)),
+              onPressed: () => a.direct ? startAgentChat(context, a, offer: true) : open(),
+              child: FittedBox(fit: BoxFit.scaleDown, child: Text(a.direct ? 'Order Langsung' : 'Lihat Profil', style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w800))),
+            ),
+          ),
         ]),
       ),
     );

@@ -216,7 +216,7 @@ class OrderRepository extends RepoBase {
     }
     if (!o.iAmClient) {
       revs.insert(0, Rev(id: nid('V'), orderId: o.id, aboutId: 'me', from: o.otherName, rating: 4 + _rnd.nextInt(2),
-          tags: ['Tepat waktu', 'Rapi'], comment: 'Kerjanya bagus, terima kasih.', pub: false));
+          tags: ['Tepat waktu', 'Rapi'], comment: 'Kerjanya bagus, terima kasih.', pub: false, svcId: o.svcId));
     }
     _sysFor(o, o.cod ? 'Pekerjaan selesai. Pembayaran tunai ke agen.' : 'Pekerjaan selesai. Dana dilepas ke agen.');
     notify('Pekerjaan selesai', o.iAmClient ? '${o.otherName} selesai mengerjakan "${o.title}". Cek hasilnya lalu beri rating.' : (o.cod ? 'Tunai ${rp(o.total)} diterima dari klien ${o.otherName}. Komisi ${rp(o.commission)} dipotong dari saldo.' : 'Dana ${rp(o.net)} dari klien ${o.otherName} masuk ke saldo.'), refType: 'order', refId: o.id);
@@ -292,7 +292,7 @@ class OrderRepository extends RepoBase {
 
   void submitReview(Ord o, int rating, List<String> tags, String comment) {
     if (o.iAmClient) {
-      revs.insert(0, Rev(id: nid('V'), orderId: o.id, aboutId: o.otherId, from: name, rating: rating, tags: tags, comment: comment));
+      revs.insert(0, Rev(id: nid('V'), orderId: o.id, aboutId: o.otherId, from: name, rating: rating, tags: tags, comment: comment, svcId: o.svcId));
       final l = rate.putIfAbsent(o.otherId, () => [0, 0]);
       l[0] += rating;
       l[1] += 1;

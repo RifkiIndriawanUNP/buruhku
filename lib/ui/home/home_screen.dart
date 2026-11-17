@@ -92,7 +92,7 @@ class _HomeTabState extends State<HomeTab> {
               isLabelVisible: vm.unreadNotes > 0,
               label: Text('${vm.unreadNotes}'),
               backgroundColor: g900,
-              child: const Icon(Icons.notifications_none, size: 28, color: g900),
+              child: const Icon(Icons.notifications, size: 28, color: kGreen),
             ),
           ),
         ]),

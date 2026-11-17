@@ -172,7 +172,7 @@ class ChatRepository extends RepoBase {
     final amt = totalOf(r.ptype, price, dur);
     final o = Ord(id: nid('ORD'), reqId: r.id, title: r.title, cat: r.cat, address: r.address, area: r.area,
         status: 'AGREED', ptype: r.ptype, otherId: c.otherId, otherName: c.otherName, pin: _pin(),
-        iAmClient: iAmClient, unit: price, price: amt, fee: feeOf(amt), schedAt: _schedOf(r));
+        iAmClient: iAmClient, unit: price, price: amt, fee: feeOf(amt), schedAt: _schedOf(r), svcId: (d['svcId'] as String?) ?? '');
     if (!iAmClient) o.nextAt = DateTime.now().add(const Duration(seconds: 6));
     o.addLog('Order langsung disepakati (${rp(amt)})');
     orders.insert(0, o);

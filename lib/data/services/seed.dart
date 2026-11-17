@@ -106,6 +106,46 @@ List<Rev> genReviews(Agent a) {
   return out;
 }
 
+const _svcRevText = [
+  'Pengerjaannya rapi dan sesuai deskripsi jasa.',
+  'Datang tepat waktu, hasilnya memuaskan.',
+  'Harga sesuai, orangnya ramah dan sigap.',
+  'Cukup bagus, ada sedikit kekurangan tapi diperbaiki cepat.',
+  'Cepat selesai dan bersih. Recommended.',
+  'Sudah beberapa kali pesan jasa ini, selalu konsisten.',
+  'Komunikasinya enak, kerjanya teliti.',
+  'Sesuai ekspektasi, nanti pesan lagi.',
+];
+
+/// Ulasan simulasi khusus satu jasa (4 sampai 6 ulasan). Tiap jasa punya rata-rata yang sedikit berbeda.
+List<Rev> genSvcReviews(Svc v, Agent a) {
+  final r = Random(v.id.hashCode ^ 0x5bd1e);
+  final n = 4 + r.nextInt(3);
+  final base = a.rating + (r.nextDouble() - .5) * .8;
+  final out = <Rev>[];
+  for (var i = 0; i < n; i++) {
+    final x = r.nextDouble();
+    final int rating;
+    if (base >= 4.6) {
+      rating = x < .78 ? 5 : (x < .96 ? 4 : 3);
+    } else if (base >= 4.0) {
+      rating = x < .5 ? 5 : (x < .85 ? 4 : 3);
+    } else {
+      rating = x < .25 ? 5 : (x < .6 ? 4 : (x < .9 ? 3 : 2));
+    }
+    out.add(Rev(
+      id: '${v.id}r$i', aboutId: a.id, svcId: v.id, from: _revFrom[r.nextInt(_revFrom.length)],
+      rating: rating,
+      tags: [['Tepat waktu', 'Rapi', 'Sopan', 'Kuat'][r.nextInt(4)]],
+      comment: _svcRevText[r.nextInt(_svcRevText.length)],
+      at: DateTime.now().subtract(Duration(days: 2 + r.nextInt(90))),
+      avatarUrl: OnlinePhotos.reviewerAvatar(r.nextInt(OnlinePhotos.reviewerAvatars.length)),
+      photoUrl: r.nextDouble() < .5 ? OnlinePhotos.proofPhotos[r.nextInt(OnlinePhotos.proofPhotos.length)] : null,
+    ));
+  }
+  return out;
+}
+
 /// Tawaran jasa milik agen simulasi (deterministik, tidak disimpan).
 List<Svc> buildServices(List<Agent> agents) {
   final r = Random(11);
