@@ -25,7 +25,7 @@ class _IncomingTabState extends State<IncomingTab> {
     final ok = k.status == 'approved';
     final l = ok ? s.incoming : <Req>[];
     final dl = ok ? s.incomingDirect : <DirectReq>[];
-    return ListView(padding: const EdgeInsets.all(16), children: [
+    return ListView(padding: kPagePad, children: [
       Row(children: [
         const Expanded(child: Text('Home agen', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800))),
         if (ok) ...[
@@ -239,13 +239,13 @@ class IncomingDetailPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = context.s;
     final r = s.reqById(id);
-    if (r == null) return Scaffold(appBar: PageBar(), body: const Empty(Icons.error_outline, 'Request tidak ditemukan.'));
+    if (r == null) return AppScaffold(appBar: PageBar(), body: const Empty(Icons.error_outline, 'Request tidak ditemukan.'));
     final mine = r.acc.where((a) => a.agentId == 'me').toList();
     final myAcc = mine.isEmpty ? null : mine.last;
     final rec = recRange(r.cat, r.ptype);
-    return Scaffold(
+    return AppScaffold(underBar: true,
       appBar: PageBar(title: const Text('Detail request')),
-      body: ListView(padding: const EdgeInsets.all(16), children: [
+      body: ListView(padding: pagePad(context), children: [
         Row(children: [CatIcon(catOf(r.cat), size: 44), const SizedBox(width: 10), Expanded(child: Text(r.title, style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w800)))]),
         const SizedBox(height: 8),
         Wrap(spacing: 6, runSpacing: 6, children: [CatTag(catOf(r.cat).name, catOf(r.cat).color, height: 22), CatTag(ptypes[r.ptype] ?? '', kPeach, height: 22)]),
@@ -301,14 +301,16 @@ class JobsTab extends StatelessWidget {
     final waiting = vm.waitingForClient;
     return DefaultTabController(
       length: 2,
-      child: Column(children: [
-        const Padding(padding: EdgeInsets.fromLTRB(16, 16, 16, 8), child: Align(alignment: Alignment.centerLeft, child: Text('Pekerjaanku', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800)))),
-        PillTabBar(const ['Aktif', 'Selesai']),
-        Expanded(
-          child: TabBarView(children: [
+      child: FloatHeader(
+        height: 100,
+        header: Column(mainAxisSize: MainAxisSize.min, children: [
+          const Padding(padding: EdgeInsets.fromLTRB(16, 4, 16, 4), child: Align(alignment: Alignment.centerLeft, child: Text('Pekerjaanku', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800)))),
+          PillTabBar(const ['Aktif', 'Selesai']),
+        ]),
+        builder: (inset) => TabBarView(children: [
             (act.isEmpty && waiting.isEmpty)
-                ? const Empty(Icons.work_outline, 'Belum ada pekerjaan aktif. ACC request di tab Masuk.')
-                : ListView(padding: const EdgeInsets.all(16), children: [
+                ? Padding(padding: EdgeInsets.only(top: inset), child: const Empty(Icons.work_outline, 'Belum ada pekerjaan aktif. ACC request di tab Masuk.'))
+                : ListView(padding: padBelow(inset), children: [
                     if (waiting.isNotEmpty) ...[
                       const Text('Menunggu pilihan klien', style: TextStyle(fontWeight: FontWeight.w700)),
                       const SizedBox(height: 8),
@@ -324,10 +326,9 @@ class JobsTab extends StatelessWidget {
                     ],
                     for (final o in act) OrderTile(o),
                   ]),
-            his.isEmpty ? const Empty(Icons.history, 'Pekerjaan selesai akan tercatat di sini.') : ListView(padding: const EdgeInsets.all(16), children: [for (final o in his) OrderTile(o)]),
-          ]),
-        ),
-      ]),
+            his.isEmpty ? Padding(padding: EdgeInsets.only(top: inset), child: const Empty(Icons.history, 'Pekerjaan selesai akan tercatat di sini.')) : ListView(padding: padBelow(inset), children: [for (final o in his) OrderTile(o)]),
+        ]),
+      ),
     );
   }
 }
@@ -381,7 +382,7 @@ class EarningsTab extends StatelessWidget {
     final wallet = WalletViewModel(s);
     final led = wallet.agentLedger;
     final revs = wallet.agentReviews;
-    return ListView(padding: const EdgeInsets.all(16), children: [
+    return ListView(padding: kPagePad, children: [
       const Text('Pendapatan', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
       const SizedBox(height: 12),
       Box(color: g900, border: g900, child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -585,14 +586,14 @@ class _KycPageState extends State<KycPage> {
           CheckboxListTile(contentPadding: EdgeInsets.zero, controlAffinity: ListTileControlAffinity.leading, value: a3, onChanged: (v) => setState(() => a3 = v ?? false), title: const Text('Saya setuju Kebijakan Privasi dan pemrosesan data KTP')),
         ]);
     }
-    return Scaffold(
+    return AppScaffold(
       appBar: PageBar(title: Text('Daftar agen: ${steps[step]}')),
       body: Column(children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
           child: Row(children: [for (var i = 0; i < steps.length; i++) Expanded(child: Container(height: 5, margin: const EdgeInsets.only(right: 4), decoration: BoxDecoration(color: i <= step ? g900 : g200, borderRadius: BorderRadius.circular(3))))]),
         ),
-        Expanded(child: Form(key: keys[step], child: ListView(padding: const EdgeInsets.all(16), children: [body]))),
+        Expanded(child: Form(key: keys[step], child: ListView(padding: kPagePad, children: [body]))),
         SafeArea(
           child: Padding(
             padding: const EdgeInsets.all(12),
@@ -628,9 +629,9 @@ class AgentSettingsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = context.s;
     final k = s.kyc;
-    return Scaffold(
+    return AppScaffold(underBar: true,
       appBar: PageBar(title: const Text('Pengaturan agen')),
-      body: ListView(padding: const EdgeInsets.all(16), children: [
+      body: ListView(padding: pagePad(context), children: [
         SwitchListTile(contentPadding: EdgeInsets.zero, title: const Text('Status online'), value: k.online, onChanged: s.kyc.status == 'approved' ? (v) => s.setOnline(v) : null),
         SwitchListTile(contentPadding: EdgeInsets.zero, title: const Text('Terima chat dan order langsung'), value: k.directOk, onChanged: (v) { k.directOk = v; s.notifyListeners(); }),
         const Section('Keahlian'),

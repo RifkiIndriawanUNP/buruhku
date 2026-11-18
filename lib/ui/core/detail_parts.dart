@@ -3,6 +3,7 @@ import 'package:buruhku/domain/models/models.dart';
 import 'package:buruhku/utils/formatters.dart';
 import 'package:buruhku/ui/core/card_parts.dart';
 import 'package:buruhku/ui/core/page_bar.dart';
+import 'package:buruhku/ui/core/photo_viewer.dart';
 import 'package:buruhku/ui/core/theme.dart';
 import 'package:buruhku/ui/core/widgets.dart';
 
@@ -46,7 +47,7 @@ class DetailHead extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-        padding: padded ? const EdgeInsets.fromLTRB(20, 4, 16, 8) : EdgeInsets.zero,
+        padding: padded ? const EdgeInsets.fromLTRB(16, 4, 16, 8) : EdgeInsets.zero,
         child: Row(children: [
           Expanded(child: Text(title, style: const TextStyle(fontSize: 16.5, fontWeight: FontWeight.w800, color: g900))),
           if (action != null)
@@ -111,7 +112,10 @@ class _PhotoSliderState extends State<PhotoSlider> {
                   controller: _c,
                   itemCount: n,
                   onPageChanged: (i) => setState(() => _i = i),
-                  itemBuilder: (_, i) => Image.network(widget.urls[i], fit: BoxFit.cover, errorBuilder: (_, __, ___) => _ph()),
+                  itemBuilder: (_, i) => GestureDetector(
+                    onTap: () => showPhotoViewer(context, widget.urls, initial: i),
+                    child: Image.network(widget.urls[i], fit: BoxFit.cover, errorBuilder: (_, __, ___) => _ph()),
+                  ),
                 ),
         ),
         if (n > 1)
@@ -215,9 +219,12 @@ class ReviewTile extends StatelessWidget {
         if (r.tags.isNotEmpty) Padding(padding: const EdgeInsets.only(top: 6), child: Wrap(spacing: 4, runSpacing: 4, children: [for (final t in r.tags) Tag(t)])),
         if (r.photoUrl != null && r.photoUrl!.isNotEmpty) ...[
           const SizedBox(height: 8),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: Image.network(r.photoUrl!, height: 84, width: 124, fit: BoxFit.cover, errorBuilder: (_, __, ___) => const SizedBox.shrink()),
+          GestureDetector(
+            onTap: () => showPhotoViewer(context, [r.photoUrl!]),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Image.network(r.photoUrl!, height: 84, width: 124, fit: BoxFit.cover, errorBuilder: (_, __, ___) => const SizedBox.shrink()),
+            ),
           ),
         ],
       ]);
@@ -247,9 +254,9 @@ class ReviewListPage extends StatelessWidget {
   const ReviewListPage({required this.title, required this.rating, required this.revs, this.svcLabel, super.key});
 
   @override
-  Widget build(BuildContext context) => Scaffold(
+  Widget build(BuildContext context) => AppScaffold(underBar: true,
         appBar: PageBar(title: Text(title)),
-        body: ListView(padding: const EdgeInsets.only(top: 4, bottom: 24), children: [
+        body: ListView(padding: pageListPad(context), children: [
           DetailCard(child: ReviewSummary(rating: rating, revs: revs)),
           DetailCard(child: revs.isEmpty ? const Text('Belum ada ulasan.', style: TextStyle(color: g500)) : ReviewList(revs, svcLabel: svcLabel)),
         ]),

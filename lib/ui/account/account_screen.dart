@@ -47,7 +47,7 @@ class AccountTab extends StatelessWidget {
       color: _bgGray,
       child: MediaQuery.withClampedTextScaling(
         maxScaleFactor: 1.25,
-        child: ListView(padding: const EdgeInsets.only(top: 20, bottom: kBarSpace), children: [
+        child: ListView(padding: const EdgeInsets.only(top: 12, bottom: kBarSpace), children: [
           // ---- kepala profil
           Center(
             child: GestureDetector(
@@ -131,30 +131,43 @@ class _EditProfilePageState extends State<EditProfilePage> {
   late final ep = TextEditingController(text: context.r.emPhone);
   final key = GlobalKey<FormState>();
   @override
-  Widget build(BuildContext context) => Scaffold(
+  Widget build(BuildContext context) => AppScaffold(
+        underBar: true,
         appBar: PageBar(title: const Text('Profil dan alamat')),
         body: Form(
           key: key,
-          child: ListView(padding: const EdgeInsets.all(16), children: [
-            Center(child: Column(children: [
-              const MyAvatar(size: 80),
-              TextButton.icon(onPressed: () => changeProfilePhoto(context), icon: const Icon(Icons.photo_camera_outlined), label: const Text('Ubah foto profil')),
-            ])),
-            const SizedBox(height: 16),
-            TF('Nama', n, validator: (v) => (v ?? '').trim().length < 3 ? 'Minimal 3 huruf' : null),
-            TF('Nomor HP', TextEditingController(text: context.r.phone), enabled: false),
-            TF('Alamat default', a, lines: 2),
-            const SavedPlacesSection(),
-            const SizedBox(height: 8),
-            const Section('Kontak darurat'),
-            TF('Nama', en),
-            TF('No. HP', ep, type: TextInputType.phone),
-            full(pbtn('Simpan', () {
-              if (!key.currentState!.validate()) return;
-              context.r.saveProfile(n: n.text.trim(), addr: a.text.trim(), en: en.text.trim(), ep: ep.text.trim());
-              Navigator.pop(context);
-              toast(context, 'Profil disimpan.');
-            })),
+          child: ListView(padding: pageListPad(context), children: [
+            SetCard(
+              child: Column(children: [
+                const MyAvatar(size: 84),
+                TextButton.icon(onPressed: () => changeProfilePhoto(context), icon: const Icon(Icons.photo_camera_outlined), label: const Text('Ubah foto profil')),
+              ]),
+            ),
+            const SetTitle('Data diri'),
+            SetCard(
+              child: Column(children: [
+                TF('Nama', n, validator: (v) => (v ?? '').trim().length < 3 ? 'Minimal 3 huruf' : null),
+                TF('Nomor HP', TextEditingController(text: context.r.phone), enabled: false),
+                TF('Alamat default', a, lines: 2),
+              ]),
+            ),
+            const Padding(padding: EdgeInsets.symmetric(horizontal: 16), child: SavedPlacesSection()),
+            const SetTitle('Kontak darurat'),
+            SetCard(
+              child: Column(children: [
+                TF('Nama', en),
+                TF('No. HP', ep, type: TextInputType.phone),
+              ]),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+              child: full(pbtn('Simpan', () {
+                if (!key.currentState!.validate()) return;
+                context.r.saveProfile(n: n.text.trim(), addr: a.text.trim(), en: en.text.trim(), ep: ep.text.trim());
+                Navigator.pop(context);
+                toast(context, 'Profil disimpan.');
+              })),
+            ),
           ]),
         ),
       );
@@ -167,11 +180,11 @@ class WalletPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = context.s;
     final led = WalletViewModel(s).clientLedger;
-    return Scaffold(
+    return AppScaffold(underBar: true,
       appBar: PageBar(title: const Text('Dompet dan metode bayar')),
-      body: ListView(padding: const EdgeInsets.all(16), children: [
-        const Warn('Pembayaran order selalu lewat escrow. Refund dikembalikan ke metode bayar asal.', icon: Icons.lock_outline),
-        Section('E-wallet tersimpan', action: 'Tambah', onAction: () async {
+      body: ListView(padding: pageListPad(context), children: [
+        const Padding(padding: EdgeInsets.fromLTRB(16, 0, 16, 8), child: Warn('Pembayaran order selalu lewat escrow. Refund dikembalikan ke metode bayar asal.', icon: Icons.lock_outline)),
+        SetHead('E-wallet tersimpan', action: 'Tambah', onAction: () async {
           var w = 'GoPay';
           final no = TextEditingController();
           final ok = await showDialog<bool>(
@@ -190,16 +203,23 @@ class WalletPage extends StatelessWidget {
             s.notifyListeners();
           }
         }),
-        if (s.wallets.isEmpty) const Text('Belum ada e-wallet.', style: TextStyle(color: g500)),
-        for (final w in s.wallets)
-          ListTile(
-            contentPadding: EdgeInsets.zero, leading: const Icon(Icons.account_balance_wallet_outlined), title: Text(w.split('|').first), subtitle: Text(w.split('|').last),
-            trailing: IconButton(icon: const Icon(Icons.delete_outline), onPressed: () { s.wallets.remove(w); s.notifyListeners(); }),
-          ),
-        const Section('Riwayat transaksi'),
-        if (led.isEmpty) const Text('Belum ada transaksi.', style: TextStyle(color: g500)),
-        for (final l in led)
-          ListTile(contentPadding: EdgeInsets.zero, dense: true, leading: Icon(l.amount >= 0 ? Icons.south_west : Icons.north_east, size: 18), title: Text(l.note), subtitle: Text(fdt(l.at)), trailing: Text(rp(l.amount), style: const TextStyle(fontWeight: FontWeight.w700))),
+        if (s.wallets.isEmpty)
+          const SetCard(child: Text('Belum ada e-wallet.', style: TextStyle(color: g500)))
+        else
+          SetGroup([
+            for (final w in s.wallets)
+              SetRow(Icons.account_balance_wallet, const Color(0xFF4C6EF5), w.split('|').first, null,
+                  sub: w.split('|').last, badge: IconButton(icon: const Icon(Icons.delete_outline, color: g500), onPressed: () { s.wallets.remove(w); s.notifyListeners(); })),
+          ]),
+        const SetTitle('Riwayat transaksi'),
+        if (led.isEmpty)
+          const SetCard(child: Text('Belum ada transaksi.', style: TextStyle(color: g500)))
+        else
+          SetGroup([
+            for (final l in led)
+              SetRow(l.amount >= 0 ? Icons.south_west : Icons.north_east, l.amount >= 0 ? const Color(0xFF34B866) : const Color(0xFFEF4F5F), l.note, null,
+                  sub: fdt(l.at), badge: Text(rp(l.amount), style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15))),
+          ]),
       ]),
     );
   }
@@ -276,7 +296,7 @@ class _NotifPageState extends State<NotifPage> {
       body: SafeArea(
         child: MediaQuery.withClampedTextScaling(
           maxScaleFactor: 1.25,
-          child: ListView(padding: const EdgeInsets.fromLTRB(20, 12, 20, 32), children: [
+          child: ListView(padding: kPagePad, children: [
             Row(children: [
               RoundBtn(size: 48, onTap: () => Navigator.maybePop(context), child: const Icon(Icons.arrow_back_ios_new_rounded, size: 20, color: g900)),
               const Expanded(child: Center(child: Text('Notifikasi', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, height: 1.2, color: g900)))),
@@ -401,9 +421,9 @@ class SettingsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = context.s;
     Widget sw(bool v, ValueChanged<bool> f) => Switch(value: v, onChanged: f);
-    return Scaffold(
+    return AppScaffold(underBar: true,
       appBar: PageBar(title: const Text('Pengaturan')),
-      body: ListView(padding: const EdgeInsets.only(bottom: 32), children: [
+      body: ListView(padding: pageListPad(context), children: [
         const SetTitle('Notifikasi'),
         SetGroup([
           SetRow(Icons.shopping_bag, const Color(0xFFF5A12B), 'Status order dan pembayaran', null, badge: sw(s.nOrder, (v) { s.nOrder = v; s.notifyListeners(); })),
@@ -470,25 +490,34 @@ class SafetyPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final s = context.s;
-    return Scaffold(
+    return AppScaffold(underBar: true,
       appBar: PageBar(title: const Text('Keamanan dan SOS')),
-      body: ListView(padding: const EdgeInsets.all(16), children: [
-        const SosButton(),
-        const SizedBox(height: 8),
-        const Text('Saat SOS ditekan, lokasi live dibagikan ke kontak darurat dan tim keamanan Buruhku.', style: TextStyle(fontSize: 12.5, color: g500)),
-        const Section('Kontak darurat'),
-        Box(child: Row(children: [
-          const Icon(Icons.contact_phone_outlined),
-          const SizedBox(width: 12),
-          Expanded(child: Text(s.emName.isEmpty ? 'Belum diatur' : '${s.emName}\n${s.emPhone}')),
-          TextButton(onPressed: () => _go(context, const EditProfilePage()), child: const Text('Ubah')),
-        ])),
-        const Section('Tips aman'),
-        for (final t in ['Pastikan wajah agen sesuai foto profil sebelum memberi PIN kerja.', 'Bayar hanya lewat escrow Buruhku. Tolak ajakan transfer di luar aplikasi.', 'Jangan bagikan OTP, PIN, atau kode verifikasi ke siapa pun.', 'Untuk pekerjaan di dalam rumah, usahakan ada orang lain di rumah.', 'Laporkan perilaku mencurigakan lewat menu Laporan.'])
-          Padding(padding: const EdgeInsets.only(bottom: 8), child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [const Icon(Icons.check_circle_outline, size: 18), const SizedBox(width: 8), Expanded(child: Text(t))])),
-        const Section('Riwayat SOS'),
-        if (s.soses.isEmpty) const Text('Belum ada.', style: TextStyle(color: g500)),
-        for (final x in s.soses) ListTile(contentPadding: EdgeInsets.zero, leading: const Icon(Icons.sos_outlined), title: Text(fdt(x.at)), subtitle: Text(x.info), trailing: Tag(x.resolved ? 'Selesai' : 'Ditangani')),
+      body: ListView(padding: pageListPad(context), children: [
+        const Padding(padding: EdgeInsets.fromLTRB(16, 0, 16, 8), child: SosButton()),
+        const Padding(
+          padding: EdgeInsets.fromLTRB(32, 0, 32, 8),
+          child: Text('Saat SOS ditekan, lokasi live dibagikan ke kontak darurat dan tim keamanan Buruhku.', style: TextStyle(fontSize: 12.5, color: g500)),
+        ),
+        const SetTitle('Kontak darurat'),
+        SetGroup([
+          SetRow(Icons.contact_phone, const Color(0xFFEF4F5F), s.emName.isEmpty ? 'Belum diatur' : s.emName, () => _go(context, const EditProfilePage()),
+              sub: s.emName.isEmpty ? 'Ketuk untuk menambahkan' : s.emPhone, badge: const Icon(Icons.chevron_right, color: g400)),
+        ]),
+        const SetTitle('Tips aman'),
+        SetCard(
+          child: Column(children: [
+            for (final t in ['Pastikan wajah agen sesuai foto profil sebelum memberi PIN kerja.', 'Bayar hanya lewat escrow Buruhku. Tolak ajakan transfer di luar aplikasi.', 'Jangan bagikan OTP, PIN, atau kode verifikasi ke siapa pun.', 'Untuk pekerjaan di dalam rumah, usahakan ada orang lain di rumah.', 'Laporkan perilaku mencurigakan lewat menu Laporan.'])
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 5),
+                child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [const Icon(Icons.check_circle, size: 18, color: kGreen), const SizedBox(width: 10), Expanded(child: Text(t, style: const TextStyle(fontSize: 14, height: 1.35)))]),
+              ),
+          ]),
+        ),
+        const SetTitle('Riwayat SOS'),
+        if (s.soses.isEmpty)
+          const SetCard(child: Text('Belum ada.', style: TextStyle(color: g500)))
+        else
+          SetGroup([for (final x in s.soses) SetRow(Icons.sos, const Color(0xFFEF4F5F), fdt(x.at), null, sub: x.info, badge: Tag(x.resolved ? 'Selesai' : 'Ditangani'))]),
       ]),
     );
   }
@@ -510,29 +539,37 @@ class _ReportPageState extends State<ReportPage> {
   List<String> evPaths = [];
   final key = GlobalKey<FormState>();
   @override
-  Widget build(BuildContext context) => Scaffold(
+  Widget build(BuildContext context) => AppScaffold(
+        underBar: true,
         appBar: PageBar(title: const Text('Buat laporan')),
         body: Form(
           key: key,
-          child: ListView(padding: const EdgeInsets.all(16), children: [
+          child: ListView(padding: pageListPad(context), children: [
+            SetCard(
+              child: Column(children: [
             DropdownButtonFormField<String>(
               initialValue: cat, decoration: const InputDecoration(labelText: 'Jenis laporan'),
               items: [for (final c in ['Penipuan', 'Pelecehan atau kekerasan', 'Pencurian atau kerusakan', 'Joki atau identitas palsu', 'Perilaku tidak profesional', 'Pelanggaran lain']) DropdownMenuItem(value: c, child: Text(c))],
               onChanged: (v) => setState(() => cat = v ?? cat),
             ),
-            const SizedBox(height: 12),
-            TF('Pihak yang dilaporkan', target),
-            TF('Kronologi', desc, lines: 5, validator: (v) => (v ?? '').trim().length < 15 ? 'Minimal 15 karakter' : null),
-            PhotoStrip(paths: evPaths, size: 60, onChanged: (l) => setState(() { evPaths = l; ev = l.length; })),
-            const SizedBox(height: 16),
-            const Warn('Kasus pelecehan, kekerasan, atau pidana diprioritaskan dan bisa dieskalasi ke Tim Legal untuk pendampingan laporan polisi.', icon: Icons.shield_outlined),
-            const SizedBox(height: 16),
+                const SizedBox(height: 12),
+                TF('Pihak yang dilaporkan', target),
+                TF('Kronologi', desc, lines: 5, validator: (v) => (v ?? '').trim().length < 15 ? 'Minimal 15 karakter' : null),
+              ]),
+            ),
+            const SetTitle('Bukti (opsional)'),
+            SetCard(child: PhotoStrip(paths: evPaths, size: 60, onChanged: (l) => setState(() { evPaths = l; ev = l.length; }))),
+            const Padding(
+              padding: EdgeInsets.fromLTRB(16, 0, 16, 12),
+              child: Warn('Kasus pelecehan, kekerasan, atau pidana diprioritaskan dan bisa dieskalasi ke Tim Legal untuk pendampingan laporan polisi.', icon: Icons.shield_outlined),
+            ),
+            Padding(padding: const EdgeInsets.symmetric(horizontal: 16), child:
             full(pbtn('Kirim laporan', () async {
               if (!key.currentState!.validate()) return;
               final r = context.r.fileReport(cat: cat, desc: desc.text.trim(), target: target.text.trim(), orderId: widget.orderId, evid: ev);
               Navigator.pop(context);
               await info(context, 'Laporan diterima', 'Nomor tiket ${r.no}. Tim Trust & Safety menanggapi maksimal 1x24 jam.');
-            })),
+            }))),
           ]),
         ),
       );
@@ -543,22 +580,22 @@ class MyReportsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final s = context.s;
-    return Scaffold(
+    return AppScaffold(
+      underBar: true,
       appBar: PageBar(title: const Text('Laporan saya'), actions: [IconButton(icon: const Icon(Icons.add), onPressed: () => _go(context, const ReportPage()))]),
       body: s.reports.isEmpty
           ? const Empty(Icons.flag_outlined, 'Belum ada laporan. Laporkan pengguna atau pesan yang mencurigakan.')
-          : ListView(padding: const EdgeInsets.all(16), children: [
+          : ListView(padding: pageListPad(context), children: [
               for (final r in s.reports)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 10),
-                  child: Box(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                SetCard(
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                     Row(children: [Text(r.no, style: const TextStyle(fontWeight: FontWeight.w800)), const Spacer(), Tag(r.status, filled: r.status == 'Diterima')]),
                     Text('${r.cat}${r.target.isEmpty ? '' : ' - ${r.target}'}', style: const TextStyle(color: g700)),
                     const SizedBox(height: 4),
                     Text(r.desc, maxLines: 3, overflow: TextOverflow.ellipsis),
                     if (r.action.isNotEmpty) Padding(padding: const EdgeInsets.only(top: 6), child: Text('Tindakan: ${r.action}', style: const TextStyle(fontSize: 12.5, color: g700))),
                     Text(ago(r.at), style: const TextStyle(fontSize: 11, color: g500)),
-                  ])),
+                  ]),
                 ),
             ]),
     );
@@ -580,16 +617,24 @@ class HelpPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = context.s;
     final sub = TextEditingController(), body = TextEditingController();
-    return Scaffold(
+    return AppScaffold(underBar: true,
       appBar: PageBar(title: const Text('Pusat bantuan')),
-      body: ListView(padding: const EdgeInsets.all(16), children: [
-        Box(color: g100, child: const Row(children: [Icon(Icons.sos_outlined, size: 28), SizedBox(width: 12), Expanded(child: Text('Darurat: Polisi 110, Ambulans 118, Darurat 112. Di aplikasi pakai tombol SOS.'))])),
-        const Section('Pertanyaan umum'),
-        for (final f in faq) ExpansionTile(tilePadding: EdgeInsets.zero, title: Text(f[0], style: const TextStyle(fontWeight: FontWeight.w600)), children: [Padding(padding: const EdgeInsets.only(bottom: 12), child: Align(alignment: Alignment.centerLeft, child: Text(f[1], style: const TextStyle(height: 1.4))))]),
-        const Section('Hubungi kami'),
-        TF('Subjek', sub),
-        TF('Pesan', body, lines: 3),
-        full(pbtn('Kirim tiket', () {
+      body: ListView(padding: pageListPad(context), children: [
+        SetCard(child: const Row(children: [Icon(Icons.sos, size: 28, color: Color(0xFFEF4F5F)), SizedBox(width: 12), Expanded(child: Text('Darurat: Polisi 110, Ambulans 118, Darurat 112. Di aplikasi pakai tombol SOS.'))])),
+        const SetTitle('Pertanyaan umum'),
+        SetCard(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          child: Theme(
+            data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+            child: Column(children: [for (final f in faq) ExpansionTile(tilePadding: EdgeInsets.zero, title: Text(f[0], style: const TextStyle(fontWeight: FontWeight.w600)), children: [Padding(padding: const EdgeInsets.only(bottom: 12), child: Align(alignment: Alignment.centerLeft, child: Text(f[1], style: const TextStyle(height: 1.4))))])]),
+          ),
+        ),
+        const SetTitle('Hubungi kami'),
+        SetCard(
+          child: Column(children: [
+            TF('Subjek', sub),
+            TF('Pesan', body, lines: 3),
+            full(pbtn('Kirim tiket', () {
           if (sub.text.trim().isEmpty || body.text.trim().length < 10) {
             toast(context, 'Isi subjek dan pesan (min 10 karakter).');
             return;
@@ -598,17 +643,18 @@ class HelpPage extends StatelessWidget {
           sub.clear();
           body.clear();
           toast(context, 'Tiket ${t.no} dibuat.');
-        })),
+            })),
+          ]),
+        ),
         if (s.tickets.isNotEmpty) ...[
-          const Section('Tiket saya'),
+          const SetTitle('Tiket saya'),
           for (final t in s.tickets)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Box(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            SetCard(
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Row(children: [Text(t.no, style: const TextStyle(fontWeight: FontWeight.w800)), const Spacer(), Tag(t.status, filled: t.status == 'Dijawab')]),
                 Text(t.subject, style: const TextStyle(fontWeight: FontWeight.w600)),
                 if (t.reply.isNotEmpty) Padding(padding: const EdgeInsets.only(top: 6), child: Text('Balasan: ${t.reply}', style: const TextStyle(fontSize: 12.5, color: g700))),
-              ])),
+              ]),
             ),
         ],
       ]),
@@ -629,9 +675,9 @@ const _policies = {
 class PolicyListPage extends StatelessWidget {
   const PolicyListPage({super.key});
   @override
-  Widget build(BuildContext context) => Scaffold(
+  Widget build(BuildContext context) => AppScaffold(underBar: true,
         appBar: PageBar(title: const Text('Kebijakan dan ketentuan')),
-        body: ListView(children: [SetGroup([for (final k in _policies.keys) SetRow(Icons.description, const Color(0xFF4C6EF5), k, () => _go(context, PolicyPage(k)), badge: const Icon(Icons.chevron_right, color: g400))])]),
+        body: ListView(padding: pageListPad(context), children: [SetGroup([for (final k in _policies.keys) SetRow(Icons.description, const Color(0xFF4C6EF5), k, () => _go(context, PolicyPage(k)), badge: const Icon(Icons.chevron_right, color: g400))])]),
       );
 }
 
@@ -639,9 +685,9 @@ class PolicyPage extends StatelessWidget {
   final String title;
   const PolicyPage(this.title, {super.key});
   @override
-  Widget build(BuildContext context) => Scaffold(
+  Widget build(BuildContext context) => AppScaffold(underBar: true,
         appBar: PageBar(title: Text(title)),
-        body: ListView(padding: const EdgeInsets.all(16), children: [Text(_policies[title] ?? '', style: const TextStyle(height: 1.5)), const SizedBox(height: 16), const Text('Versi prototype: isi final perlu ditinjau konsultan hukum.', style: TextStyle(color: g500, fontSize: 12))]),
+        body: ListView(padding: pageListPad(context), children: [SetCard(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(_policies[title] ?? '', style: const TextStyle(height: 1.5)), const SizedBox(height: 16), const Text('Versi prototype: isi final perlu ditinjau konsultan hukum.', style: TextStyle(color: g500, fontSize: 12))])),]),
       );
 }
 
@@ -658,12 +704,13 @@ class AdminPage extends StatelessWidget {
     final disps = vm.openDisputes;
     return DefaultTabController(
       length: 6,
-      child: Scaffold(
+      child: AppScaffold(
+        underBar: true,
         appBar: PageBar(title: const Text('Panel Admin (Simulasi)'), bottom: const TabBar(isScrollable: true, tabs: [Tab(text: 'KYC'), Tab(text: 'Moderasi'), Tab(text: 'Laporan'), Tab(text: 'Sengketa'), Tab(text: 'SOS'), Tab(text: 'Statistik')])),
         body: TabBarView(children: [
           // KYC
           (k.status == 'pending' || k.status == 'needs_more')
-              ? ListView(padding: const EdgeInsets.all(16), children: [
+              ? ListView(padding: underBarPad(context, kPagePad, extra: 48), children: [
                   Box(child: Column(children: [
                     Kv('Nama', k.name), Kv('NIK', k.nik), Kv('Lahir', k.birth), Kv('Alamat', k.addr),
                     Kv('Kontak darurat', '${k.emName} ${k.emPhone}'), Kv('KTP', k.ktp ? 'Terunggah' : '-'), Kv('Selfie liveness', k.selfie ? 'Lolos 94%' : '-'),
@@ -682,11 +729,11 @@ class AdminPage extends StatelessWidget {
                     if (r != null) s.adminKyc('more', r);
                   })),
                 ])
-              : Empty(Icons.how_to_reg_outlined, 'Tidak ada antrean KYC. Status pendaftaranmu: ${k.status}.'),
+              : Padding(padding: EdgeInsets.only(top: MediaQuery.paddingOf(context).top + kBarH + 48), child: Empty(Icons.how_to_reg_outlined, 'Tidak ada antrean KYC. Status pendaftaranmu: ${k.status}.')),
           // moderasi
           review.isEmpty
-              ? const Empty(Icons.rule, 'Tidak ada request yang menunggu tinjauan.')
-              : ListView(padding: const EdgeInsets.all(16), children: [
+              ? Padding(padding: EdgeInsets.only(top: MediaQuery.paddingOf(context).top + kBarH + 48), child: const Empty(Icons.rule, 'Tidak ada request yang menunggu tinjauan.'))
+              : ListView(padding: underBarPad(context, kPagePad, extra: 48), children: [
                   for (final r in review)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 10),
@@ -702,8 +749,8 @@ class AdminPage extends StatelessWidget {
                 ]),
           // laporan
           reps.isEmpty
-              ? const Empty(Icons.flag_outlined, 'Tidak ada laporan baru.')
-              : ListView(padding: const EdgeInsets.all(16), children: [
+              ? Padding(padding: EdgeInsets.only(top: MediaQuery.paddingOf(context).top + kBarH + 48), child: const Empty(Icons.flag_outlined, 'Tidak ada laporan baru.'))
+              : ListView(padding: underBarPad(context, kPagePad, extra: 48), children: [
                   for (final r in reps)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 10),
@@ -722,8 +769,8 @@ class AdminPage extends StatelessWidget {
                 ]),
           // sengketa
           disps.isEmpty
-              ? const Empty(Icons.gavel_outlined, 'Tidak ada sengketa terbuka.')
-              : ListView(padding: const EdgeInsets.all(16), children: [
+              ? Padding(padding: EdgeInsets.only(top: MediaQuery.paddingOf(context).top + kBarH + 48), child: const Empty(Icons.gavel_outlined, 'Tidak ada sengketa terbuka.'))
+              : ListView(padding: underBarPad(context, kPagePad, extra: 48), children: [
                   for (final d in disps)
                     Builder(builder: (_) {
                       final o = s.orderById(d.orderId);
@@ -746,13 +793,13 @@ class AdminPage extends StatelessWidget {
                 ]),
           // SOS
           s.soses.isEmpty
-              ? const Empty(Icons.sos_outlined, 'Tidak ada alarm SOS.')
-              : ListView(padding: const EdgeInsets.all(16), children: [
+              ? Padding(padding: EdgeInsets.only(top: MediaQuery.paddingOf(context).top + kBarH + 48), child: const Empty(Icons.sos_outlined, 'Tidak ada alarm SOS.'))
+              : ListView(padding: underBarPad(context, kPagePad, extra: 48), children: [
                   for (final x in s.soses)
                     ListTile(leading: const Icon(Icons.sos_outlined), title: Text('${fdt(x.at)}${x.orderId.isEmpty ? '' : '  |  ${x.orderId}'}'), subtitle: Text(x.info), trailing: x.resolved ? const Tag('Selesai') : FilledButton(onPressed: () => s.resolveSos(x), child: const Text('Selesaikan'))),
                 ]),
           // statistik
-          ListView(padding: const EdgeInsets.all(16), children: [
+          ListView(padding: underBarPad(context, kPagePad, extra: 48), children: [
             Box(child: Column(children: [
               Kv('Request dibuat', '${vm.requestsCreated}'),
               Kv('Order total', '${vm.ordersTotal}'),

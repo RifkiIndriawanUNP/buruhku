@@ -88,7 +88,7 @@ class Stars extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Row(mainAxisSize: MainAxisSize.min, children: [
         for (var i = 1; i <= 5; i++)
-          Icon(r >= i - 0.25 ? Icons.star : (r >= i - 0.75 ? Icons.star_half : Icons.star_border), size: size, color: const Color(0xFF1A2B5F)),
+          Icon(r >= i - 0.25 ? Icons.star : (r >= i - 0.75 ? Icons.star_half : Icons.star_border), size: size, color: kStar),
       ]);
 }
 
@@ -99,7 +99,7 @@ class StarPicker extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Row(mainAxisAlignment: MainAxisAlignment.center, children: [
         for (var i = 1; i <= 5; i++)
-          IconButton(iconSize: 36, onPressed: () => onChanged(i), icon: Icon(i <= value ? Icons.star : Icons.star_border, color: const Color(0xFF1A2B5F))),
+          IconButton(iconSize: 36, onPressed: () => onChanged(i), icon: Icon(i <= value ? Icons.star : Icons.star_border, color: kStar)),
       ]);
 }
 
@@ -189,6 +189,17 @@ Widget pbtn(String label, VoidCallback? f, {IconData? icon}) =>
     icon == null ? FilledButton(onPressed: f, child: Text(label)) : FilledButton.icon(onPressed: f, icon: Icon(icon, size: 18), label: Text(label));
 Widget obtn(String label, VoidCallback? f, {IconData? icon}) =>
     icon == null ? OutlinedButton(onPressed: f, child: Text(label)) : OutlinedButton.icon(onPressed: f, icon: Icon(icon, size: 18), label: Text(label));
+/// Tombol kompak (tinggi 38) untuk di dalam kartu. Tombol form tetap memakai pbtn/obtn.
+Widget pbtnS(String label, VoidCallback? f, {IconData? icon}) {
+  final st = FilledButton.styleFrom(minimumSize: const Size(64, 38), padding: const EdgeInsets.symmetric(horizontal: 14));
+  return icon == null ? FilledButton(style: st, onPressed: f, child: Text(label)) : FilledButton.icon(style: st, onPressed: f, icon: Icon(icon, size: 18), label: Text(label));
+}
+
+Widget obtnS(String label, VoidCallback? f, {IconData? icon}) {
+  final st = OutlinedButton.styleFrom(minimumSize: const Size(64, 38), padding: const EdgeInsets.symmetric(horizontal: 14));
+  return icon == null ? OutlinedButton(style: st, onPressed: f, child: Text(label)) : OutlinedButton.icon(style: st, onPressed: f, icon: Icon(icon, size: 18), label: Text(label));
+}
+
 Widget full(Widget w) => SizedBox(width: double.infinity, child: w);
 
 class Seg extends StatelessWidget {

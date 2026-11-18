@@ -32,25 +32,25 @@ class _AgentMapViewState extends State<AgentMapView> {
           fitKey: '${l.length}-${widget.radiusKm}',
           onBackgroundTap: (_) => setState(() => sel = null),
           marks: [
-            for (final a in l) MapMark.agent(a.pos, online: a.online, selected: a.id == sel, onTap: () => setState(() => sel = a.id)),
+            for (final a in l) MapMark.agent(a.pos, online: a.online, selected: a.id == sel, imageUrl: a.avatarUrl, onTap: () => setState(() => sel = a.id)),
           ],
         ),
       ),
-      Positioned(
-        left: 12,
-        right: 12,
-        bottom: 8,
-        child: picked != null
-            ? AgentCard(picked, wide: true)
-            : Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(color: cW, border: Border.all(color: g300), borderRadius: BorderRadius.circular(6)),
-                child: Text(
-                  l.isEmpty ? 'Tidak ada agen yang cocok dengan filter.' : '${l.length} agen dalam ${widget.radiusKm.toInt()} km. Ketuk marker untuk melihat agen.',
-                  style: const TextStyle(fontSize: 12.5, color: g700),
-                ),
-              ),
-      ),
+      // Positioned(
+      //   left: 12,
+      //   right: 12,
+      //   bottom: 76, // di atas tombol peta mengambang
+      //   child: picked != null
+      //       ? AgentCard(picked, wide: true)
+      //       : Container(
+      //           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      //           decoration: BoxDecoration(color: cW, border: Border.all(color: g300), borderRadius: BorderRadius.circular(6)),
+      //           child: Text(
+      //             l.isEmpty ? 'Tidak ada agen yang cocok dengan filter.' : '${l.length} agen dalam ${widget.radiusKm.toInt()} km. Ketuk marker untuk melihat agen.',
+      //             style: const TextStyle(fontSize: 12.5, color: g700),
+      //           ),
+      //         ),
+      // ),
     ]);
   }
 }

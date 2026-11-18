@@ -15,6 +15,7 @@ const g900 = Color(0xFF1C1C1C);
 const cBg = Color(0xFFF2F3F7);
 
 const kGreen = Color(0xFF1FA75A);
+const kStar = Color(0xFFFFB400); // semua bintang rating
 const kGreenLt = Color(0xFF7BD39A);
 const kGreenBg = Color(0xFFDDF4E6); // latar hijau muda (chip terpilih)
 const kBgGray = cBg; // nama lain untuk cBg (dipakai kode v4)

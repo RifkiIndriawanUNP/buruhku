@@ -125,7 +125,7 @@ class SavedPlacesSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = context.s;
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Section('Lokasi tersimpan', action: 'Tambah', onAction: () {
+      SetHead('Lokasi tersimpan', action: 'Tambah', onAction: () {
         if (s.places.length >= _maxPlaces) {
           toast(context, 'Maksimal $_maxPlaces lokasi tersimpan.');
           return;
@@ -194,11 +194,12 @@ class _PlaceEditPageState extends State<PlaceEditPage> {
   final key = GlobalKey<FormState>();
 
   @override
-  Widget build(BuildContext context) => Scaffold(
+  Widget build(BuildContext context) => AppScaffold(
+        underBar: true,
         appBar: PageBar(title: Text(widget.place == null ? 'Tambah lokasi' : 'Ubah lokasi')),
         body: Form(
           key: key,
-          child: ListView(padding: const EdgeInsets.all(16), children: [
+          child: ListView(padding: pagePad(context), children: [
             TF('Nama lokasi', label, maxLen: 30, validator: (v) => (v ?? '').trim().isEmpty ? 'Nama wajib diisi' : null),
             Wrap(spacing: 8, children: [
               for (final l in ['Rumah', 'Kantor', 'Rumah keluarga'])

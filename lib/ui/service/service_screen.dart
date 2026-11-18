@@ -62,7 +62,7 @@ class ServiceCard extends StatelessWidget {
                 child: RoundBtn(
                   size: 32,
                   onTap: () => context.r.toggleFavSvc(svc.id),
-                  child: Icon(fav ? Icons.favorite : Icons.favorite_border, size: 18, color: Colors.red),
+                  child: Icon(fav ? Icons.favorite : Icons.favorite_border, size: 18, color: fav ? Colors.red : g500),
                 ),
               ),
             ]),
@@ -80,7 +80,7 @@ class ServiceCard extends StatelessWidget {
             ]),
             const SizedBox(height: 6),
             Row(children: [
-              const Icon(Icons.star, size: 14, color: kNavy),
+              const Icon(Icons.star, size: 14, color: kStar),
               const SizedBox(width: 3),
               Text(n == 0 ? 'Baru' : '${rating.toStringAsFixed(1)} ($n)', style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: g900)),
               const Spacer(),
@@ -139,7 +139,7 @@ class ServiceCard extends StatelessWidget {
                     child: RoundBtn(
                       size: 28,
                       onTap: () => context.r.toggleFavSvc(svc.id),
-                      child: Icon(fav ? Icons.favorite : Icons.favorite_border, size: 16, color: Colors.red),
+                      child: Icon(fav ? Icons.favorite : Icons.favorite_border, size: 16, color: fav ? Colors.red : g500),
                     ),
                   ),
                 ]),
@@ -162,7 +162,7 @@ class ServiceCard extends StatelessWidget {
                       if (!a.online) ...[const SizedBox(width: 6), const Text('Offline', style: TextStyle(fontSize: 10, color: g500))],
                     ]),
                   ),
-                  const Icon(Icons.star, size: 13, color: kNavy),
+                  const Icon(Icons.star, size: 13, color: kStar),
                   const SizedBox(width: 3),
                   Text(s.ratingOfSvc(svc) > 0 ? s.ratingOfSvc(svc).toStringAsFixed(1) : 'Baru', style: const TextStyle(fontSize: 12, color: g700)),
                 ]),
@@ -206,22 +206,15 @@ class _EtaChip extends StatelessWidget {
       );
 }
 
-/// Tombol "Order" hijau muda di baris tarif kartu jasa.
+/// Tombol "Order" di baris tarif kartu jasa. Sama dengan tombol di kartu agen: hijau penuh.
 class _OrderChip extends StatelessWidget {
   final VoidCallback onTap;
   const _OrderChip({required this.onTap});
   @override
-  Widget build(BuildContext context) => Material(
-        color: kGreenBg,
-        shape: const StadiumBorder(side: BorderSide(color: Color(0x661FA75A), width: 1.2)),
-        child: InkWell(
-          customBorder: const StadiumBorder(),
-          onTap: onTap,
-          child: const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 14, vertical: 9),
-            child: Text('Order', style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w800, color: Color(0xFF0B7A41))),
-          ),
-        ),
+  Widget build(BuildContext context) => FilledButton(
+        style: FilledButton.styleFrom(minimumSize: const Size(0, 40), padding: const EdgeInsets.symmetric(horizontal: 18)),
+        onPressed: onTap,
+        child: const Text('Order', style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w800)),
       );
 }
 
@@ -249,19 +242,21 @@ class _ServiceListPageState extends State<ServiceListPage> {
   Widget build(BuildContext context) {
     final s = context.s;
     final l = s.svcsNear(cat: cat, sort: sort);
-    return Scaffold(
-      appBar: PageBar(title: Text(widget.title), actions: [
-        PopupMenuButton<String>(
-          icon: const Icon(Icons.sort),
-          tooltip: 'Urutkan',
-          onSelected: (v) => setState(() => sort = v),
-          itemBuilder: (_) => [
-            for (final e in {'jarak': 'Terdekat', 'harga': 'Termurah', 'rating': 'Rating agen'}.entries) CheckedPopupMenuItem(value: e.key, checked: sort == e.key, child: Text(e.value)),
-          ],
-        ),
-      ]),
-      body: Column(children: [
-        SizedBox(
+    return AppScaffold(
+      underBar: true,
+      appBar: PageBar(
+        title: Text(widget.title),
+        actions: [
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.sort),
+            tooltip: 'Urutkan',
+            onSelected: (v) => setState(() => sort = v),
+            itemBuilder: (_) => [
+              for (final e in {'jarak': 'Terdekat', 'harga': 'Termurah', 'rating': 'Rating agen'}.entries) CheckedPopupMenuItem(value: e.key, checked: sort == e.key, child: Text(e.value)),
+            ],
+          ),
+        ],
+        bottom: BarBottom(
           height: 52,
           child: ListView(scrollDirection: Axis.horizontal, padding: const EdgeInsets.fromLTRB(16, 8, 16, 8), children: [
             Padding(padding: const EdgeInsets.only(right: 8), child: ChoiceChip(label: const Text('Semua'), selected: cat == null, onSelected: (_) => setState(() => cat = null))),
@@ -272,12 +267,13 @@ class _ServiceListPageState extends State<ServiceListPage> {
               ),
           ]),
         ),
-        Expanded(
-          child: l.isEmpty
-              ? const Empty(Icons.storefront_outlined, 'Belum ada tawaran jasa untuk pilihan ini. Buat request agar agen yang menghubungimu.')
-              : ListView(padding: const EdgeInsets.all(16), children: [for (final v in l) ServiceTile(v)]),
-        ),
-      ]),
+      ),
+      body: l.isEmpty
+          ? Padding(
+              padding: EdgeInsets.only(top: MediaQuery.paddingOf(context).top + kBarH + 52),
+              child: const Empty(Icons.storefront_outlined, 'Belum ada tawaran jasa untuk pilihan ini. Buat request agar agen yang menghubungimu.'),
+            )
+          : ListView(padding: underBarPad(context, kPagePad, extra: 52), children: [for (final v in l) ServiceTile(v)]),
     );
   }
 }
@@ -291,7 +287,7 @@ class ServiceDetailPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = context.s;
     final v = s.svcById(id);
-    if (v == null) return Scaffold(appBar: PageBar(), body: const Empty(Icons.error_outline, 'Tawaran jasa tidak ditemukan.'));
+    if (v == null) return AppScaffold(appBar: PageBar(), body: const Empty(Icons.error_outline, 'Tawaran jasa tidak ditemukan.'));
     final a = s.agentById(v.agentId);
     final c = catOf(v.cat);
     final revs = s.reviewsOfSvc(v.id);
@@ -331,7 +327,7 @@ class ServiceDetailPage extends StatelessWidget {
             child: RoundBtn(
               size: 44,
               onTap: () => s.toggleFavSvc(v.id),
-              child: Icon(fav ? Icons.favorite : Icons.favorite_border, size: 22, color: Colors.red),
+              child: Icon(fav ? Icons.favorite : Icons.favorite_border, size: 22, color: fav ? Colors.red : g500),
             ),
           ),
         ]),
@@ -348,7 +344,7 @@ class ServiceDetailPage extends StatelessWidget {
             Text(v.title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, height: 1.25, color: g900)),
             const SizedBox(height: 8),
             Row(children: [
-              const Icon(Icons.star, size: 16, color: kNavy),
+              const Icon(Icons.star, size: 16, color: kStar),
               const SizedBox(width: 4),
               Text(revs.isEmpty ? 'Belum ada ulasan' : '${rating.toStringAsFixed(1)}  (${revs.length} ulasan)', style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600, color: g900)),
               const Spacer(),
@@ -541,8 +537,8 @@ class FavAgentsView extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = context.s;
     final favs = s.agents.where((a) => s.favs.contains(a.id)).toList();
-    if (favs.isEmpty) return const Empty(Icons.favorite_border, 'Ketuk ikon hati di profil agen untuk menyimpan agen favorit.');
-    return ListView(padding: const EdgeInsets.all(16), children: [
+    if (favs.isEmpty) return Padding(padding: EdgeInsets.only(top: HeaderInset.of(context)), child: const Empty(Icons.favorite_border, 'Ketuk ikon hati di profil agen untuk menyimpan agen favorit.'));
+    return ListView(padding: insetPad(context), children: [
       for (final a in favs)
         Dismissible(
           key: ValueKey('fa${a.id}'), direction: DismissDirection.endToStart,
@@ -560,8 +556,8 @@ class FavServicesView extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = context.s;
     final favs = s.favSvc.map(s.svcById).whereType<Svc>().toList();
-    if (favs.isEmpty) return const Empty(Icons.favorite_border, 'Ketuk ikon hati di tawaran jasa untuk menyimpannya sebagai jasa favorit.');
-    return ListView(padding: const EdgeInsets.all(16), children: [
+    if (favs.isEmpty) return Padding(padding: EdgeInsets.only(top: HeaderInset.of(context)), child: const Empty(Icons.favorite_border, 'Ketuk ikon hati di tawaran jasa untuk menyimpannya sebagai jasa favorit.'));
+    return ListView(padding: insetPad(context), children: [
       for (final v in favs)
         Dismissible(
           key: ValueKey('fs${v.id}'), direction: DismissDirection.endToStart,
@@ -581,14 +577,15 @@ class MyServicesPage extends StatelessWidget {
     final s = context.s;
     final ok = s.kyc.status == 'approved';
     final l = s.mySvcs;
-    return Scaffold(
+    return AppScaffold(
+      underBar: true,
       appBar: PageBar(title: const Text('Tawaran jasa saya')),
       body: !ok
           ? const Empty(Icons.how_to_reg_outlined, 'Daftar dan verifikasi sebagai agen dulu untuk membuat tawaran jasa.')
           : l.isEmpty
               ? Empty(Icons.storefront_outlined, 'Belum ada tawaran jasa. Buat tawaran dengan harga yang kamu tentukan, klien tinggal memesan.',
                   action: pbtn('Tambah penawaran jasa', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ServiceEditPage())), icon: Icons.add))
-              : ListView(padding: const EdgeInsets.all(16), children: [
+              : ListView(padding: pagePad(context), children: [
                   const Warn('Tawaran aktif tampil di Beranda klien sekitar dan bisa langsung dipesan. Pesanan masuk ke Order langsung di Home kamu.', icon: Icons.storefront_outlined),
                   const SizedBox(height: 12),
                   for (final v in l)
@@ -703,11 +700,12 @@ class _ServiceEditPageState extends State<ServiceEditPage> {
     final ids = <String>{...s.kyc.cats, cat}.toList();
     final rec = recRange(cat, ptype);
     final sug = catSuggest[cat] ?? templates;
-    return Scaffold(
+    return AppScaffold(
+      underBar: true,
       appBar: PageBar(title: Text(widget.svc == null ? 'Tambah penawaran jasa' : 'Ubah tawaran jasa')),
       body: Form(
         key: key,
-        child: ListView(padding: const EdgeInsets.all(16), children: [
+        child: ListView(padding: pagePad(context), children: [
           Padding(
             padding: const EdgeInsets.only(bottom: 12),
             child: DropdownButtonFormField<String>(

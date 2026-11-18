@@ -8,7 +8,7 @@ import 'package:buruhku/ui/home/home_view_model.dart';
 import 'package:buruhku/ui/search/search_screen.dart';
 import 'package:buruhku/ui/service/service_screen.dart';
 
-const _hPad = 20.0;
+const _hPad = 16.0;
 
 class HomeTab extends StatefulWidget {
   final HomeViewModel viewModel;

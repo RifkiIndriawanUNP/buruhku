@@ -8,23 +8,56 @@ import 'package:buruhku/ui/agents/agent_detail_screen.dart';
 import 'package:buruhku/ui/chat/chat_screen.dart';
 import 'package:buruhku/ui/location/location_screen.dart';
 import 'package:buruhku/ui/order/order_screen.dart';
+import 'package:buruhku/ui/request/request_map_view.dart';
 import 'package:buruhku/ui/service/service_screen.dart';
 
 // ---------------------------------------------------------------- tab Request
-class MyRequestsTab extends StatelessWidget {
+class MyRequestsTab extends StatefulWidget {
   const MyRequestsTab({super.key});
   @override
-  Widget build(BuildContext context) => DefaultTabController(
-        length: 3,
-        child: Column(children: [
-          const Padding(
-            padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: Align(alignment: Alignment.centerLeft, child: Text('Request & favorit', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800))),
+  State<MyRequestsTab> createState() => _MyRequestsTabState();
+}
+
+class _MyRequestsTabState extends State<MyRequestsTab> {
+  bool _map = false;
+  bool _fabExt = true; // tombol melebar (true) atau mengecil jadi ikon saat gulir turun
+
+  @override
+  Widget build(BuildContext context) => Stack(children: [
+        DefaultTabController(
+          length: 3,
+          child: ScrollFabListener(
+            onExtended: (v) {
+              if (v != _fabExt) setState(() => _fabExt = v);
+            },
+            child: FloatHeader(
+              height: _map ? 48 : 102,
+              header: Column(mainAxisSize: MainAxisSize.min, children: [
+                const Padding(
+                  padding: EdgeInsets.fromLTRB(16, 4, 16, 4),
+                  child: Align(alignment: Alignment.centerLeft, child: Text('Request & favorit', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800))),
+                ),
+                if (!_map) PillTabBar(const ['Request', 'Agen favorit', 'Jasa favorit']),
+              ]),
+              builder: (inset) => _map ? const RequestMapView() : const TabBarView(children: [_RequestList(), FavAgentsView(), FavServicesView()]),
+            ),
           ),
-          PillTabBar(const ['Request', 'Agen favorit', 'Jasa favorit']),
-          const Expanded(child: TabBarView(children: [_RequestList(), FavAgentsView(), FavServicesView()])),
-        ]),
-      );
+        ),
+        // Toggle daftar/peta: pil hijau yang mengecil jadi ikon saat daftar digulir turun.
+        Positioned(
+          right: 16,
+          bottom: kBarSpace - 24,
+          child: ScrollFab(
+            icon: _map ? Icons.view_agenda_outlined : Icons.map_outlined,
+            label: _map ? 'Daftar' : 'Peta',
+            extended: _map || _fabExt,
+            onTap: () => setState(() {
+              _map = !_map;
+              _fabExt = true;
+            }),
+          ),
+        ),
+      ]);
 }
 
 class _RequestList extends StatelessWidget {
@@ -33,7 +66,7 @@ class _RequestList extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = context.s;
     final l = s.myReqs;
-    return ListView(padding: const EdgeInsets.all(16), children: [
+    return ListView(padding: insetPad(context), children: [
       full(pbtn('Buat request baru', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RequestFormPage())), icon: Icons.add)),
       const SizedBox(height: 4),
       const Section('Template cepat'),
@@ -225,11 +258,12 @@ class _RequestFormPageState extends State<RequestFormPage> {
   Widget build(BuildContext context) {
     final rec = recRange(cat, ptype);
     final total = totalOf(ptype, p, d);
-    return Scaffold(
+    return AppScaffold(
+      underBar: true,
       appBar: PageBar(title: Text(widget.edit == null ? 'Buat request' : 'Ubah request')),
       body: Form(
         key: key,
-        child: ListView(padding: const EdgeInsets.all(16), children: [
+        child: ListView(padding: pagePad(context), children: [
           if (widget.edit == null) ...[
             Text(widget.cat != null ? 'Saran jasa ${catOf(cat).name}' : 'Jasa populer', style: const TextStyle(fontWeight: FontWeight.w700)),
             const SizedBox(height: 8),
@@ -322,12 +356,12 @@ class ReqDetailPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = context.s;
     final r = s.reqById(id);
-    if (r == null) return Scaffold(appBar: PageBar(), body: const Empty(Icons.error_outline, 'Request tidak ditemukan.'));
+    if (r == null) return AppScaffold(appBar: PageBar(), body: const Empty(Icons.error_outline, 'Request tidak ditemukan.'));
     if (r.workers > 1) return GroupOrderPage(r.id);
     final open = ['OPEN', 'HAS_ACCEPTORS', 'FULL'].contains(r.status);
     final accs = r.acc.where((a) => a.status == 'accepted' || a.status == 'selected').toList();
     final orders = s.orders.where((o) => o.reqId == r.id).toList();
-    return Scaffold(
+    return AppScaffold(underBar: true,
       appBar: PageBar(title: const Text('Detail request'), actions: [
         if (open || r.status == 'EXPIRED' || r.status == 'IN_REVIEW')
           PopupMenuButton<String>(
@@ -341,7 +375,7 @@ class ReqDetailPage extends StatelessWidget {
             itemBuilder: (_) => const [PopupMenuItem(value: 'edit', child: Text('Ubah request')), PopupMenuItem(value: 'cancel', child: Text('Batalkan request'))],
           ),
       ]),
-      body: ListView(padding: const EdgeInsets.all(16), children: [
+      body: ListView(padding: pagePad(context), children: [
         Row(children: [
           CatIcon(catOf(r.cat), size: 44),
           const SizedBox(width: 10),

@@ -6,6 +6,7 @@ import 'package:latlong2/latlong.dart' show LatLng;
 import 'package:buruhku/utils/geo.dart';
 import 'package:buruhku/ui/account/account_screen.dart';
 import 'package:buruhku/ui/agents/agent_detail_screen.dart';
+import 'package:buruhku/ui/chat/chat_cards.dart';
 import 'package:buruhku/ui/location/location_screen.dart';
 import 'package:buruhku/ui/order/order_screen.dart';
 import 'package:buruhku/ui/request/request_screen.dart';
@@ -74,9 +75,11 @@ class _ChatsTabState extends State<ChatsTab> {
 
     return MediaQuery.withClampedTextScaling(
       maxScaleFactor: 1.25,
-      child: Column(children: [
+      child: FloatHeader(
+        height: searching ? 192 : 128,
+        header: Column(mainAxisSize: MainAxisSize.min, children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+          padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
           child: Row(children: [
             const Expanded(child: Text('Pesan', style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800, height: 1.2, color: g900))),
             RoundBtn(
@@ -123,16 +126,23 @@ class _ChatsTabState extends State<ChatsTab> {
             FilterPill('Pesan Langsung', selected: seg == 'direct', onTap: () => setState(() => seg = 'direct')),
           ]),
         )),
-        const SizedBox(height: 16),
-        Expanded(
-          child: l.isEmpty
-              ? Empty(Icons.chat_bubble_outline, kw.isNotEmpty ? 'Tidak ada percakapan yang cocok.' : seg == 'direct' ? 'Chat langsung dimulai dari profil agen.' : seg == 'order' ? 'Chat negosiasi muncul saat ada agen yang ACC requestmu.' : 'Belum ada percakapan.')
-              : ListView(padding: const EdgeInsets.fromLTRB(20, 4, 20, kBarSpace), children: [
-                  SoftCard(radius: 28, padding: const EdgeInsets.fromLTRB(16, 8, 16, 8), child: Column(children: [for (final c in l) _row(context, c)])),
-                ]),
-        ),
-      ]),
+        ]),
+        builder: (inset) => l.isEmpty
+            ? Padding(padding: EdgeInsets.only(top: inset), child: Empty(Icons.chat_bubble_outline, kw.isNotEmpty ? 'Tidak ada percakapan yang cocok.' : seg == 'direct' ? 'Chat langsung dimulai dari profil agen.' : seg == 'order' ? 'Chat negosiasi muncul saat ada agen yang ACC requestmu.' : 'Belum ada percakapan.'))
+            : ListView(padding: padBelow(inset, const EdgeInsets.fromLTRB(16, 4, 16, kBarSpace)), children: [
+                SoftCard(radius: 28, padding: const EdgeInsets.fromLTRB(16, 8, 16, 8), child: Column(children: [for (final c in l) _row(context, c)])),
+              ]),
+      ),
     );
+  }
+
+  /// Foto profil agen kalau lawan chat adalah agen, kalau tidak inisial nama.
+  Widget _avatar(BuildContext context, Chat c) {
+    if (c.otherAgent) {
+      final ag = context.s.agentById(c.otherId);
+      if (ag.id == c.otherId && (ag.avatarUrl ?? '').isNotEmpty) return AvatarPh(52, url: ag.avatarUrl);
+    }
+    return InitialAvatar(c.otherName, size: 52);
   }
 
   Widget _row(BuildContext context, Chat c) {
@@ -145,7 +155,7 @@ class _ChatsTabState extends State<ChatsTab> {
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 9),
         child: Row(children: [
-          InitialAvatar(c.otherName, size: 52),
+          _avatar(context, c),
           const SizedBox(width: 12),
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
@@ -301,7 +311,7 @@ class _ChatPageState extends State<ChatPage> {
   Widget build(BuildContext context) {
     final s = context.s;
     final c = s.chatById(widget.id);
-    if (c == null) return Scaffold(appBar: PageBar(), body: const Empty(Icons.error_outline, 'Chat tidak ditemukan.'));
+    if (c == null) return AppScaffold(appBar: PageBar(), body: const Empty(Icons.error_outline, 'Chat tidak ditemukan.'));
     if (c.unread > 0) WidgetsBinding.instance.addPostFrameCallback((_) => store.markRead(c));
     if (c.msgs.length != last) {
       last = c.msgs.length;
@@ -313,7 +323,7 @@ class _ChatPageState extends State<ChatPage> {
     final pr = s.reqById(c.refId);
     final pa = _pickable(c, pr);
     final blocked = s.blocked.contains(c.otherId);
-    return Scaffold(
+    return AppScaffold(
       appBar: ProfileBar(
         avatar: Avatar(size: 44, imageUrl: c.otherAgent ? s.agentById(c.otherId).avatarUrl : null),
         title: c.otherName,
@@ -332,55 +342,97 @@ class _ChatPageState extends State<ChatPage> {
       ),
       body: Column(children: [
         if (o == null && pa != null && pr != null)
-          Container(
-            color: g100, padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            child: Row(children: [
-              const Icon(Icons.how_to_reg_outlined, size: 18),
-              const SizedBox(width: 8),
-              Expanded(child: Text('Harga ${rp(pa.price)}${unitOf(pr.ptype)}  |  ACC ${s.activeAcc(pr).length}/${pr.quota}', style: const TextStyle(fontSize: 12.5))),
-              FilledButton(
-                style: FilledButton.styleFrom(minimumSize: const Size(0, 36), padding: const EdgeInsets.symmetric(horizontal: 14)),
-                onPressed: () => pickAgent(context, s, pr, pa),
-                child: Text(pr.workers > 1 ? 'Detail order' : 'Pilih agen'),
-              ),
-            ]),
-          ),
-        if (o != null)
-          Container(
-            color: g100, padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            child: Row(children: [
-              const Icon(Icons.receipt_long_outlined, size: 18),
-              const SizedBox(width: 8),
-              Expanded(child: Text('Order: ${ordLabels[o.status] ?? o.status}  |  ${rp(o.total)}', style: const TextStyle(fontSize: 12.5))),
-              TextButton(onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => OrderPage(o.id))), child: Text(o.status == 'AGREED' && o.iAmClient ? 'Bayar' : 'Buka order')),
-            ]),
+          _ChatBanner(
+            icon: Icons.how_to_reg_outlined,
+            text: '${rp(pa.price)}${unitOf(pr.ptype)}  \u00b7  ACC ${s.activeAcc(pr).length}/${pr.quota}',
+            action: pr.workers > 1 ? 'Detail order' : 'Pilih agen',
+            onTap: () => pickAgent(context, s, pr, pa),
+          )
+        else if (o != null)
+          _ChatBanner(
+            icon: Icons.receipt_long_outlined,
+            text: '${ordLabels[o.status] ?? o.status}  \u00b7  ${rp(o.total)}',
+            action: o.status == 'AGREED' && o.iAmClient ? 'Bayar' : 'Buka order',
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => OrderPage(o.id))),
           )
         else if (c.type == 'direct')
-          const Padding(padding: EdgeInsets.all(8), child: Warn('Chat langsung tanpa order tidak dilindungi escrow. Buat penawaran order lewat tombol + agar aman.', icon: Icons.shield_outlined)),
+          const Padding(padding: EdgeInsets.fromLTRB(16, 4, 16, 0), child: Warn('Tanpa order, chat ini tidak dilindungi escrow.', icon: Icons.shield_outlined)),
         Expanded(
           child: ListView(
-            controller: sc, padding: const EdgeInsets.all(12),
+            controller: sc,
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
             children: [for (final m in c.msgs) _Bubble(c, m)],
           ),
         ),
         if (c.closed || blocked)
-          const Padding(padding: EdgeInsets.all(12), child: Warn('Chat ini ditutup (hanya baca).', icon: Icons.lock_outline))
+          const Padding(padding: EdgeInsets.all(16), child: Warn('Chat ini ditutup (hanya baca).', icon: Icons.lock_outline))
         else
           SafeArea(
-            child: Container(
-              decoration: const BoxDecoration(border: Border(top: BorderSide(color: g200))),
-              padding: const EdgeInsets.fromLTRB(4, 6, 8, 6),
-              child: Row(children: [
-                IconButton(onPressed: () => _attach(c), icon: const Icon(Icons.add_circle_outline)),
-                Expanded(child: TextField(controller: ctl, minLines: 1, maxLines: 4, onSubmitted: (_) => _send(), decoration: const InputDecoration(hintText: 'Tulis pesan...'))),
-                const SizedBox(width: 6),
-                IconButton.filled(onPressed: _send, icon: const Icon(Icons.send, size: 18)),
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(12, 6, 12, 10),
+              child: Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
+                GestureDetector(
+                  onTap: () => _attach(c),
+                  child: Container(width: 48, height: 48, decoration: const BoxDecoration(color: cW, shape: BoxShape.circle), child: const Icon(Icons.add, size: 26, color: g900)),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: TextField(
+                    controller: ctl,
+                    minLines: 1,
+                    maxLines: 4,
+                    onSubmitted: (_) => _send(),
+                    decoration: const InputDecoration(
+                      hintText: 'Tulis pesan...',
+                      filled: true,
+                      fillColor: cW,
+                      border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(26)), borderSide: BorderSide.none),
+                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(26)), borderSide: BorderSide.none),
+                      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(26)), borderSide: BorderSide.none),
+                      contentPadding: EdgeInsets.symmetric(horizontal: 18, vertical: 13),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                GestureDetector(
+                  onTap: _send,
+                  child: Container(width: 48, height: 48, decoration: const BoxDecoration(color: kGreen, shape: BoxShape.circle), child: const Icon(Icons.send_rounded, size: 21, color: Colors.white)),
+                ),
               ]),
             ),
           ),
       ]),
     );
   }
+}
+
+/// Info singkat di atas chat (request atau order terkait) dengan satu tombol aksi.
+class _ChatBanner extends StatelessWidget {
+  final IconData icon;
+  final String text, action;
+  final VoidCallback onTap;
+  const _ChatBanner({required this.icon, required this.text, required this.action, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(12, 8, 8, 8),
+          decoration: BoxDecoration(color: cW, borderRadius: BorderRadius.circular(18)),
+          child: Row(children: [
+            Container(width: 34, height: 34, decoration: BoxDecoration(color: kGreenBg, borderRadius: BorderRadius.circular(11)), child: Icon(icon, size: 19, color: kGreen)),
+            const SizedBox(width: 10),
+            Expanded(child: Text(text, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: g900))),
+            const SizedBox(width: 8),
+            FilledButton(
+              style: FilledButton.styleFrom(minimumSize: const Size(0, 36), padding: const EdgeInsets.symmetric(horizontal: 16)),
+              onPressed: onTap,
+              child: Text(action, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800)),
+            ),
+          ]),
+        ),
+      );
 }
 
 class _Bubble extends StatefulWidget {
@@ -405,20 +457,17 @@ class _BubbleState extends State<_Bubble> {
     s.respondOffer(widget.c, m, 'counter', counter: p);
   }
 
-  Widget _actions(AppState s) {
+  /// Tombol respons penawaran. Null kalau tidak perlu (sudah dijawab, milikku, atau chat ditutup):
+  /// statusnya sudah tampil sebagai pil di kartu.
+  Widget? _actions(AppState s) {
     final m = widget.m;
-    if (m.data['status'] != 'pending') {
-      final st = {'accepted': 'Disepakati', 'rejected': 'Ditolak', 'countered': 'Ditawar balik'}[m.data['status']] ?? '';
-      return Tag(st, filled: m.data['status'] == 'accepted');
-    }
-    if (m.from == 'me') return const Text('Menunggu respons...', style: TextStyle(fontSize: 12, color: g500));
-    if (widget.c.closed) return const SizedBox();
+    if (m.data['status'] != 'pending' || m.from == 'me' || widget.c.closed) return null;
     return Row(children: [
-      Expanded(child: pbtn('Setuju', () => s.respondOffer(widget.c, m, 'accept'))),
-      const SizedBox(width: 6),
-      Expanded(child: obtn('Tawar', () => _counter(s))),
-      const SizedBox(width: 6),
-      IconButton.outlined(onPressed: () => s.respondOffer(widget.c, m, 'reject'), icon: const Icon(Icons.close)),
+      Expanded(child: pbtnS('Setuju', () => s.respondOffer(widget.c, m, 'accept'))),
+      const SizedBox(width: 8),
+      Expanded(child: obtnS('Tawar', () => _counter(s))),
+      const SizedBox(width: 8),
+      IconButton.outlined(visualDensity: VisualDensity.compact, onPressed: () => s.respondOffer(widget.c, m, 'reject'), icon: const Icon(Icons.close, size: 20)),
     ]);
   }
 
@@ -429,68 +478,50 @@ class _BubbleState extends State<_Bubble> {
     if (m.type == 'system') {
       return Center(
         child: Container(
-          margin: const EdgeInsets.symmetric(vertical: 6), padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-          decoration: BoxDecoration(color: g100, borderRadius: BorderRadius.circular(12)),
+          margin: const EdgeInsets.symmetric(vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+          decoration: BoxDecoration(color: const Color(0xFFE4E5E9), borderRadius: BorderRadius.circular(12)),
           child: Text(m.body, textAlign: TextAlign.center, style: const TextStyle(fontSize: 11.5, color: g700)),
         ),
       );
     }
     final me = m.from == 'me';
-    Widget body;
+    final maxW = MediaQuery.sizeOf(context).width * .78;
+    final status = (m.data['status'] as String?) ?? 'pending';
+    final Widget body;
     switch (m.type) {
       case 'image':
-        body = Column(crossAxisAlignment: CrossAxisAlignment.start, children: [TempPhoto(path: m.data['path'] as String?, w: 180, h: 130), const SizedBox(height: 4), Text(m.body)]);
-        break;
+        body = ImageMsgCard(path: m.data['path'] as String?);
       case 'location':
-        body = SizedBox(width: 200, child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [MapThumb(pin: kMapCenter, title: m.body), const SizedBox(height: 4), Text(m.body, style: const TextStyle(fontSize: 12.5))]));
-        break;
+        body = LocationMsgCard(address: m.body);
       case 'offer':
-        final pt = m.data['ptype'] as String;
-        body = SizedBox(width: 230, child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const Row(children: [Icon(Icons.sell_outlined, size: 16), SizedBox(width: 6), Text('Penawaran harga', style: TextStyle(fontWeight: FontWeight.w700))]),
-          const SizedBox(height: 6),
-          Text('${rp(m.data['price'] as int)}${unitOf(pt)}', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
-          Text(ptypes[pt] ?? '', style: const TextStyle(fontSize: 12, color: g500)),
-          const SizedBox(height: 8),
-          _actions(s),
-        ]));
-        break;
+        body = PriceOfferCard(price: m.data['price'] as int, ptype: m.data['ptype'] as String, status: status, actions: _actions(s));
       case 'order_offer':
-        final d = m.data;
-        body = SizedBox(width: 250, child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const Row(children: [Icon(Icons.assignment_outlined, size: 16), SizedBox(width: 6), Text('Penawaran order', style: TextStyle(fontWeight: FontWeight.w700))]),
-          const SizedBox(height: 6),
-          Text(d['title'] as String, style: const TextStyle(fontWeight: FontWeight.w700)),
-          Text(d['desc'] as String? ?? '', style: const TextStyle(fontSize: 12.5, color: g700)),
-          const SizedBox(height: 4),
-          Text('${d['address']}\n${d['when']}', style: const TextStyle(fontSize: 12, color: g500)),
-          const SizedBox(height: 4),
-          Text('${rp(d['price'] as int)}${unitOf(d['ptype'] as String)}', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
-          const SizedBox(height: 8),
-          _actions(s),
-        ]));
-        break;
+        body = OrderOfferCard(d: m.data, status: status, actions: _actions(s));
       case 'contact':
-        body = SizedBox(width: 220, child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const Row(children: [Icon(Icons.phone_outlined, size: 16), SizedBox(width: 6), Text('Kontak WhatsApp', style: TextStyle(fontWeight: FontWeight.w700))]),
-          Text(m.body, style: const TextStyle(fontSize: 16)),
-          const SizedBox(height: 6),
-          const Text('Di luar Buruhku tidak dilindungi.', style: TextStyle(fontSize: 11, color: g500)),
-          if (!me) obtn('Buka WhatsApp', () => info(context, 'Buka WhatsApp', 'Pada aplikasi rilis, tombol ini membuka https://wa.me/${m.body.replaceAll(RegExp(r'\D'), '')}'), icon: Icons.open_in_new),
-        ]));
-        break;
+        body = ContactMsgCard(
+          number: m.body,
+          onOpen: me ? null : () => info(context, 'Buka WhatsApp', 'Pada aplikasi rilis, tombol ini membuka https://wa.me/${m.body.replaceAll(RegExp(r'\D'), '')}'),
+        );
       case 'ewallet':
-        final no = (m.data['no'] ?? '').toString();
-        final masked = no.length > 4 ? '${'•' * (no.length - 4)}${no.substring(no.length - 4)}' : no;
-        body = SizedBox(width: 220, child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Row(children: [const Icon(Icons.account_balance_wallet_outlined, size: 16), const SizedBox(width: 6), Text('E-wallet ${m.body}', style: const TextStyle(fontWeight: FontWeight.w700))]),
-          Text(reveal || me ? no : masked, style: const TextStyle(fontSize: 16)),
-          Text('Tujuan: ${m.data['purpose']}', style: const TextStyle(fontSize: 11.5, color: g500)),
-          if (!me) TextButton(onPressed: () => setState(() => reveal = !reveal), child: Text(reveal ? 'Sembunyikan' : 'Tampilkan')),
-        ]));
-        break;
+        body = WalletMsgCard(
+          name: m.body,
+          number: (m.data['no'] ?? '').toString(),
+          purpose: (m.data['purpose'] ?? '').toString(),
+          mine: me,
+          revealed: reveal,
+          onToggle: () => setState(() => reveal = !reveal),
+        );
       default:
-        body = Text(m.body);
+        body = Container(
+          constraints: BoxConstraints(maxWidth: maxW),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            color: me ? kGreen : cW,
+            borderRadius: BorderRadius.only(topLeft: const Radius.circular(18), topRight: const Radius.circular(18), bottomLeft: Radius.circular(me ? 18 : 4), bottomRight: Radius.circular(me ? 4 : 18)),
+          ),
+          child: Text(m.body, style: TextStyle(fontSize: 15, height: 1.35, color: me ? Colors.white : g900)),
+        );
     }
     final bubble = GestureDetector(
       onLongPress: me ? null : () async {
@@ -498,12 +529,7 @@ class _BubbleState extends State<_Bubble> {
           Navigator.push(context, MaterialPageRoute(builder: (_) => ReportPage(target: widget.c.otherName, targetId: widget.c.otherId, prefill: 'Pesan: ${_preview(m)}')));
         }
       },
-      child: Container(
-        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * .78),
-        padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(color: me ? g200 : cW, border: Border.all(color: g300), borderRadius: BorderRadius.circular(10)),
-        child: body,
-      ),
+      child: body,
     );
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
@@ -513,11 +539,11 @@ class _BubbleState extends State<_Bubble> {
           Padding(
             padding: const EdgeInsets.only(top: 4),
             child: ConstrainedBox(
-              constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * .78),
+              constraints: BoxConstraints(maxWidth: maxW),
               child: const Warn('Terindikasi penipuan (link, permintaan transfer di luar aplikasi, atau OTP/PIN). Jangan bayar atau kirim kode di luar Buruhku.'),
             ),
           ),
-        Padding(padding: const EdgeInsets.only(top: 2), child: Text(ftime(m.at), style: const TextStyle(fontSize: 10, color: g500))),
+        Padding(padding: const EdgeInsets.only(top: 3, left: 4, right: 4), child: Text(ftime(m.at), style: const TextStyle(fontSize: 10.5, color: g500))),
       ]),
     );
   }

@@ -45,18 +45,18 @@ class AgentDetail extends StatelessWidget {
     const val = TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: g900);
     String? svcLabel(Rev r) => r.svcId.isEmpty ? null : s.svcById(r.svcId)?.title;
 
-    return Scaffold(
+    return AppScaffold(underBar: true,
       appBar: PageBar(title: const Text('Profil agen'), actions: [
-        IconButton(onPressed: () => s.toggleFav(a.id), icon: Icon(s.favs.contains(a.id) ? Icons.favorite : Icons.favorite_border, color: Colors.red)),
+        IconButton(onPressed: () => s.toggleFav(a.id), icon: Icon(s.favs.contains(a.id) ? Icons.favorite : Icons.favorite_border, color: s.favs.contains(a.id) ? Colors.red : g500)),
         IconButton(onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ReportPage(target: a.short, targetId: a.id))), icon: const Icon(Icons.flag_outlined)),
       ]),
-      body: ListView(padding: const EdgeInsets.only(top: 4, bottom: 16), children: [
+      body: ListView(padding: pageListPad(context), children: [
         // Kepala profil: foto, nama, status, lencana, lalu tiga angka utama.
         DetailCard(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Row(children: [
               Stack(clipBehavior: Clip.none, children: [
-                AvatarPh(84, url: a.avatarUrl),
+                GestureDetector(onTap: () => showPhotoViewer(context, [a.avatarUrl ?? '']), child: AvatarPh(84, url: a.avatarUrl)),
                 Positioned(
                   right: 2,
                   bottom: 2,
@@ -86,7 +86,7 @@ class AgentDetail extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
               decoration: BoxDecoration(color: cBg, borderRadius: BorderRadius.circular(16)),
               child: Row(children: [
-                _stat(Row(mainAxisSize: MainAxisSize.min, children: [const Icon(Icons.star, size: 16, color: kNavy), const SizedBox(width: 4), Text(rating.toStringAsFixed(1), style: val)]), '${revs.length} ulasan'),
+                _stat(Row(mainAxisSize: MainAxisSize.min, children: [const Icon(Icons.star, size: 16, color: kStar), const SizedBox(width: 4), Text(rating.toStringAsFixed(1), style: val)]), '${revs.length} ulasan'),
                 _stat(Text('${a.jobs}', style: val), 'Order selesai'),
                 _stat(Text('~${a.dist.toStringAsFixed(1)} km', style: val), 'Jarak'),
               ]),
@@ -122,9 +122,12 @@ class AgentDetail extends StatelessWidget {
                     scrollDirection: Axis.horizontal,
                     itemCount: a.portfolio.length,
                     separatorBuilder: (_, __) => const SizedBox(width: 8),
-                    itemBuilder: (ctx, idx) => ClipRRect(
-                      borderRadius: BorderRadius.circular(14),
-                      child: Image.network(a.portfolio[idx], width: 130, height: 100, fit: BoxFit.cover, errorBuilder: (_, __, ___) => const Ph(w: 130, h: 100)),
+                    itemBuilder: (ctx, idx) => GestureDetector(
+                      onTap: () => showPhotoViewer(context, a.portfolio, initial: idx),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(14),
+                        child: Image.network(a.portfolio[idx], width: 130, height: 100, fit: BoxFit.cover, errorBuilder: (_, __, ___) => const Ph(w: 130, h: 100)),
+                      ),
                     ),
                   ),
                 )

@@ -143,7 +143,7 @@ class AgentCard extends StatelessWidget {
                 name,
                 const SizedBox(height: 2),
                 Row(children: [
-                  const Icon(Icons.star, size: 14, color: kNavy),
+                  const Icon(Icons.star, size: 14, color: kStar),
                   const SizedBox(width: 3),
                   Flexible(
                     child: Text(
@@ -163,7 +163,7 @@ class AgentCard extends StatelessWidget {
               onTap: () => context.r.toggleFav(a.id),
               child: Padding(
                 padding: const EdgeInsets.only(left: 8, bottom: 8),
-                child: Icon(fav ? Icons.favorite : Icons.favorite_border, size: 22, color: Colors.red),
+                child: Icon(fav ? Icons.favorite : Icons.favorite_border, size: 22, color: fav ? Colors.red : g500),
               ),
             ),
           ]),
@@ -192,7 +192,7 @@ class AgentCard extends StatelessWidget {
           FittedBox(
             fit: BoxFit.scaleDown,
             child: Row(mainAxisSize: MainAxisSize.min, children: [
-              if (icon != null) ...[Icon(icon, size: 14, color: kNavy), const SizedBox(width: 4)],
+              if (icon != null) ...[Icon(icon, size: 14, color: kStar), const SizedBox(width: 4)],
               Text(value, maxLines: 1, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, height: _lh, color: g900)),
             ]),
           ),

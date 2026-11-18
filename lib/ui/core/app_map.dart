@@ -7,6 +7,8 @@ import 'package:buruhku/ui/core/page_bar.dart';
 import 'package:buruhku/utils/geo.dart';
 
 /// Satu titik di peta (agen, agen yang sedang berjalan, dst.).
+Widget _markerFallback() => Container(color: g100, child: const Icon(Icons.person, size: 20, color: g500));
+
 class MapMark {
   final LatLng point;
   final Widget child;
@@ -14,21 +16,22 @@ class MapMark {
   final Alignment alignment;
   const MapMark(this.point, this.child, {this.size = 34, this.alignment = Alignment.center});
 
-  /// Marker bulat untuk agen. Gelap = online, abu-abu = offline.
-  factory MapMark.agent(LatLng p, {required bool online, bool selected = false, VoidCallback? onTap}) => MapMark(
+  /// Marker bulat berisi foto profil agen. Cincin hijau = online, abu-abu = offline.
+  factory MapMark.agent(LatLng p, {required bool online, bool selected = false, VoidCallback? onTap, String? imageUrl}) => MapMark(
         p,
         GestureDetector(
           onTap: onTap,
           child: Container(
-            decoration: BoxDecoration(
-              color: online ? g900 : g400,
-              shape: BoxShape.circle,
-              border: Border.all(color: cW, width: selected ? 3 : 2),
+            padding: EdgeInsets.all(selected ? 3.5 : 2.5),
+            decoration: BoxDecoration(color: online ? kGreen : g400, shape: BoxShape.circle),
+            child: ClipOval(
+              child: (imageUrl != null && imageUrl.isNotEmpty)
+                  ? Image.network(imageUrl, fit: BoxFit.cover, errorBuilder: (_, __, ___) => _markerFallback())
+                  : _markerFallback(),
             ),
-            child: Icon(Icons.person, size: selected ? 22 : 18, color: cW),
           ),
         ),
-        size: selected ? 40 : 32,
+        size: selected ? 50 : 40,
       );
 
   /// Agen yang sedang menuju lokasi (pelacakan order).
@@ -183,7 +186,7 @@ class _AppMapState extends State<AppMap> {
       if (w.interactive && w.height >= 140)
         Positioned(
           right: 6,
-          top: 6,
+          bottom: 28,
           child: Column(children: [
             _ZoomBtn(Icons.add, () => _zoomBy(1)),
             const SizedBox(height: 4),
@@ -256,7 +259,7 @@ class MapFullPage extends StatelessWidget {
   const MapFullPage({super.key, required this.pin, this.title = 'Lokasi'});
 
   @override
-  Widget build(BuildContext context) => Scaffold(
+  Widget build(BuildContext context) => AppScaffold(underBar: true,
         appBar: PageBar(title: Text(title)),
         body: AppMap(height: double.infinity, framed: false, pin: pin, zoom: 15),
       );

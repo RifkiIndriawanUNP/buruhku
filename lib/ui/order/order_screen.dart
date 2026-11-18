@@ -8,6 +8,7 @@ import 'package:buruhku/utils/geo.dart';
 import 'package:buruhku/ui/account/account_screen.dart';
 import 'package:buruhku/ui/agents/agent_detail_screen.dart';
 import 'package:buruhku/ui/chat/chat_screen.dart';
+import 'package:buruhku/ui/order/order_parts.dart';
 import 'package:buruhku/ui/request/request_screen.dart';
 import 'package:buruhku/data/services/online_photos.dart';
 
@@ -132,15 +133,25 @@ class _ActiveViewState extends State<_ActiveView> {
         final soon = widget.entries.where((e) => e.upcoming(now)).toList();
         final cur = widget.entries.where((e) => !e.upcoming(now)).toList();
         final l = seg == 'now' ? cur : soon;
-        return Column(children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 10, 4),
-            child: Seg({'now': 'Sekarang (${cur.length})', 'soon': 'Akan datang (${soon.length})'}, seg, (v) => setState(() => seg = v)),
-          ),
-          Expanded(
+        final inset = HeaderInset.of(context);
+        const segH = 60.0;
+        return Stack(children: [
+          Positioned.fill(
             child: l.isEmpty
-                ? Empty(seg == 'now' ? Icons.hourglass_empty : Icons.event_available_outlined, seg == 'now' ? 'Belum ada order berjalan.' : 'Belum ada order terjadwal.')
-                : ListView(padding: const EdgeInsets.all(16), children: [for (final e in l) _entryTile(e)]),
+                ? Padding(
+                    padding: EdgeInsets.only(top: inset + segH),
+                    child: Empty(seg == 'now' ? Icons.hourglass_empty : Icons.event_available_outlined, seg == 'now' ? 'Belum ada order berjalan.' : 'Belum ada order terjadwal.'),
+                  )
+                : ListView(padding: padBelow(inset + segH), children: [for (final e in l) _entryTile(e)]),
+          ),
+          Positioned(
+            left: 0,
+            right: 0,
+            top: inset,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 10, 4),
+              child: Seg({'now': 'Sekarang (${cur.length})', 'soon': 'Akan datang (${soon.length})'}, seg, (v) => setState(() => seg = v)),
+            ),
           ),
         ]);
       });
@@ -156,16 +167,19 @@ class HistoryTab extends StatelessWidget {
     final his = all.where((e) => !e.active).toList();
     return DefaultTabController(
       length: 2,
-      child: Column(children: [
-        const Padding(padding: EdgeInsets.fromLTRB(16, 16, 16, 8), child: Align(alignment: Alignment.centerLeft, child: Text('Aktivitas', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800)))),
-        PillTabBar(const ['Aktif', 'Riwayat']),
-        Expanded(
-          child: TabBarView(children: [
-            _ActiveView(act),
-            his.isEmpty ? const Empty(Icons.history, 'Order selesai atau batal akan muncul di sini.') : ListView(padding: const EdgeInsets.all(16), children: [for (final e in his) _entryTile(e)]),
-          ]),
-        ),
-      ]),
+      child: FloatHeader(
+        height: 100,
+        header: Column(mainAxisSize: MainAxisSize.min, children: [
+          const Padding(padding: EdgeInsets.fromLTRB(16, 4, 16, 4), child: Align(alignment: Alignment.centerLeft, child: Text('Aktivitas', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800)))),
+          PillTabBar(const ['Aktif', 'Riwayat']),
+        ]),
+        builder: (inset) => TabBarView(children: [
+          _ActiveView(act),
+          his.isEmpty
+              ? Padding(padding: EdgeInsets.only(top: inset), child: const Empty(Icons.history, 'Order selesai atau batal akan muncul di sini.'))
+              : ListView(padding: padBelow(inset), children: [for (final e in his) _entryTile(e)]),
+        ]),
+      ),
     );
   }
 }
@@ -235,7 +249,7 @@ class GroupOrderPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = context.s;
     final r = s.reqById(reqId);
-    if (r == null) return Scaffold(appBar: PageBar(), body: const Empty(Icons.error_outline, 'Request tidak ditemukan.'));
+    if (r == null) return AppScaffold(appBar: PageBar(), body: const Empty(Icons.error_outline, 'Request tidak ditemukan.'));
     final subs = s.orders.where((o) => o.reqId == reqId && o.iAmClient).toList();
     final started = r.chosen.isNotEmpty;
     bool hadOrder(Acc a) => subs.any((o) => o.otherId == a.agentId);
@@ -255,7 +269,7 @@ class GroupOrderPage extends StatelessWidget {
     final fee = live.fold<int>(0, (a, o) => a + o.fee);
     final anyLive = subs.any((o) => ['SCHEDULED', 'ON_THE_WAY', 'ARRIVED', 'IN_PROGRESS'].contains(o.status));
     final enough = r.chosen.length + agreed >= r.workers;
-    return Scaffold(
+    return AppScaffold(underBar: true,
       appBar: PageBar(title: Text('Order ${r.workers} agen'), actions: [
         if (editable)
           PopupMenuButton<String>(
@@ -269,7 +283,7 @@ class GroupOrderPage extends StatelessWidget {
             itemBuilder: (_) => const [PopupMenuItem(value: 'edit', child: Text('Ubah request')), PopupMenuItem(value: 'cancel', child: Text('Batalkan request'))],
           ),
       ]),
-      body: ListView(padding: const EdgeInsets.all(16), children: [
+      body: ListView(padding: pagePad(context), children: [
         Row(children: [
           CatIcon(catOf(r.cat), size: 44),
           const SizedBox(width: 10),
@@ -607,7 +621,7 @@ class _OrderPageState extends State<OrderPage> {
   Widget build(BuildContext context) {
     final s = context.s;
     final o = s.orderById(widget.id);
-    if (o == null) return Scaffold(appBar: PageBar(), body: const Empty(Icons.error_outline, 'Order tidak ditemukan.'));
+    if (o == null) return AppScaffold(appBar: PageBar(), body: const Empty(Icons.error_outline, 'Order tidak ditemukan.'));
     final cli = o.iAmClient;
     final st = _step(o);
     final chat = s.chatOfOrder(o);
@@ -615,7 +629,33 @@ class _OrderPageState extends State<OrderPage> {
     final rq = s.reqById(o.reqId);
     final grp = rq != null && rq.workers > 1 && cli;
     final disp = s.disputeOf(o.disputeId);
-    return Scaffold(
+    final actions = <Widget>[
+      if (o.cod && o.active) Padding(padding: const EdgeInsets.only(bottom: 10), child: Warn(cli ? 'Bayar tunai ${rp(o.total)} ke agen setelah pekerjaan selesai. Tanpa perlindungan escrow.' : 'Order COD: tagih tunai ${rp(o.total)} dari klien setelah selesai. Komisi ${rp(o.commission)} dipotong dari saldomu.', icon: Icons.payments_outlined)),
+      ..._statusArea(context, s, o),
+      if (o.chg != null) ...[
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(color: cBg, borderRadius: BorderRadius.circular(16)),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            const Text('Permintaan tambahan biaya', style: TextStyle(fontWeight: FontWeight.w800)),
+            const SizedBox(height: 2),
+            Text('${rp(o.chg!['amount'] as int)}: ${o.chg!['reason']}'),
+            const SizedBox(height: 8),
+            if (o.chg!['by'] == 'other' && cli)
+              Row(children: [
+                Expanded(child: pbtnS('Setujui', () => s.respondChange(o, true))),
+                const SizedBox(width: 8),
+                Expanded(child: obtnS('Tolak', () => s.respondChange(o, false))),
+              ])
+            else
+              const Text('Menunggu persetujuan pihak lain...', style: TextStyle(color: g500)),
+          ]),
+        ),
+      ],
+      if (live) ...[const SizedBox(height: 12), SosButton(orderId: o.id)],
+    ];
+    return AppScaffold(underBar: true,
       appBar: PageBar(title: const Text('Detail order'), actions: [
         if (o.active || o.status == 'COMPLETED' || o.status == 'REVIEWED')
           PopupMenuButton<String>(
@@ -635,115 +675,114 @@ class _OrderPageState extends State<OrderPage> {
             ],
           ),
       ]),
-      body: ListView(padding: const EdgeInsets.all(16), children: [
-        Row(children: [
-          CatIcon(catOf(o.cat), size: 44),
-          const SizedBox(width: 10),
-          Expanded(child: Text(o.title, style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w800))),
-        ]),
-        const SizedBox(height: 8),
-        Wrap(spacing: 6, runSpacing: 6, children: [
-          CatTag(catOf(o.cat).name, catOf(o.cat).color, height: 22),
-          CatTag(ptypes[o.ptype] ?? '', kPeach, height: 22),
-          Tag(ordLabels[o.status] ?? o.status, filled: true),
-          Tag(cli ? 'Kamu klien' : 'Kamu agen', icon: Icons.badge_outlined),
-          if (o.cod) const Tag('COD', icon: Icons.payments_outlined),
-        ]),
-        if (grp)
-          Align(
-            alignment: Alignment.centerLeft,
-            child: TextButton.icon(onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => GroupOrderPage(o.reqId))), icon: const Icon(Icons.groups_outlined), label: Text('Lihat semua agen (${rq.workers} agen)')),
-          ),
-        if (st >= 0) ...[
-          const SizedBox(height: 14),
-          Row(children: [
-            for (var i = 0; i < stepNames.length; i++)
+      body: ListView(padding: pageListPad(context), children: [
+        // Status dan tahapan
+        DetailCard(
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Row(children: [
+              CatIcon(catOf(o.cat), size: 48),
+              const SizedBox(width: 12),
               Expanded(
-                child: Column(children: [
-                  Container(
-                    width: 22, height: 22,
-                    decoration: BoxDecoration(shape: BoxShape.circle, color: i < st ? g900 : cW, border: Border.all(color: i <= st ? g900 : g300, width: i == st ? 3 : 1)),
-                    child: i < st ? const Icon(Icons.check, size: 14, color: cW) : null,
-                  ),
-                  const SizedBox(height: 3),
-                  Text(stepNames[i], style: TextStyle(fontSize: 9.5, fontWeight: i == st ? FontWeight.w800 : FontWeight.w400, color: i <= st ? g900 : g500)),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text(o.title, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, height: 1.2, color: g900)),
+                  const SizedBox(height: 6),
+                  Wrap(spacing: 4, runSpacing: 4, children: [CatTag(catOf(o.cat).name, catOf(o.cat).color, height: 22), CatTag(ptypes[o.ptype] ?? '', kPeach, height: 22)]),
                 ]),
               ),
-          ]),
-        ],
-        const SizedBox(height: 14),
-        if (o.cod && o.active) Padding(padding: const EdgeInsets.only(bottom: 10), child: Warn(cli ? 'Bayar tunai ${rp(o.total)} ke agen setelah pekerjaan selesai. Tanpa perlindungan escrow.' : 'Order COD: tagih tunai ${rp(o.total)} dari klien setelah selesai. Komisi ${rp(o.commission)} dipotong dari saldomu.', icon: Icons.payments_outlined)),
-        ..._statusArea(context, s, o),
-        if (o.chg != null) ...[
-          const SizedBox(height: 10),
-          Box(
-            color: g100,
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              const Text('Permintaan tambahan biaya', style: TextStyle(fontWeight: FontWeight.w700)),
-              Text('${rp(o.chg!['amount'] as int)}: ${o.chg!['reason']}'),
-              const SizedBox(height: 8),
-              if (o.chg!['by'] == 'other' && cli)
-                Row(children: [
-                  Expanded(child: pbtn('Setujui', () => s.respondChange(o, true))),
-                  const SizedBox(width: 8),
-                  Expanded(child: obtn('Tolak', () => s.respondChange(o, false))),
-                ])
-              else
-                const Text('Menunggu persetujuan pihak lain...', style: TextStyle(color: g500)),
             ]),
-          ),
-        ],
-        if (live) ...[const SizedBox(height: 10), SosButton(orderId: o.id)],
-        if (disp != null) ...[
-          const Section('Sengketa'),
-          Box(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Kv('Jenis', disp.type),
-            Kv('Status', disp.status == 'open' ? 'Menunggu tanggapan' : disp.status == 'responded' ? 'Ditanggapi, menunggu admin' : 'Diputuskan'),
-            if (disp.response.isNotEmpty) Text(disp.response, style: const TextStyle(color: g700)),
-            if (disp.status != 'resolved') const Padding(padding: EdgeInsets.only(top: 6), child: Text('Dana tetap ditahan. Keputusan ada di Akun > Panel Admin (Simulasi).', style: TextStyle(fontSize: 12, color: g500))),
-            if (disp.status != 'resolved') ...[
-              const SizedBox(height: 10),
-              full(obtn('Batalkan sengketa', () async {
-                if (await confirm(context, 'Batalkan sengketa?', 'Order dilanjutkan seperti semula. Kamu masih bisa mengajukan masalah lagi nanti.', ok: 'Batalkan sengketa')) s.cancelDispute(disp);
-              }, icon: Icons.undo)),
-            ],
-          ])),
-        ],
-        const Section('Rincian'),
-        Box(child: Column(children: [
-          Kv('Jadwal', o.schedAt == null ? 'Fleksibel' : fdt(o.schedAt!)),
-          Kv('Alamat', (cli || o.escrow == 'held' || o.escrow == 'released' || o.escrow == 'cod') ? (o.address.isEmpty ? o.area : o.address) : '${o.area} (alamat lengkap muncul setelah dibayar)'),
-          Kv('Harga', '${rp(o.unit)}${unitOf(o.ptype)}'),
-          if (o.extra > 0) Kv('Tambahan disetujui', rp(o.extra)),
-          Kv(cli ? 'Biaya layanan platform' : 'Komisi platform (10%)', rp(cli ? o.fee : o.commission)),
-          const Divider(),
-          Kv(cli ? 'Total bayar' : 'Pendapatan bersih', rp(cli ? o.total + o.fee : o.net), bold: true),
-          Kv('Escrow', {'none': 'Belum dibayar', 'cod': 'Bayar tunai (COD)', 'held': 'Dana ditahan', 'released': 'Dilepas ke agen', 'refunded': 'Dikembalikan', 'split': 'Dibagi 50:50', 'partial': 'Kompensasi sebagian'}[o.escrow] ?? o.escrow),
-        ])),
-        const Section('Lawan transaksi'),
-        Box(
-          onTap: cli && o.otherId.startsWith('a') ? () => Navigator.push(context, MaterialPageRoute(builder: (_) => AgentDetail(o.otherId))) : null,
-          child: Row(children: [
-            Avatar(size: 44, imageUrl: cli && o.otherId.startsWith('a') ? s.agentById(o.otherId).avatarUrl : null),
-            const SizedBox(width: 10),
-            Expanded(child: Text(o.otherName, style: const TextStyle(fontWeight: FontWeight.w700))),
-            if (chat != null) obtn('Chat', () => Navigator.push(context, MaterialPageRoute(builder: (_) => ChatPage(chat.id))), icon: Icons.chat_bubble_outline),
+            const SizedBox(height: 12),
+            Wrap(spacing: 6, runSpacing: 6, children: [
+              Tag(ordLabels[o.status] ?? o.status, filled: true),
+              Tag(cli ? 'Kamu klien' : 'Kamu agen', icon: Icons.badge_outlined),
+              if (o.cod) const Tag('COD', icon: Icons.payments_outlined),
+            ]),
+            if (st >= 0) ...[const SizedBox(height: 18), OrderStepper(step: st, names: stepNames)],
+            if (grp)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: TextButton.icon(
+                  onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => GroupOrderPage(o.reqId))),
+                  icon: const Icon(Icons.groups_outlined),
+                  label: Text('Lihat semua agen (${rq.workers} agen)'),
+                ),
+              ),
           ]),
         ),
-        if (o.log.isNotEmpty) ...[
-          const Section('Riwayat kejadian'),
-          for (final l in o.log.reversed)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 3),
-              child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                const Icon(Icons.circle, size: 7, color: g500),
-                const SizedBox(width: 8),
-                Expanded(child: Text(l.split('|').sublist(1).join('|'), style: const TextStyle(fontSize: 12.5))),
-                Text(ftime(DateTime.parse(l.split('|').first)), style: const TextStyle(fontSize: 11, color: g500)),
-              ]),
-            ),
-        ],
-        const SizedBox(height: 30),
+        // Aksi sesuai tahap dan peran
+        if (actions.isNotEmpty) DetailCard(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: actions)),
+        // Lawan transaksi
+        DetailCard(
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: cli && o.otherId.startsWith('a') ? () => Navigator.push(context, MaterialPageRoute(builder: (_) => AgentDetail(o.otherId))) : null,
+            child: Row(children: [
+              AvatarPh(48, url: cli && o.otherId.startsWith('a') ? s.agentById(o.otherId).avatarUrl : null),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text(o.otherName, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 15.5, fontWeight: FontWeight.w800, color: g900)),
+                  const SizedBox(height: 2),
+                  if (cli && o.otherId.startsWith('a'))
+                    Row(children: [
+                      const Icon(Icons.star, size: 14, color: kStar),
+                      const SizedBox(width: 3),
+                      Text('${s.ratingOf(s.agentById(o.otherId)).toStringAsFixed(1)}  \u00b7  Agen', style: const TextStyle(fontSize: 12.5, color: g500)),
+                    ])
+                  else
+                    Text(cli ? 'Agen' : 'Klien', style: const TextStyle(fontSize: 12.5, color: g500)),
+                ]),
+              ),
+              if (chat != null)
+                GestureDetector(
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ChatPage(chat.id))),
+                  child: Container(width: 44, height: 44, decoration: const BoxDecoration(color: cBg, shape: BoxShape.circle), child: const Icon(Icons.chat_bubble_outline, size: 21, color: g900)),
+                ),
+            ]),
+          ),
+        ),
+        if (disp != null)
+          DetailCard(
+            title: 'Sengketa',
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Kv('Jenis', disp.type),
+              Kv('Status', disp.status == 'open' ? 'Menunggu tanggapan' : disp.status == 'responded' ? 'Ditanggapi, menunggu admin' : 'Diputuskan'),
+              if (disp.response.isNotEmpty) Text(disp.response, style: const TextStyle(color: g700)),
+              if (disp.status != 'resolved') const Padding(padding: EdgeInsets.only(top: 6), child: Text('Dana tetap ditahan. Keputusan ada di Akun > Panel Admin (Simulasi).', style: TextStyle(fontSize: 12, color: g500))),
+              if (disp.status != 'resolved') ...[
+                const SizedBox(height: 10),
+                full(obtn('Batalkan sengketa', () async {
+                  if (await confirm(context, 'Batalkan sengketa?', 'Order dilanjutkan seperti semula. Kamu masih bisa mengajukan masalah lagi nanti.', ok: 'Batalkan sengketa')) s.cancelDispute(disp);
+                }, icon: Icons.undo)),
+              ],
+            ]),
+          ),
+        // Jadwal dan lokasi
+        DetailCard(
+          title: 'Pesanan',
+          child: Column(children: [
+            OrderLine(Icons.event_outlined, 'Jadwal', o.schedAt == null ? 'Fleksibel' : fdt(o.schedAt!)),
+            const SizedBox(height: 12),
+            OrderLine(Icons.place_outlined, 'Alamat', (cli || o.escrow == 'held' || o.escrow == 'released' || o.escrow == 'cod') ? (o.address.isEmpty ? o.area : o.address) : '${o.area} (alamat lengkap muncul setelah dibayar)'),
+          ]),
+        ),
+        // Rincian pembayaran
+        DetailCard(
+          title: 'Pembayaran',
+          child: Column(children: [
+            PayRow('Harga', '${rp(o.unit)}${unitOf(o.ptype)}'),
+            if (o.extra > 0) PayRow('Tambahan disetujui', rp(o.extra)),
+            PayRow(cli ? 'Biaya layanan' : 'Komisi platform (10%)', rp(cli ? o.fee : o.commission)),
+            const Padding(padding: EdgeInsets.symmetric(vertical: 8), child: Divider(height: 1, thickness: 1, color: kLine)),
+            PayRow(cli ? 'Total bayar' : 'Pendapatan bersih', rp(cli ? o.total + o.fee : o.net), bold: true),
+            const SizedBox(height: 6),
+            Row(children: [
+              const Text('Escrow', style: TextStyle(fontSize: 13, color: g500)),
+              const Spacer(),
+              Tag({'none': 'Belum dibayar', 'cod': 'Bayar tunai (COD)', 'held': 'Dana ditahan', 'released': 'Dilepas ke agen', 'refunded': 'Dikembalikan', 'split': 'Dibagi 50:50', 'partial': 'Kompensasi sebagian'}[o.escrow] ?? o.escrow),
+            ]),
+          ]),
+        ),
+        if (o.log.isNotEmpty) DetailCard(title: 'Riwayat', child: OrderTimeline(o.log)),
       ]),
     );
   }
@@ -1023,15 +1062,15 @@ class _PaymentPageState extends State<PaymentPage> {
   Widget build(BuildContext context) {
     final s = context.s;
     final os = widget.ids.map(s.orderById).whereType<Ord>().where((o) => o.status == 'AGREED').toList();
-    if (os.isEmpty) return Scaffold(appBar: PageBar(title: const Text('Pembayaran')), body: const Empty(Icons.info_outline, 'Tidak ada order yang menunggu pembayaran.'));
+    if (os.isEmpty) return AppScaffold(appBar: PageBar(title: const Text('Pembayaran')), body: const Empty(Icons.info_outline, 'Tidak ada order yang menunggu pembayaran.'));
     final cod = method == 'COD';
     final total = os.fold<int>(0, (a, o) => a + o.total);
     final fee = os.fold<int>(0, (a, o) => a + o.fee);
     final due = os.map((o) => o.payBy).reduce((a, b) => a.isBefore(b) ? a : b);
     final seed = os.first.id.codeUnits.fold(0, (a, b) => a + b);
-    return Scaffold(
+    return AppScaffold(underBar: true,
       appBar: PageBar(title: const Text('Pembayaran')),
-      body: ListView(padding: const EdgeInsets.all(16), children: [
+      body: ListView(padding: pagePad(context), children: [
         Box(child: Column(children: [
           Kv('Pekerjaan', os.first.title),
           if (os.length > 1) for (final o in os) Kv('Agen ${o.otherName}', rp(o.total)),
@@ -1113,9 +1152,9 @@ class _RatingPageState extends State<RatingPage> {
     final s = context.r;
     final o = s.orderById(widget.id)!;
     final tags = o.iAmClient ? ['Tepat waktu', 'Rapi', 'Sopan', 'Kuat'] : ['Ramah', 'Deskripsi jelas', 'Bayar cepat'];
-    return Scaffold(
+    return AppScaffold(underBar: true,
       appBar: PageBar(title: Text(o.iAmClient ? 'Nilai agen' : 'Nilai klien')),
-      body: ListView(padding: const EdgeInsets.all(16), children: [
+      body: ListView(padding: pagePad(context), children: [
         Center(child: Column(children: [const Avatar(size: 64), const SizedBox(height: 6), Text(o.otherName, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700))])),
         StarPicker(rating, (v) => setState(() => rating = v)),
         Wrap(spacing: 8, runSpacing: 8, children: [for (final t in tags) FilterChip(label: Text(t), selected: sel.contains(t), onSelected: (v) => setState(() => v ? sel.add(t) : sel.remove(t)))]),
@@ -1155,11 +1194,12 @@ class _DisputePageState extends State<DisputePage> {
     final s = context.r;
     final o = s.orderById(widget.id)!;
     final types = ['Pekerjaan tidak selesai', 'Kualitas buruk', 'Kerusakan atau barang hilang', 'Tidak hadir', 'Harga tambahan sepihak', 'Lainnya'];
-    return Scaffold(
+    return AppScaffold(
+      underBar: true,
       appBar: PageBar(title: const Text('Ajukan masalah')),
       body: Form(
         key: key,
-        child: ListView(padding: const EdgeInsets.all(16), children: [
+        child: ListView(padding: pagePad(context), children: [
           const Warn('Dana tetap ditahan selama sengketa. Pihak lain punya 48 jam menanggapi, lalu admin memutuskan.', icon: Icons.gavel_outlined),
           const SizedBox(height: 14),
           DropdownButtonFormField<String>(initialValue: type, decoration: const InputDecoration(labelText: 'Jenis masalah'), items: [for (final t in types) DropdownMenuItem(value: t, child: Text(t))], onChanged: (v) => setState(() => type = v ?? type)),
@@ -1188,9 +1228,9 @@ class InvoicePage extends StatelessWidget {
     final s = context.s;
     final o = s.orderById(id)!;
     final cli = o.iAmClient;
-    return Scaffold(
+    return AppScaffold(underBar: true,
       appBar: PageBar(title: const Text('Invoice')),
-      body: ListView(padding: const EdgeInsets.all(16), children: [
+      body: ListView(padding: pagePad(context), children: [
         Box(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           const Text('BURUHKU', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, letterSpacing: 2)),
           const SizedBox(height: 4),

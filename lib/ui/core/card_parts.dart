@@ -16,7 +16,11 @@ const kGapXs = 4.0; // antar baris teks kecil
 const kGapSm = 8.0; // antar elemen dalam satu kartu
 const kGapMd = 12.0; // antar blok dalam satu kartu
 const kCardGap = 12.0; // antar kartu putih (SoftCard) di daftar vertikal
-const kTileGap = 10.0; // antar kartu garis (Box) di daftar vertikal
+/// Padding halaman baku: tepi kiri-kanan 16, atas 8, bawah 24. Dipakai semua ListView tingkat halaman.
+const kPagePad = EdgeInsets.fromLTRB(16, 8, 16, 24);
+/// Untuk halaman yang isinya sudah berupa kartu bermargin 16 (DetailCard, SetCard, SetGroup).
+const kPageListPad = EdgeInsets.only(top: 8, bottom: 24);
+const kTileGap = 12.0; // antar kartu garis (Box) di daftar vertikal
 
 /// Rupiah dengan spasi: "Rp 63.000".
 String rpSp(num n) => rp(n).replaceFirst('Rp', 'Rp ');
@@ -217,36 +221,97 @@ class InitialAvatar extends StatelessWidget {
   }
 }
 
-/// Tab berbentuk pil: pilihan aktif diberi latar abu-abu dan teks hijau.
+/// Tab berbentuk pil kecil. Lebar mengikuti isi dan berada di tengah. Kalau tidak muat, tab dibagi rata
+/// selebar layar. Penanda pilihan aktif bergeser mulus ke tab yang dipilih.
 class PillTabs extends StatelessWidget {
   final List<String> labels;
   final int index;
   final ValueChanged<int> onChanged;
   const PillTabs({required this.labels, required this.index, required this.onChanged, super.key});
+
+  static const height = 40.0, _inset = 3.0, _padX = 16.0;
+  static const _style = TextStyle(fontSize: 14, fontWeight: FontWeight.w700, height: 1.2);
+
   @override
-  Widget build(BuildContext context) => Container(
-        height: 54,
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(27), border: Border.all(color: const Color(0xFFDCDDE1))),
-        child: Row(children: [
-          for (var i = 0; i < labels.length; i++)
-            Expanded(
-              child: GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: () => onChanged(i),
-                child: Center(
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 180),
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
-                      decoration: BoxDecoration(color: i == index ? const Color(0xFFEBEBEB) : Colors.transparent, borderRadius: BorderRadius.circular(22)),
-                      child: Text(labels[i], maxLines: 1, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, height: 1.2, color: i == index ? const Color(0xFF3DBE7A) : const Color(0xFF7B7B7B))),
-                    ),
+  Widget build(BuildContext context) {
+    final scaler = MediaQuery.textScalerOf(context);
+    return LayoutBuilder(builder: (context, c) {
+      final natural = [
+        for (final l in labels)
+          (TextPainter(text: TextSpan(text: l, style: _style), textDirection: TextDirection.ltr, textScaler: scaler, maxLines: 1)..layout()).width + _padX * 2,
+      ];
+      const borderW = 1.0;
+      final totalPad = _inset + borderW;
+      final avail = c.maxWidth - totalPad * 2;
+      final fill = natural.fold<double>(0, (a, b) => a + b) > avail;
+      final widths = fill ? List<double>.filled(labels.length, avail / labels.length) : natural;
+      final barW = fill ? c.maxWidth : widths.fold<double>(0, (a, b) => a + b) + totalPad * 2;
+      final left = widths.take(index).fold<double>(0, (a, b) => a + b);
+
+      return Center(
+        child: Container(
+          width: barW,
+          height: height,
+          padding: const EdgeInsets.all(_inset),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(height / 2),
+            border: Border.all(color: const Color(0xFFDCDDE1)),
+            boxShadow: const [
+              BoxShadow(color: Color(0x14000000), blurRadius: 18, offset: Offset(0, 6)),
+            ],
+          ),
+          child: Stack(
+            clipBehavior: Clip.antiAlias,
+            children: [
+              AnimatedPositioned(
+                duration: const Duration(milliseconds: 280),
+                curve: Curves.easeOutCubic,
+                left: left,
+                top: 0,
+                bottom: 0,
+                width: widths[index],
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: kGreenBg,
+                    borderRadius: BorderRadius.circular((height - totalPad * 2) / 2),
                   ),
                 ),
               ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  for (var i = 0; i < labels.length; i++)
+                    fill
+                        ? Expanded(
+                            child: _tabItem(i),
+                          )
+                        : SizedBox(
+                            width: widths[i],
+                            child: _tabItem(i),
+                          ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      );
+    });
+  }
+
+  Widget _tabItem(int i) => GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () => onChanged(i),
+        child: Center(
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: AnimatedDefaultTextStyle(
+              duration: const Duration(milliseconds: 200),
+              style: _style.copyWith(color: i == index ? kGreen : g500),
+              child: Text(labels[i], maxLines: 1),
             ),
-        ]),
+          ),
+        ),
       );
 }
 
@@ -315,6 +380,38 @@ class SetRow extends StatelessWidget {
             if (badge != null) ...[const SizedBox(width: 8), badge!],
           ]),
         ),
+      );
+}
+
+/// Kartu putih untuk isi bebas (formulir, teks) dengan tepi dan jarak sama seperti [SetGroup].
+class SetCard extends StatelessWidget {
+  final Widget child;
+  final EdgeInsetsGeometry padding;
+  const SetCard({required this.child, this.padding = const EdgeInsets.all(16), super.key});
+  @override
+  Widget build(BuildContext context) => Container(
+        width: double.infinity,
+        margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+        padding: padding,
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+        child: child,
+      );
+}
+
+/// Judul kecil di atas grup, dengan tautan aksi di kanan (opsional).
+class SetHead extends StatelessWidget {
+  final String text;
+  final String? action;
+  final VoidCallback? onAction;
+  const SetHead(this.text, {this.action, this.onAction, super.key});
+  @override
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsets.fromLTRB(32, 8, 28, 8),
+        child: Row(children: [
+          Expanded(child: Text(text, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: kGreen))),
+          if (action != null)
+            GestureDetector(behavior: HitTestBehavior.opaque, onTap: onAction, child: Text(action!, style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700, color: g900))),
+        ]),
       );
 }
 
