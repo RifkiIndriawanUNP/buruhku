@@ -14,9 +14,9 @@ class _OnboardingState extends State<Onboarding> {
   final pc = PageController();
   int i = 0;
   static const slides = [
-    [Icons.handyman_outlined, 'Apa itu Buruhku?', 'Tempat bertemunya orang yang butuh bantuan tenaga dengan buruh harian yang siap bekerja. Tulis pekerjaan apa saja, harga bisa ditawar.'],
-    [Icons.verified_user_outlined, 'Aman dan terpercaya', 'Agen diverifikasi KTP dan selfie. Uangmu ditahan escrow sampai pekerjaan selesai. Ada tombol SOS dan jalur lapor resmi.'],
-    [Icons.route_outlined, 'Cara kerjanya', 'Buat request, agen terdekat menekan ACC, kamu pilih lewat chat dan harga, bayar ke escrow, lalu nilai hasilnya.'],
+    ['assets/images/onboarding_1.png', 'Apa itu Buruhku?', 'Tempat bertemunya orang yang butuh bantuan tenaga dengan buruh harian yang siap bekerja. Tulis pekerjaan apa saja, harga bisa ditawar.'],
+    ['assets/images/onboarding_2.png', 'Aman dan terpercaya', 'Agen diverifikasi KTP dan selfie. Uangmu ditahan escrow sampai pekerjaan selesai. Ada tombol SOS dan jalur lapor resmi.'],
+    ['assets/images/onboarding_3.png', 'Cara kerjanya', 'Buat request, agen terdekat menekan ACC, kamu pilih lewat chat dan harga, bayar ke escrow, lalu nilai hasilnya.'],
   ];
   @override
   Widget build(BuildContext context) => Scaffold(
@@ -32,11 +32,18 @@ class _OnboardingState extends State<Onboarding> {
                     Padding(
                       padding: const EdgeInsets.all(32),
                       child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                        Ph(w: 220, h: 220, icon: s[0] as IconData),
-                        const SizedBox(height: 32),
-                        Text(s[1] as String, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
-                        const SizedBox(height: 12),
-                        Text(s[2] as String, textAlign: TextAlign.center, style: TextStyle(color: g700, height: 1.4)),
+                        Flexible(
+                          child: Image.asset(
+                            s[0],
+                            width: 300,
+                            fit: BoxFit.contain,
+                            errorBuilder: (_, __, ___) => const Ph(w: 220, h: 220, icon: Icons.handyman_outlined),
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        Text(s[1], style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
+                        const SizedBox(height: 10),
+                        Text(s[2], textAlign: TextAlign.center, style: TextStyle(color: g700, height: 1.4)),
                       ]),
                     ),
                 ],
@@ -45,7 +52,7 @@ class _OnboardingState extends State<Onboarding> {
             Row(mainAxisAlignment: MainAxisAlignment.center, children: [
               for (var k = 0; k < slides.length; k++)
                 Container(margin: const EdgeInsets.all(4), width: k == i ? 22 : 8, height: 8,
-                    decoration: BoxDecoration(color: k == i ? g900 : g300, borderRadius: BorderRadius.circular(4))),
+                    decoration: BoxDecoration(color: k == i ? kGreen : g300, borderRadius: BorderRadius.circular(4))),
             ]),
             Padding(
               padding: const EdgeInsets.all(24),
@@ -89,7 +96,7 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     final w = MediaQuery.sizeOf(context).width;
-    const radius = BorderRadius.all(Radius.circular(16));
+    const radius = BorderRadius.all(Radius.circular(18));
     return Scaffold(
       body: SafeArea(
         bottom: false,
@@ -108,24 +115,24 @@ class _LoginPageState extends State<LoginPage> {
                           'assets/images/splash_illustration.png',
                           width: (w * .82).clamp(240.0, 340.0).toDouble(),
                           fit: BoxFit.contain,
-                          errorBuilder: (_, __, ___) => Container(width: 96, height: 96, decoration: BoxDecoration(color: g900, borderRadius: BorderRadius.circular(24)), child: Icon(Icons.handyman, color: cW, size: 56)),
+                          errorBuilder: (_, __, ___) => Container(width: 96, height: 96, decoration: BoxDecoration(color: g900, borderRadius: BorderRadius.circular(24)), child: Icon(Icons.handyman, color: cW, size: 52)),
                         ),
                       ),
                     ),
                   ),
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
-                    decoration: BoxDecoration(color: cW, borderRadius: BorderRadius.vertical(top: Radius.circular(32))),
+                    padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
+                    decoration: BoxDecoration(color: cW, borderRadius: const BorderRadius.vertical(top: Radius.circular(32))),
                     child: SafeArea(
                       top: false,
                       child: Form(
                         key: key,
                         child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-                          Text('Masuk ke Buruhku', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: g900)),
+                          Text('Masuk ke Buruhku', style: TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: g900)),
                           const SizedBox(height: 6),
                           Text('Masukkan nomor HP, kami kirim kode OTP.', style: TextStyle(fontSize: 15, color: g500)),
-                          const SizedBox(height: 24),
+                          const SizedBox(height: 22),
                           TextFormField(
                             controller: ctl,
                             keyboardType: TextInputType.phone,
@@ -139,7 +146,7 @@ class _LoginPageState extends State<LoginPage> {
                               fillColor: cBg,
                               prefixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),
                               prefixIcon: Padding(
-                                padding: const EdgeInsets.only(left: 16, right: 8),
+                                padding: const EdgeInsets.only(left: 18, right: 10),
                                 child: Row(mainAxisSize: MainAxisSize.min, children: [
                                   const Text('+62', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
                                   const SizedBox(width: 12),
@@ -151,14 +158,14 @@ class _LoginPageState extends State<LoginPage> {
                               focusedBorder: const OutlineInputBorder(borderRadius: radius, borderSide: BorderSide(color: kGreen, width: 2)),
                               errorBorder: const OutlineInputBorder(borderRadius: radius, borderSide: BorderSide(color: kRed, width: 1.5)),
                               focusedErrorBorder: const OutlineInputBorder(borderRadius: radius, borderSide: BorderSide(color: kRed, width: 2)),
-                              contentPadding: const EdgeInsets.symmetric(vertical: 16),
+                              contentPadding: const EdgeInsets.symmetric(vertical: 18),
                             ),
                             validator: (v) => (v ?? '').replaceAll(RegExp(r'\D'), '').length < 9 ? 'Nomor HP minimal 9 digit' : null,
                           ),
                           const SizedBox(height: 16),
                           full(pbtn('Kirim kode OTP', _send, icon: Icons.arrow_forward_rounded)),
-                          const SizedBox(height: 16),
-                          Center(child: Text('Satu nomor untuk satu akun.', style: TextStyle(fontSize: 13, color: g500))),
+                          const SizedBox(height: 14),
+                          Center(child: Text('Satu nomor untuk satu akun.', style: TextStyle(fontSize: 12.5, color: g500))),
                         ]),
                       ),
                     ),
@@ -199,16 +206,16 @@ class _OtpPageState extends State<OtpPage> {
     return AppScaffold(
       underBar: true,
       appBar: PageBar(title: const Text('Verifikasi')),
-      body: RevealListView(padding: underBarPad(context, const EdgeInsets.fromLTRB(24, 12, 24, 24)), children: [
-        const Icon(Icons.mark_email_unread_outlined, size: 48, color: kGreen),
-        const SizedBox(height: 16),
-        Text('Masukkan kode', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: g900)),
+      body: ListView(padding: underBarPad(context, const EdgeInsets.fromLTRB(24, 12, 24, 24)), children: [
+        const Icon(Icons.mark_email_unread_outlined, size: 44, color: kGreen),
+        const SizedBox(height: 14),
+        Text('Masukkan kode', style: TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: g900)),
         const SizedBox(height: 6),
         Text('Kode 6 digit dikirim ke ${s.pendingPhone}', style: TextStyle(fontSize: 15, color: g500)),
-        const SizedBox(height: 24),
+        const SizedBox(height: 28),
         OtpBoxes(ctl: ctl, error: err != null, onChanged: (_) => setState(() => err = null)),
-        if (err != null) Padding(padding: const EdgeInsets.only(top: 8), child: Text(err!, style: const TextStyle(fontSize: 13, color: kRed, fontWeight: FontWeight.w600))),
-        const SizedBox(height: 16),
+        if (err != null) Padding(padding: const EdgeInsets.only(top: 10), child: Text(err!, style: const TextStyle(fontSize: 13, color: kRed, fontWeight: FontWeight.w600))),
+        const SizedBox(height: 18),
         // Mode demo: ketuk untuk mengisi kode otomatis.
         Center(
           child: GestureDetector(
@@ -217,7 +224,7 @@ class _OtpPageState extends State<OtpPage> {
               err = null;
             }),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
               decoration: BoxDecoration(color: cW, borderRadius: BorderRadius.circular(16)),
               child: Row(mainAxisSize: MainAxisSize.min, children: [
                 Icon(Icons.science_outlined, size: 16, color: g500),
@@ -241,7 +248,7 @@ class _OtpPageState extends State<OtpPage> {
           },
           child: const Text('Kirim ulang kode'),
         ),
-        Center(child: Text('Jangan bagikan kode ke siapa pun.', style: TextStyle(fontSize: 13, color: g500))),
+        Center(child: Text('Jangan bagikan kode ke siapa pun.', style: TextStyle(fontSize: 12.5, color: g500))),
       ]),
     );
   }
@@ -301,7 +308,7 @@ class _OtpBoxesState extends State<OtpBoxes> {
                       width: 2,
                     ),
                   ),
-                  child: Text(i < text.length ? text[i] : '', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: g900)),
+                  child: Text(i < text.length ? text[i] : '', style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800, color: g900)),
                 ),
               ),
             ],
@@ -346,7 +353,7 @@ class _ProfileSetupState extends State<ProfileSetup> {
         appBar: PageBar(title: const Text('Lengkapi profil')),
         body: Form(
           key: key,
-          child: RevealListView(padding: pagePad(context), children: [
+          child: ListView(padding: pagePad(context), children: [
             Center(child: Column(children: [
               Stack(children: [
                 const MyAvatar(size: 88),
