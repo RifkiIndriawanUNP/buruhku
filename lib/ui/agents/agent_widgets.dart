@@ -20,8 +20,8 @@ class AgentCard extends StatelessWidget {
   static const _pad = 12.0;
   static const _avatar = 52.0; // dipakai mode lebar
   static const _avatarSq = 56.0; // mode kotak
-  static const _btn = 38.0; // tombol mode lebar
-  static const _buy = 42.0; // tombol mode kotak
+  static const _btn = 40.0; // tombol mode lebar
+  static const _buy = 40.0; // tombol mode kotak
   static const _tag = 18.0;
   static const _maxScale = 1.2;
   static const _lh = 1.2; // tinggi baris tetap supaya perhitungan akurat
@@ -108,7 +108,7 @@ class AgentCard extends StatelessWidget {
             child: FilledButton(
               style: FilledButton.styleFrom(minimumSize: const Size(0, _buy), padding: const EdgeInsets.symmetric(horizontal: 8)),
               onPressed: () => a.direct ? startAgentChat(context, a, offer: true) : open(),
-              child: FittedBox(fit: BoxFit.scaleDown, child: Text(a.direct ? 'Order Langsung' : 'Lihat Profil', style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w800))),
+              child: FittedBox(fit: BoxFit.scaleDown, child: Text(a.direct ? 'Order Langsung' : 'Lihat Profil', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800))),
             ),
           ),
         ]),
@@ -150,7 +150,7 @@ class AgentCard extends StatelessWidget {
                       '${rating.toStringAsFixed(1)}  \u00b7  ~${a.dist.toStringAsFixed(1)} km  \u00b7  ${a.jobs} order',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 12.5, height: _lh, color: g700),
+                      style: const TextStyle(fontSize: 13, height: _lh, color: g700),
                     ),
                   ),
                 ]),
@@ -163,7 +163,7 @@ class AgentCard extends StatelessWidget {
               onTap: () => context.r.toggleFav(a.id),
               child: Padding(
                 padding: const EdgeInsets.only(left: 8, bottom: 8),
-                child: Icon(fav ? Icons.favorite : Icons.favorite_border, size: 22, color: fav ? Colors.red : g500),
+                child: Icon(fav ? Icons.favorite : Icons.favorite_border, size: 24, color: fav ? Colors.red : g500),
               ),
             ),
           ]),
@@ -178,7 +178,7 @@ class AgentCard extends StatelessWidget {
               child: SizedBox(
                 height: _btn,
                 width: double.infinity,
-                child: Center(child: Text(a.direct ? 'Order Langsung' : 'Lihat Profil', style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700, color: g900))),
+                child: Center(child: Text(a.direct ? 'Order Langsung' : 'Lihat Profil', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: g900))),
               ),
             ),
           ),

@@ -12,6 +12,20 @@ import 'package:buruhku/ui/request/request_map_view.dart';
 import 'package:buruhku/ui/service/service_screen.dart';
 
 // ---------------------------------------------------------------- tab Request
+/// Top bar bergaya halaman Pesan: judul 28 + tab kapsul (PillTabBar asli, tidak diubah).
+/// Tinggi total 110 -> dipasang di FloatHeader.height. Jarak tab -> isi = 10 + 8 = 18.
+const double _barH = 110;
+Widget _topBar(String title, List<String> labels) => MediaQuery.withClampedTextScaling(
+      maxScaleFactor: 1.25,
+      child: Column(mainAxisSize: MainAxisSize.min, children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
+          child: SizedBox(height: 52, child: Align(alignment: Alignment.centerLeft, child: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w800, height: 1.2, color: g900)))),
+        ),
+        PillTabBar(labels),
+      ]),
+    );
+
 class MyRequestsTab extends StatefulWidget {
   const MyRequestsTab({super.key});
   @override
@@ -31,14 +45,10 @@ class _MyRequestsTabState extends State<MyRequestsTab> {
               if (v != _fabExt) setState(() => _fabExt = v);
             },
             child: FloatHeader(
-              height: _map ? 48 : 102,
-              header: Column(mainAxisSize: MainAxisSize.min, children: [
-                const Padding(
-                  padding: EdgeInsets.fromLTRB(16, 4, 16, 4),
-                  child: Align(alignment: Alignment.centerLeft, child: Text('Request & favorit', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800))),
-                ),
-                if (!_map) PillTabBar(const ['Request', 'Agen favorit', 'Jasa favorit']),
-              ]),
+              height: _map ? 56 : _barH,
+              header: _map
+                  ? const Padding(padding: EdgeInsets.fromLTRB(20, 4, 20, 0), child: SizedBox(height: 52, child: Align(alignment: Alignment.centerLeft, child: Text('Request & favorit', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, height: 1.2, color: g900)))))
+                  : _topBar('Request & favorit', const ['Request', 'Agen favorit', 'Jasa favorit']),
               builder: (inset) => _map ? const RequestMapView() : const TabBarView(children: [_RequestList(), FavAgentsView(), FavServicesView()]),
             ),
           ),
@@ -62,14 +72,23 @@ class _MyRequestsTabState extends State<MyRequestsTab> {
 
 class _RequestList extends StatelessWidget {
   const _RequestList();
+
+  /// Satu-satunya angka untuk mengatur jarak antar blok (tab -> judul, chip -> tombol, tombol -> judul).
+  static const double _gap = 18;
+
+  /// Judul bagian rata kiri dengan chip/tombol (x = 16). [top] = jarak atas judul.
+  /// Jarak pil -> judul pertama sudah diatur header (24, sama dengan halaman Pesan).
+  static Widget _title(String t, double top) => Padding(
+        padding: EdgeInsets.fromLTRB(0, top, 0, 10),
+        child: Text(t, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, height: 1.2, color: g900)),
+      );
+
   @override
   Widget build(BuildContext context) {
     final s = context.s;
     final l = s.myReqs;
     return ListView(padding: insetPad(context), children: [
-      full(pbtn('Buat request baru', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RequestFormPage())), icon: Icons.add)),
-      const SizedBox(height: 4),
-      const Section('Template cepat'),
+      _title('Template cepat', 0),
       SizedBox(
         height: 40,
         child: ListView(scrollDirection: Axis.horizontal, children: [
@@ -83,7 +102,9 @@ class _RequestList extends StatelessWidget {
             ),
         ]),
       ),
-      const Section('Daftar request'),
+      const SizedBox(height: _gap),
+      full(pbtn('Buat request baru', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RequestFormPage())), icon: Icons.add)),
+      _title('Daftar request', _gap),
       if (l.isEmpty) const Padding(padding: EdgeInsets.only(top: 40), child: Empty(Icons.assignment_outlined, 'Belum ada request. Tulis pekerjaan apa saja, agen terdekat akan menghubungimu.')),
       for (final r in l)
         Padding(
@@ -97,7 +118,7 @@ class _RequestList extends StatelessWidget {
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Text(r.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w700)),
                   const SizedBox(height: 4),
-                  Text('${rp(r.price)}${unitOf(r.ptype)}  |  ${r.workers} buruh', style: const TextStyle(color: g700, fontSize: 12.5)),
+                  Text('${rp(r.price)}${unitOf(r.ptype)}  |  ${r.workers} buruh', style: const TextStyle(color: g700, fontSize: 13)),
                   const SizedBox(height: 6),
                   Wrap(spacing: 6, runSpacing: 4, children: [
                     Tag(reqLabels[r.status] ?? r.status, filled: r.status == 'OPEN' || r.status == 'HAS_ACCEPTORS'),
@@ -210,11 +231,11 @@ class _RequestFormPageState extends State<RequestFormPage> {
             const SizedBox(height: 8),
             if (p < rec[0]) const Warn('Harga di bawah rekomendasi wajar. Agen mungkin enggan ACC. Pertimbangkan menaikkan harga.'),
             const SizedBox(height: 8),
-            const Text('Pembayaran dilakukan setelah agen dipilih. Dana ditahan escrow sampai pekerjaan selesai.', style: TextStyle(color: g500, fontSize: 12.5)),
-            const SizedBox(height: 14),
+            const Text('Pembayaran dilakukan setelah agen dipilih. Dana ditahan escrow sampai pekerjaan selesai.', style: TextStyle(color: g500, fontSize: 13)),
+            const SizedBox(height: 16),
             Row(children: [
               Expanded(child: obtn('Ubah', () => Navigator.pop(c, false))),
-              const SizedBox(width: 10),
+              const SizedBox(width: 8),
               Expanded(child: pbtn(widget.edit == null ? 'Kirim request' : 'Simpan', () => Navigator.pop(c, true))),
             ]),
           ]),
@@ -279,7 +300,7 @@ class _RequestFormPageState extends State<RequestFormPage> {
                     width: 150,
                     child: Box(
                       onTap: () => setState(() => _applyTpl(t)),
-                      padding: const EdgeInsets.all(10),
+                      padding: const EdgeInsets.all(8),
                       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                         CatIcon(catOf(t['c'] as String), size: 26),
                         const SizedBox(height: 4),
@@ -332,7 +353,7 @@ class _RequestFormPageState extends State<RequestFormPage> {
           Padding(
             padding: const EdgeInsets.only(bottom: 12),
             child: Text('Rekomendasi harga wajar: ${rp(rec[0])} sampai ${rp(rec[1])}${unitOf(ptype)}${ptype != 'lump' && p > 0 ? '\nEstimasi total: ${rp(total)}' : ''}',
-                style: const TextStyle(fontSize: 12.5, color: g700)),
+                style: const TextStyle(fontSize: 13, color: g700)),
           ),
           const Text('Foto pendukung (maks 5)', style: TextStyle(fontWeight: FontWeight.w700)),
           const SizedBox(height: 8),
@@ -378,10 +399,10 @@ class ReqDetailPage extends StatelessWidget {
       body: ListView(padding: pagePad(context), children: [
         Row(children: [
           CatIcon(catOf(r.cat), size: 44),
-          const SizedBox(width: 10),
-          Expanded(child: Text(r.title, style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w800))),
+          const SizedBox(width: 8),
+          Expanded(child: Text(r.title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800))),
         ]),
-        const SizedBox(height: 10),
+        const SizedBox(height: 12),
         Wrap(spacing: 6, runSpacing: 6, children: [
           CatTag(catOf(r.cat).name, catOf(r.cat).color, height: 22),
           CatTag(ptypes[r.ptype] ?? '', kPeach, height: 22),
@@ -391,11 +412,11 @@ class ReqDetailPage extends StatelessWidget {
         ]),
         if (open)
           Padding(
-            padding: const EdgeInsets.only(top: 10),
+            padding: const EdgeInsets.only(top: 8),
             child: Live((_) => Text('Sisa waktu mencari agen: ${clock(r.expires.difference(DateTime.now()))}', style: const TextStyle(color: g700))),
           ),
-        if (r.status == 'IN_REVIEW') Padding(padding: const EdgeInsets.only(top: 10), child: Warn('${r.reason}\nBuka Akun > Panel Admin (Simulasi) untuk menyetujui.')),
-        const SizedBox(height: 10),
+        if (r.status == 'IN_REVIEW') Padding(padding: const EdgeInsets.only(top: 8), child: Warn('${r.reason}\nBuka Akun > Panel Admin (Simulasi) untuk menyetujui.')),
+        const SizedBox(height: 12),
         Box(child: Column(children: [
           Kv('Kategori', catOf(r.cat).name),
           Kv('Harga', '${rp(r.price)}${unitOf(r.ptype)} (${ptypes[r.ptype]})'),
@@ -411,7 +432,7 @@ class ReqDetailPage extends StatelessWidget {
         if (r.status == 'EXPIRED') ...[
           const Section('Belum ada kesepakatan'),
           const Warn('Request kedaluwarsa. Pilih salah satu cara agar lebih mudah dapat agen.'),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
           Wrap(spacing: 8, runSpacing: 8, children: [
             obtn('Naikkan harga 10%', () => s.relist(r, addPrice: (r.price * 0.1 / 1000).round() * 1000), icon: Icons.trending_up),
             obtn('Perluas radius +5 km', () => s.relist(r, addRadius: 5), icon: Icons.radar),
@@ -432,7 +453,7 @@ class ReqDetailPage extends StatelessWidget {
               onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => OrderPage(o.id))),
             ),
         ],
-        const SizedBox(height: 30),
+        const SizedBox(height: 32),
       ]),
     );
   }
@@ -456,10 +477,10 @@ class _AccCard extends StatelessWidget {
             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => AgentDetail(ag.id))),
             child: Row(children: [
               Avatar(size: 46, imageUrl: ag.avatarUrl),
-              const SizedBox(width: 10),
+              const SizedBox(width: 8),
               Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Row(children: [Text(ag.short, style: const TextStyle(fontWeight: FontWeight.w700)), const SizedBox(width: 6), if (ag.verified) const Icon(Icons.verified_outlined, size: 16)]),
-                Row(children: [Stars(s.ratingOf(ag), size: 12), Text('  ${s.ratingOf(ag).toStringAsFixed(1)}  ~${ag.dist.toStringAsFixed(1)} km  ${ag.jobs} job', style: const TextStyle(fontSize: 11.5, color: g500))]),
+                Row(children: [Stars(s.ratingOf(ag), size: 12), Text('  ${s.ratingOf(ag).toStringAsFixed(1)}  ~${ag.dist.toStringAsFixed(1)} km  ${ag.jobs} job', style: const TextStyle(fontSize: 12, color: g500))]),
               ])),
               Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
                 Text(rp(a.price), style: const TextStyle(fontWeight: FontWeight.w800)),
@@ -467,7 +488,7 @@ class _AccCard extends StatelessWidget {
               ]),
             ]),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
           if (selected)
             Row(children: [
               const Expanded(child: Tag('Dipilih', icon: Icons.check_circle_outline, filled: true)),

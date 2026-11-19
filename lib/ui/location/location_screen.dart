@@ -64,7 +64,7 @@ class _LocationFieldState extends State<LocationField> {
       const Text('Lokasi pekerjaan', style: TextStyle(fontWeight: FontWeight.w700)),
       const SizedBox(height: 8),
       if (s.places.isEmpty)
-        const Text('Belum ada lokasi tersimpan. Simpan lokasi di bawah atau lewat Akun > Profil dan alamat.', style: TextStyle(fontSize: 12.5, color: g500))
+        const Text('Belum ada lokasi tersimpan. Simpan lokasi di bawah atau lewat Akun > Profil dan alamat.', style: TextStyle(fontSize: 13, color: g500))
       else
         SizedBox(
           height: 40,
@@ -85,7 +85,7 @@ class _LocationFieldState extends State<LocationField> {
               ),
           ]),
         ),
-      const SizedBox(height: 10),
+      const SizedBox(height: 12),
       AppMap(
         height: widget.mapH,
         pin: widget.pin,
@@ -135,14 +135,14 @@ class SavedPlacesSection extends StatelessWidget {
       if (s.places.isEmpty)
         const Padding(
           padding: EdgeInsets.only(bottom: 12),
-          child: Text('Belum ada lokasi tersimpan. Simpan rumah, kantor, atau tempat lain agar cepat dipilih saat membuat request atau order.', style: TextStyle(color: g500, fontSize: 12.5)),
+          child: Text('Belum ada lokasi tersimpan. Simpan rumah, kantor, atau tempat lain agar cepat dipilih saat membuat request atau order.', style: TextStyle(color: g500, fontSize: 13)),
         ),
       for (final p in s.places)
         Padding(
           padding: const EdgeInsets.only(bottom: 8),
           child: Box(
             child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Icon(placeIcon(p.label), size: 26),
+              Icon(placeIcon(p.label), size: 28),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -152,7 +152,7 @@ class SavedPlacesSection extends StatelessWidget {
                     if (s.address == p.address) const Tag('Utama'),
                   ]),
                   const SizedBox(height: 2),
-                  Text(p.address, style: const TextStyle(color: g700, fontSize: 12.5)),
+                  Text(p.address, style: const TextStyle(color: g700, fontSize: 13)),
                 ]),
               ),
               PopupMenuButton<String>(
@@ -205,7 +205,7 @@ class _PlaceEditPageState extends State<PlaceEditPage> {
               for (final l in ['Rumah', 'Kantor', 'Rumah keluarga'])
                 ActionChip(avatar: Icon(placeIcon(l), size: 16), label: Text(l), onPressed: () => setState(() => label.text = l)),
             ]),
-            const SizedBox(height: 14),
+            const SizedBox(height: 16),
             const Text('Titik di peta', style: TextStyle(fontWeight: FontWeight.w700)),
             const SizedBox(height: 8),
             AppMap(height: 190, pin: pin, zoom: 15, onPick: (o) => setState(() => pin = o)),

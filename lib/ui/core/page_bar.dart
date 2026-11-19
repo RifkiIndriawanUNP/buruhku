@@ -113,7 +113,7 @@ class PageBar extends StatelessWidget implements PreferredSizeWidget {
               child: title == null
                   ? const SizedBox.shrink()
                   : DefaultTextStyle(
-                      style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w800, height: 1.2, color: g900),
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, height: 1.2, color: g900),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       textAlign: TextAlign.center,
@@ -231,8 +231,8 @@ class ProfileBar extends StatelessWidget implements PreferredSizeWidget {
                           const SizedBox(width: 12),
                           Expanded(
                             child: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.start, children: [
-                              Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800, height: 1.2, color: g900)),
-                              if (subtitle != null) Text(subtitle!, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13.5, height: 1.2, color: g500)),
+                              Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, height: 1.2, color: g900)),
+                              if (subtitle != null) Text(subtitle!, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, height: 1.2, color: g500)),
                             ]),
                           ),
                         ]),

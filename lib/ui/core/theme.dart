@@ -22,6 +22,32 @@ const kBgGray = cBg; // nama lain untuk cBg (dipakai kode v4)
 const kLine = Color(0xFFDCDDE1); // garis tipis kartu dan tombol
 const kRed = Color(0xFFE5484D);
 
+// ---------- skala tipografi, jarak, radius ----------
+// Pakai nilai di bawah ini untuk semua teks dan jarak baru. Jangan membuat ukuran lepas.
+
+/// Skala tipografi (9 langkah). Judul tebal (w800), isi normal, keterangan abu-abu.
+class AppText {
+  static const display = TextStyle(fontSize: 34, fontWeight: FontWeight.w800, height: 1.1, color: g900); // angka besar
+  static const headline = TextStyle(fontSize: 22, fontWeight: FontWeight.w800, height: 1.2, color: g900); // judul halaman/tab
+  static const title = TextStyle(fontSize: 18, fontWeight: FontWeight.w800, height: 1.25, color: g900); // judul bagian dan kartu besar
+  static const subtitle = TextStyle(fontSize: 16, fontWeight: FontWeight.w700, height: 1.3, color: g900); // judul item daftar
+  static const bodyLg = TextStyle(fontSize: 15, fontWeight: FontWeight.w500, height: 1.35, color: g900); // isi utama dan input
+  static const body = TextStyle(fontSize: 14, fontWeight: FontWeight.w400, height: 1.3, color: g900); // isi biasa
+  static const label = TextStyle(fontSize: 13, fontWeight: FontWeight.w600, height: 1.3, color: g700); // label dan info kedua
+  static const caption = TextStyle(fontSize: 12, fontWeight: FontWeight.w500, height: 1.3, color: g500); // keterangan
+  static const micro = TextStyle(fontSize: 11, fontWeight: FontWeight.w600, height: 1.2, color: g500); // tag dan lencana
+}
+
+/// Skala jarak (kelipatan 4, ditambah setengah langkah 2 dan 6).
+class AppSpace {
+  static const xxs = 2.0, xs = 4.0, sm = 8.0, md = 12.0, lg = 16.0, xl = 24.0, xxl = 32.0;
+}
+
+/// Skala radius: kecil 8, sedang 12, besar 16, kartu 22, pil penuh.
+class AppRadius {
+  static const sm = 8.0, md = 12.0, lg = 16.0, card = 22.0, pill = 999.0;
+}
+
 ThemeData buildTheme() {
   final b = OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: kLine));
   final pill = RoundedRectangleBorder(borderRadius: BorderRadius.circular(26));
@@ -33,10 +59,14 @@ ThemeData buildTheme() {
         error: kRed, onError: cW, outline: kLine, outlineVariant: g200,
         primaryContainer: kGreenBg, onPrimaryContainer: g900, secondaryContainer: kGreenBg, onSecondaryContainer: g900),
     scaffoldBackgroundColor: kBgGray,
+    textTheme: const TextTheme(
+      displayLarge: AppText.display, headlineMedium: AppText.headline, titleLarge: AppText.title, titleMedium: AppText.subtitle,
+      bodyLarge: AppText.bodyLg, bodyMedium: AppText.body, bodySmall: AppText.caption,
+      labelLarge: TextStyle(fontSize: 15, fontWeight: FontWeight.w700), labelMedium: AppText.label, labelSmall: AppText.micro),
     appBarTheme: const AppBarTheme(
         backgroundColor: kBgGray, foregroundColor: g900, elevation: 0, scrolledUnderElevation: 0, centerTitle: true,
         surfaceTintColor: Colors.transparent,
-        titleTextStyle: TextStyle(color: g900, fontSize: 19, fontWeight: FontWeight.w800)),
+        titleTextStyle: TextStyle(color: g900, fontSize: 18, fontWeight: FontWeight.w800)),
     inputDecorationTheme: InputDecorationTheme(
         filled: true, fillColor: cW,
         border: b, enabledBorder: b, isDense: true, contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),

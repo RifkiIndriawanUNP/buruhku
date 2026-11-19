@@ -32,7 +32,7 @@ class TempPhoto extends StatelessWidget {
     if (p == null || p.isEmpty) return Ph(w: w, h: h);
     if (p.startsWith('http://') || p.startsWith('https://')) {
       return ClipRRect(
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(8),
         child: Image.network(
           p,
           width: w,
@@ -42,7 +42,7 @@ class TempPhoto extends StatelessWidget {
         ),
       );
     }
-    return ClipRRect(borderRadius: BorderRadius.circular(6), child: Image.file(File(p), width: w, height: h, fit: BoxFit.cover, errorBuilder: (_, __, ___) => Ph(w: w, h: h)));
+    return ClipRRect(borderRadius: BorderRadius.circular(8), child: Image.file(File(p), width: w, height: h, fit: BoxFit.cover, errorBuilder: (_, __, ___) => Ph(w: w, h: h)));
   }
 }
 
@@ -66,7 +66,7 @@ class PhotoStrip extends StatelessWidget {
               final p = await pickTempPhoto(context);
               if (p != null) onChanged([...paths, p]);
             },
-            child: Container(width: size, height: size, decoration: BoxDecoration(border: Border.all(color: g500), borderRadius: BorderRadius.circular(6)), child: const Icon(Icons.add_a_photo_outlined)),
+            child: Container(width: size, height: size, decoration: BoxDecoration(border: Border.all(color: g500), borderRadius: BorderRadius.circular(8)), child: const Icon(Icons.add_a_photo_outlined)),
           ),
       ]);
 }
@@ -181,11 +181,11 @@ class _FaceDemoDialogState extends State<_FaceDemoDialog> {
         title: const Text('Verifikasi wajah'),
         content: Column(mainAxisSize: MainAxisSize.min, children: [
           ClipOval(child: Image.file(File(widget.path), width: 140, height: 140, fit: BoxFit.cover, errorBuilder: (_, __, ___) => const Avatar(size: 140, icon: Icons.face_outlined))),
-          const SizedBox(height: 14),
-          if (!done) ...[const CircularProgressIndicator(strokeWidth: 2.5), const SizedBox(height: 10), const Text('Mencocokkan wajah dengan foto KTP...')]
-          else ...[const Icon(Icons.check_circle, size: 30), const SizedBox(height: 6), Text('Liveness lolos, kecocokan wajah $match%', textAlign: TextAlign.center)],
+          const SizedBox(height: 16),
+          if (!done) ...[const CircularProgressIndicator(strokeWidth: 2.5), const SizedBox(height: 12), const Text('Mencocokkan wajah dengan foto KTP...')]
+          else ...[const Icon(Icons.check_circle, size: 32), const SizedBox(height: 6), Text('Liveness lolos, kecocokan wajah $match%', textAlign: TextAlign.center)],
           const SizedBox(height: 8),
-          const Text('Hasil ini simulasi untuk demo. Foto selfie tidak disimpan.', textAlign: TextAlign.center, style: TextStyle(fontSize: 11.5, color: g500)),
+          const Text('Hasil ini simulasi untuk demo. Foto selfie tidak disimpan.', textAlign: TextAlign.center, style: TextStyle(fontSize: 12, color: g500)),
         ]),
         actions: [if (done) TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Lanjut'))],
       );

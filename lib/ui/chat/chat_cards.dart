@@ -12,14 +12,14 @@ class MsgCard extends StatelessWidget {
   final double width;
   final EdgeInsetsGeometry padding;
   final Widget child;
-  const MsgCard({required this.child, this.width = _w, this.padding = const EdgeInsets.all(14), super.key});
+  const MsgCard({required this.child, this.width = _w, this.padding = const EdgeInsets.all(12), super.key});
 
   @override
   Widget build(BuildContext context) => Container(
         width: width,
         padding: padding,
         clipBehavior: Clip.antiAlias,
-        decoration: BoxDecoration(color: cW, borderRadius: BorderRadius.circular(20)),
+        decoration: BoxDecoration(color: cW, borderRadius: BorderRadius.circular(22)),
         child: child,
       );
 }
@@ -53,8 +53,8 @@ class OfferStatusPill extends StatelessWidget {
       _ => ('Menunggu', const Color(0xFFFFF1D0), const Color(0xFF9A6B00)),
     };
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(10)),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(12)),
       child: Text(label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, height: 1.1, color: fg)),
     );
   }
@@ -64,7 +64,7 @@ Widget _price(int price, String ptype, {double size = 24}) {
   final unit = unitOf(ptype);
   return Text.rich(TextSpan(
     text: rp(price),
-    style: TextStyle(fontSize: size, fontWeight: FontWeight.w900, height: 1.15, color: g900),
+    style: TextStyle(fontSize: size, fontWeight: FontWeight.w800, height: 1.15, color: g900),
     children: [if (unit.isNotEmpty) TextSpan(text: unit, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: g500))],
   ));
 }
@@ -75,9 +75,9 @@ class _InfoRow extends StatelessWidget {
   const _InfoRow(this.icon, this.text);
   @override
   Widget build(BuildContext context) => Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Icon(icon, size: 17, color: g500),
+        Icon(icon, size: 16, color: g500),
         const SizedBox(width: 8),
-        Expanded(child: Text(text, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13.5, height: 1.3, color: g700))),
+        Expanded(child: Text(text, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, height: 1.3, color: g700))),
       ]);
 }
 
@@ -94,7 +94,7 @@ class PriceOfferCard extends StatelessWidget {
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Row(children: [
             const _IconDot(Icons.sell_outlined, kGreen, size: 34),
-            const SizedBox(width: 10),
+            const SizedBox(width: 8),
             Expanded(child: Text(ptypes[ptype] ?? '', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: g500))),
             OfferStatusPill(status),
           ]),
@@ -122,7 +122,7 @@ class OrderOfferCard extends StatelessWidget {
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
           catId != null ? CatIcon(catOf(catId), size: 42) : const _IconDot(Icons.assignment_outlined, kGreen, size: 42),
-          const SizedBox(width: 10),
+          const SizedBox(width: 8),
           Expanded(child: Text((d['title'] ?? '').toString(), maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, height: 1.2, color: g900))),
           const SizedBox(width: 8),
           OfferStatusPill(status),
@@ -203,7 +203,7 @@ class ImageMsgCard extends StatelessWidget {
     final p = path;
     return GestureDetector(
       onTap: (p == null || p.isEmpty) ? null : () => showPhotoViewer(context, [p]),
-      child: ClipRRect(borderRadius: BorderRadius.circular(18), child: TempPhoto(path: p, w: 220, h: 165)),
+      child: ClipRRect(borderRadius: BorderRadius.circular(16), child: TempPhoto(path: p, w: 220, h: 165)),
     );
   }
 }
@@ -222,11 +222,11 @@ class LocationMsgCard extends StatelessWidget {
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             AppMap(height: 118, pin: kMapCenter, zoom: 15, interactive: false, framed: false),
             Padding(
-              padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
               child: Row(children: [
                 const Icon(Icons.place, size: 18, color: kGreen),
                 const SizedBox(width: 6),
-                Expanded(child: Text(address, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13.5, height: 1.3, color: g900))),
+                Expanded(child: Text(address, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, height: 1.3, color: g900))),
                 const Icon(Icons.chevron_right, size: 20, color: g500),
               ]),
             ),

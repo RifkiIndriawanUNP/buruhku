@@ -13,7 +13,7 @@ class OrderStepper extends StatelessWidget {
 
   Widget _dot(int i) {
     if (i < step) {
-      return Container(width: 20, height: 20, decoration: const BoxDecoration(color: kGreen, shape: BoxShape.circle), child: const Icon(Icons.check, size: 13, color: Colors.white));
+      return Container(width: 20, height: 20, decoration: const BoxDecoration(color: kGreen, shape: BoxShape.circle), child: const Icon(Icons.check, size: 14, color: Colors.white));
     }
     if (i == step) {
       return Container(width: 22, height: 22, decoration: BoxDecoration(color: cW, shape: BoxShape.circle, border: Border.all(color: kGreen, width: 3.5)));
@@ -34,8 +34,8 @@ class OrderStepper extends StatelessWidget {
                   Expanded(child: _seg(i < names.length - 1, i < step)),
                 ]),
               ),
-              const SizedBox(height: 5),
-              Text(names[i], maxLines: 1, style: TextStyle(fontSize: 10, fontWeight: i == step ? FontWeight.w800 : FontWeight.w500, color: i <= step ? g900 : g500)),
+              const SizedBox(height: 4),
+              Text(names[i], maxLines: 1, style: TextStyle(fontSize: 11, fontWeight: i == step ? FontWeight.w800 : FontWeight.w500, color: i <= step ? g900 : g500)),
             ]),
           ),
       ]);
@@ -49,13 +49,13 @@ class OrderLine extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Container(width: 36, height: 36, decoration: BoxDecoration(color: cBg, borderRadius: BorderRadius.circular(12)), child: Icon(icon, size: 19, color: g700)),
+        Container(width: 36, height: 36, decoration: BoxDecoration(color: cBg, borderRadius: BorderRadius.circular(12)), child: Icon(icon, size: 20, color: g700)),
         const SizedBox(width: 12),
         Expanded(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(label, style: const TextStyle(fontSize: 12, color: g500)),
-            const SizedBox(height: 1),
-            Text(value, style: const TextStyle(fontSize: 14.5, height: 1.3, fontWeight: FontWeight.w600, color: g900)),
+            const SizedBox(height: 2),
+            Text(value, style: const TextStyle(fontSize: 14, height: 1.3, fontWeight: FontWeight.w600, color: g900)),
           ]),
         ),
       ]);
@@ -72,7 +72,7 @@ class PayRow extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 4),
         child: Row(children: [
           Expanded(child: Text(label, style: TextStyle(fontSize: bold ? 15 : 14, fontWeight: bold ? FontWeight.w800 : FontWeight.w500, color: bold ? g900 : g700))),
-          Text(value, style: TextStyle(fontSize: bold ? 19 : 14, fontWeight: bold ? FontWeight.w900 : FontWeight.w600, color: g900)),
+          Text(value, style: TextStyle(fontSize: bold ? 19 : 14, fontWeight: bold ? FontWeight.w800 : FontWeight.w600, color: g900)),
         ]),
       );
 }
@@ -99,11 +99,11 @@ class OrderTimeline extends StatelessWidget {
             const SizedBox(width: 8),
             Expanded(
               child: Padding(
-                padding: EdgeInsets.only(bottom: i < l.length - 1 ? 14 : 0),
+                padding: EdgeInsets.only(bottom: i < l.length - 1 ? 12 : 0),
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text(l[i].split('|').sublist(1).join('|'), style: const TextStyle(fontSize: 13.5, height: 1.3, color: g900)),
+                  Text(l[i].split('|').sublist(1).join('|'), style: const TextStyle(fontSize: 13, height: 1.3, color: g900)),
                   const SizedBox(height: 2),
-                  Text(ftime(DateTime.parse(l[i].split('|').first)), style: const TextStyle(fontSize: 11.5, color: g500)),
+                  Text(ftime(DateTime.parse(l[i].split('|').first)), style: const TextStyle(fontSize: 12, color: g500)),
                 ]),
               ),
             ),

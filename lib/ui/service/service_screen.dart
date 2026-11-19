@@ -50,7 +50,7 @@ class ServiceCard extends StatelessWidget {
         maxScaleFactor: 1.25,
         child: SoftCard(
           radius: 22,
-          padding: const EdgeInsets.all(10),
+          padding: const EdgeInsets.all(8),
           onTap: detail,
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Stack(children: [
@@ -66,7 +66,7 @@ class ServiceCard extends StatelessWidget {
                 ),
               ),
             ]),
-            const SizedBox(height: 10),
+            const SizedBox(height: 12),
             Wrap(spacing: 4, runSpacing: 4, children: [CatTag(c.name, c.color), CatTag(ptypes[svc.ptype] ?? '', kPeach)]),
             const SizedBox(height: 8),
             Text(svc.title, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, height: 1.2, color: g900)),
@@ -76,20 +76,20 @@ class ServiceCard extends StatelessWidget {
               const SizedBox(width: 6),
               Flexible(child: Text(a.short, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: g900))),
               if (a.verified) ...[const SizedBox(width: 4), const VerifiedBadge(size: 15)],
-              if (!a.online) ...[const SizedBox(width: 6), const Text('Offline', style: TextStyle(fontSize: 10, color: g500))],
+              if (!a.online) ...[const SizedBox(width: 6), const Text('Offline', style: TextStyle(fontSize: 11, color: g500))],
             ]),
             const SizedBox(height: 6),
             Row(children: [
               const Icon(Icons.star, size: 14, color: kStar),
-              const SizedBox(width: 3),
-              Text(n == 0 ? 'Baru' : '${rating.toStringAsFixed(1)} ($n)', style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: g900)),
+              const SizedBox(width: 4),
+              Text(n == 0 ? 'Baru' : '${rating.toStringAsFixed(1)} ($n)', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: g900)),
               const Spacer(),
-              Flexible(child: Text('\u2022 ~${a.dist.toStringAsFixed(1)} km', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 11.5, color: g500))),
+              Flexible(child: Text('\u2022 ~${a.dist.toStringAsFixed(1)} km', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, color: g500))),
             ]),
             const Spacer(),
-            const SizedBox(height: 10),
+            const SizedBox(height: 12),
             const Divider(height: 1, thickness: 1, color: kLine),
-            const SizedBox(height: 10),
+            const SizedBox(height: 12),
             Row(children: [
               Expanded(
                 child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -99,7 +99,7 @@ class ServiceCard extends StatelessWidget {
                     alignment: Alignment.centerLeft,
                     child: Text.rich(TextSpan(
                       text: rpSp(svc.price),
-                      style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: g900),
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: g900),
                       children: [if (unit.isNotEmpty) TextSpan(text: unit, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: g500))],
                     )),
                   ),
@@ -122,14 +122,14 @@ class ServiceCard extends StatelessWidget {
       maxScaleFactor: 1.25,
       child: SoftCard(
         radius: 22,
-        padding: const EdgeInsets.all(10),
+        padding: const EdgeInsets.all(8),
         onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ServiceDetailPage(svc.id))),
         child: IntrinsicHeight(
           child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
             SizedBox(
               width: 108,
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(12),
                 // Hanya anak Positioned, jadi foto mengikuti tinggi kolom teks (tidak memaksa baris lebih tinggi).
                 child: Stack(children: [
                   Positioned.fill(child: (url != null && url.isNotEmpty) ? Image.network(url, fit: BoxFit.cover, errorBuilder: (_, __, ___) => ph()) : ph()),
@@ -148,7 +148,7 @@ class ServiceCard extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(svc.title, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 15.5, fontWeight: FontWeight.w800, height: 1.2, color: g900)),
+                Text(svc.title, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, height: 1.2, color: g900)),
                 const SizedBox(height: 6),
                 Wrap(spacing: 4, runSpacing: 4, children: [CatTag(c.name, c.color), CatTag(ptypes[svc.ptype] ?? '', kPeach)]),
                 const SizedBox(height: 8),
@@ -159,11 +159,11 @@ class ServiceCard extends StatelessWidget {
                       const SizedBox(width: 6),
                       Flexible(child: Text(a.short, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: g900))),
                       if (a.verified) ...[const SizedBox(width: 4), const VerifiedBadge(size: 14)],
-                      if (!a.online) ...[const SizedBox(width: 6), const Text('Offline', style: TextStyle(fontSize: 10, color: g500))],
+                      if (!a.online) ...[const SizedBox(width: 6), const Text('Offline', style: TextStyle(fontSize: 11, color: g500))],
                     ]),
                   ),
-                  const Icon(Icons.star, size: 13, color: kStar),
-                  const SizedBox(width: 3),
+                  const Icon(Icons.star, size: 14, color: kStar),
+                  const SizedBox(width: 4),
                   Text(s.ratingOfSvc(svc) > 0 ? s.ratingOfSvc(svc).toStringAsFixed(1) : 'Baru', style: const TextStyle(fontSize: 12, color: g700)),
                 ]),
                 const SizedBox(height: 6),
@@ -174,12 +174,12 @@ class ServiceCard extends StatelessWidget {
                       alignment: Alignment.centerLeft,
                       child: Text.rich(TextSpan(
                         text: rpSp(svc.price),
-                        style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: g900),
-                        children: [if (unit.isNotEmpty) TextSpan(text: unit, style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: g500))],
+                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: g900),
+                        children: [if (unit.isNotEmpty) TextSpan(text: unit, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: g500))],
                       )),
                     ),
                   ),
-                  Text('~${a.dist.toStringAsFixed(1)} km', style: const TextStyle(fontSize: 11.5, color: g500)),
+                  Text('~${a.dist.toStringAsFixed(1)} km', style: const TextStyle(fontSize: 12, color: g500)),
                 ]),
               ]),
             ),
@@ -199,9 +199,9 @@ class _EtaChip extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(color: const Color(0xE6FFFFFF), borderRadius: BorderRadius.circular(12)),
         child: Row(mainAxisSize: MainAxisSize.min, children: [
-          const Icon(Icons.bolt, size: 13, color: Color(0xFFF5A12B)),
+          const Icon(Icons.bolt, size: 14, color: Color(0xFFF5A12B)),
           const SizedBox(width: 2),
-          Text(text, style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w800, color: g900)),
+          Text(text, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: g900)),
         ]),
       );
 }
@@ -212,9 +212,9 @@ class _OrderChip extends StatelessWidget {
   const _OrderChip({required this.onTap});
   @override
   Widget build(BuildContext context) => FilledButton(
-        style: FilledButton.styleFrom(minimumSize: const Size(0, 40), padding: const EdgeInsets.symmetric(horizontal: 18)),
+        style: FilledButton.styleFrom(minimumSize: const Size(0, 40), padding: const EdgeInsets.symmetric(horizontal: 16)),
         onPressed: onTap,
-        child: const Text('Order', style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w800)),
+        child: const Text('Order', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800)),
       );
 }
 
@@ -327,7 +327,7 @@ class ServiceDetailPage extends StatelessWidget {
             child: RoundBtn(
               size: 44,
               onTap: () => s.toggleFavSvc(v.id),
-              child: Icon(fav ? Icons.favorite : Icons.favorite_border, size: 22, color: fav ? Colors.red : g500),
+              child: Icon(fav ? Icons.favorite : Icons.favorite_border, size: 24, color: fav ? Colors.red : g500),
             ),
           ),
         ]),
@@ -337,7 +337,7 @@ class ServiceDetailPage extends StatelessWidget {
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text.rich(TextSpan(
               text: rpSp(v.price),
-              style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: g900),
+              style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: g900),
               children: [if (unit.isNotEmpty) TextSpan(text: unit, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: g500))],
             )),
             const SizedBox(height: 6),
@@ -346,13 +346,13 @@ class ServiceDetailPage extends StatelessWidget {
             Row(children: [
               const Icon(Icons.star, size: 16, color: kStar),
               const SizedBox(width: 4),
-              Text(revs.isEmpty ? 'Belum ada ulasan' : '${rating.toStringAsFixed(1)}  (${revs.length} ulasan)', style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600, color: g900)),
+              Text(revs.isEmpty ? 'Belum ada ulasan' : '${rating.toStringAsFixed(1)}  (${revs.length} ulasan)', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: g900)),
               const Spacer(),
-              const Icon(Icons.place_outlined, size: 15, color: g500),
+              const Icon(Icons.place_outlined, size: 16, color: g500),
               const SizedBox(width: 2),
               Text('~${a.dist.toStringAsFixed(1)} km', style: const TextStyle(fontSize: 13, color: g500)),
             ]),
-            const SizedBox(height: 10),
+            const SizedBox(height: 12),
             Wrap(spacing: 4, runSpacing: 4, children: [
               CatTag(c.name, c.color),
               CatTag(ptypes[v.ptype] ?? '', kPeach),
@@ -371,11 +371,11 @@ class ServiceDetailPage extends StatelessWidget {
               Expanded(
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Row(children: [
-                    Flexible(child: Text(a.short, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 15.5, fontWeight: FontWeight.w800, color: g900))),
+                    Flexible(child: Text(a.short, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: g900))),
                     if (a.verified) ...[const SizedBox(width: 4), const VerifiedBadge()],
                   ]),
                   const SizedBox(height: 2),
-                  Text(a.online ? 'Online' : 'Offline', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: a.online ? kGreen : g500)),
+                  Text(a.online ? 'Online' : 'Offline', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: a.online ? kGreen : g500)),
                   const SizedBox(height: 2),
                   Text('\u2605 ${s.ratingOf(a).toStringAsFixed(1)}  \u00b7  ${a.jobs} order selesai', style: const TextStyle(fontSize: 12, color: g500)),
                 ]),
@@ -387,7 +387,7 @@ class ServiceDetailPage extends StatelessWidget {
                 child: InkWell(
                   customBorder: const StadiumBorder(),
                   onTap: openAgent,
-                  child: const Padding(padding: EdgeInsets.symmetric(horizontal: 14, vertical: 9), child: Text('Kunjungi', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: g900))),
+                  child: const Padding(padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8), child: Text('Kunjungi', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: g900))),
                 ),
               ),
             ]),
@@ -403,7 +403,7 @@ class ServiceDetailPage extends StatelessWidget {
             const Padding(padding: EdgeInsets.symmetric(vertical: 8), child: Divider(height: 1, thickness: 1, color: kLine)),
             const Text('Deskripsi', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: g500)),
             const SizedBox(height: 4),
-            Text(v.desc, style: const TextStyle(fontSize: 14.5, height: 1.45, color: g900)),
+            Text(v.desc, style: const TextStyle(fontSize: 14, height: 1.45, color: g900)),
           ]),
         ),
         // Cara order
@@ -413,7 +413,7 @@ class ServiceDetailPage extends StatelessWidget {
             const Icon(Icons.bolt, size: 20, color: kGreen),
             const SizedBox(width: 8),
             const Expanded(
-              child: Text('Pilih lokasi dan jadwal, harga sudah terisi. Kamu bisa menawar harga. Agen menyetujui, menawar balik, atau menolak, lalu bayar lewat escrow atau COD.', style: TextStyle(fontSize: 13.5, height: 1.4, color: g700)),
+              child: Text('Pilih lokasi dan jadwal, harga sudah terisi. Kamu bisa menawar harga. Agen menyetujui, menawar balik, atau menolak, lalu bayar lewat escrow atau COD.', style: TextStyle(fontSize: 13, height: 1.4, color: g700)),
             ),
           ]),
         ),
@@ -426,7 +426,7 @@ class ServiceDetailPage extends StatelessWidget {
               ? const Text('Belum ada ulasan untuk jasa ini.', style: TextStyle(color: g500))
               : Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   ReviewSummary(rating: rating, revs: revs),
-                  const Padding(padding: EdgeInsets.symmetric(vertical: 14), child: Divider(height: 1, thickness: 1, color: kLine)),
+                  const Padding(padding: EdgeInsets.symmetric(vertical: 12), child: Divider(height: 1, thickness: 1, color: kLine)),
                   ReviewList(revs.take(3).toList()),
                 ]),
         ),
@@ -441,11 +441,11 @@ class ServiceDetailPage extends StatelessWidget {
         child: SafeArea(
           top: false,
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
             child: Row(children: [
               GestureDetector(
                 onTap: () => startAgentChat(context, a),
-                child: Container(width: 48, height: 48, decoration: const BoxDecoration(color: cBg, shape: BoxShape.circle), child: const Icon(Icons.chat_bubble_outline, size: 22, color: g900)),
+                child: Container(width: 48, height: 48, decoration: const BoxDecoration(color: cBg, shape: BoxShape.circle), child: const Icon(Icons.chat_bubble_outline, size: 24, color: g900)),
               ),
               const SizedBox(width: 12),
               Expanded(child: pbtn('Order jasa ini', order, icon: Icons.shopping_bag_outlined)),
@@ -481,16 +481,16 @@ Future<String?> orderServiceSheet(BuildContext context, Svc svc) {
             key: key,
             child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
               const Text('Order jasa', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
-              const SizedBox(height: 10),
+              const SizedBox(height: 12),
               Box(color: g100, child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text(svc.title, style: const TextStyle(fontWeight: FontWeight.w700)),
                 Text('${a.short}  |  ${catOf(svc.cat).name}', style: const TextStyle(fontSize: 12, color: g500)),
                 const SizedBox(height: 4),
-                Text(svc.desc, style: const TextStyle(fontSize: 12.5)),
+                Text(svc.desc, style: const TextStyle(fontSize: 13)),
                 const SizedBox(height: 4),
                 Text('Harga agen ${svcPrice(svc)}', style: const TextStyle(fontWeight: FontWeight.w700)),
               ])),
-              const SizedBox(height: 14),
+              const SizedBox(height: 16),
               LocationField(addr: addr, pin: pin, mapH: 110, onPin: (o) => set(() => pin = o)),
               const SizedBox(height: 8),
               const Text('Jadwal', style: TextStyle(fontWeight: FontWeight.w700)),
@@ -503,7 +503,7 @@ Future<String?> orderServiceSheet(BuildContext context, Svc svc) {
                   if (d != null) set(() => when = d);
                 }, icon: Icons.event),
               ],
-              const SizedBox(height: 14),
+              const SizedBox(height: 16),
               if (svc.ptype != 'lump') TF('Durasi (${svc.ptype == 'hourly' ? 'jam' : 'hari'})', dur, type: TextInputType.number, validator: (v) => (double.tryParse((v ?? '').replaceAll(',', '.')) ?? 0) <= 0 ? 'Wajib diisi' : null),
               TF('Harga (Rp${unitOf(svc.ptype)}), bisa kamu tawar', price, money: true, onChanged: (_) => set(() {}), validator: (v) => money(v ?? '') < 15000 ? 'Minimal Rp15.000' : null),
               Padding(padding: const EdgeInsets.only(bottom: 12), child: Text(note, style: const TextStyle(fontSize: 12, color: g500))),
@@ -590,7 +590,7 @@ class MyServicesPage extends StatelessWidget {
                   const SizedBox(height: 12),
                   for (final v in l)
                     Padding(
-                      padding: const EdgeInsets.only(bottom: 10),
+                      padding: const EdgeInsets.only(bottom: 8),
                       child: Box(
                         onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ServiceEditPage(svc: v))),
                         child: Row(children: [
@@ -733,7 +733,7 @@ class _ServiceEditPageState extends State<ServiceEditPage> {
           const SizedBox(height: 12),
           if (ptype != 'lump') TF('Estimasi durasi (${ptype == 'hourly' ? 'jam' : 'hari'})', dur, type: TextInputType.number, validator: (v) => d <= 0 ? 'Wajib untuk tarif ${ptype == 'hourly' ? 'per jam' : 'harian'}' : null),
           TF('Harga (Rp${unitOf(ptype)})', price, money: true, validator: (v) => money(v ?? '') < 15000 ? 'Minimal Rp15.000' : null),
-          Padding(padding: const EdgeInsets.only(bottom: 8), child: Text('Rekomendasi wajar: ${rp(rec[0])} sampai ${rp(rec[1])}${unitOf(ptype)}', style: const TextStyle(fontSize: 12.5, color: g700))),
+          Padding(padding: const EdgeInsets.only(bottom: 8), child: Text('Rekomendasi wajar: ${rp(rec[0])} sampai ${rp(rec[1])}${unitOf(ptype)}', style: const TextStyle(fontSize: 13, color: g700))),
           SwitchListTile(contentPadding: EdgeInsets.zero, title: const Text('Tampilkan ke klien'), subtitle: const Text('Nonaktifkan jika sedang tidak menerima jasa ini'), value: active, onChanged: (v) => setState(() => active = v)),
           const SizedBox(height: 8),
           full(pbtn('Simpan tawaran', _save, icon: Icons.check)),

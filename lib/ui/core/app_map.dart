@@ -210,7 +210,7 @@ class _Label extends StatelessWidget {
   Widget build(BuildContext context) => Container(
         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
         color: const Color(0xCCFFFFFF),
-        child: Text(text, style: const TextStyle(fontSize: 10, color: g700)),
+        child: Text(text, style: const TextStyle(fontSize: 11, color: g700)),
       );
 }
 
@@ -243,7 +243,7 @@ class MapThumb extends StatelessWidget {
           decoration: BoxDecoration(color: g100, border: Border.all(color: g300), borderRadius: BorderRadius.circular(8)),
           child: const Center(
             child: Column(mainAxisSize: MainAxisSize.min, children: [
-              Icon(Icons.location_on, size: 30, color: g900),
+              Icon(Icons.location_on, size: 32, color: g900),
               SizedBox(height: 2),
               Text('Ketuk untuk lihat peta', style: TextStyle(fontSize: 11, color: g700)),
             ]),

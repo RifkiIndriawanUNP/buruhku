@@ -44,8 +44,8 @@ class _IncomingTabState extends State<IncomingTab> {
           const SizedBox(width: 8),
           Expanded(child: _stat('Penerimaan', '${(s.acceptRate * 100).round()}%')),
         ]),
-        if (s.penalty > 0) Padding(padding: const EdgeInsets.only(top: 10), child: Warn('Kamu punya ${s.penalty} pembatalan sepihak. Reputasi turun, hindari membatalkan order.')),
-        if (!k.online) const Padding(padding: EdgeInsets.only(top: 10), child: Warn('Kamu offline. Aktifkan status Online untuk menerima request dan order langsung.', icon: Icons.cloud_off_outlined)),
+        if (s.penalty > 0) Padding(padding: const EdgeInsets.only(top: 8), child: Warn('Kamu punya ${s.penalty} pembatalan sepihak. Reputasi turun, hindari membatalkan order.')),
+        if (!k.online) const Padding(padding: EdgeInsets.only(top: 8), child: Warn('Kamu offline. Aktifkan status Online untuk menerima request dan order langsung.', icon: Icons.cloud_off_outlined)),
         const SizedBox(height: 12),
         Box(
           onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MyServicesPage())),
@@ -66,15 +66,15 @@ class _IncomingTabState extends State<IncomingTab> {
             ),
           ]),
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 16),
         Seg({'req': 'Request sekitar (${l.length})', 'direct': 'Order langsung (${dl.length})'}, seg, (v) => setState(() => seg = v)),
-        const SizedBox(height: 10),
+        const SizedBox(height: 12),
         if (seg == 'req') ...[
-          if (l.isEmpty) const Padding(padding: EdgeInsets.only(top: 30), child: Empty(Icons.inbox_outlined, 'Belum ada request baru. Request sesuai keahlian dan radiusmu muncul otomatis saat kamu online.')),
+          if (l.isEmpty) const Padding(padding: EdgeInsets.only(top: 32), child: Empty(Icons.inbox_outlined, 'Belum ada request baru. Request sesuai keahlian dan radiusmu muncul otomatis saat kamu online.')),
           if (k.online)
             for (final r in l)
               Padding(
-                padding: const EdgeInsets.only(bottom: 10),
+                padding: const EdgeInsets.only(bottom: 8),
                 child: Box(
                   onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => IncomingDetailPage(r.id))),
                   child: Row(children: [
@@ -92,14 +92,14 @@ class _IncomingTabState extends State<IncomingTab> {
                 ),
               ),
         ] else ...[
-          if (dl.isEmpty) const Padding(padding: EdgeInsets.only(top: 30), child: Empty(Icons.bolt_outlined, 'Belum ada order langsung. Pesanan dari tawaran jasamu atau chat langsung klien muncul di sini.')),
+          if (dl.isEmpty) const Padding(padding: EdgeInsets.only(top: 32), child: Empty(Icons.bolt_outlined, 'Belum ada order langsung. Pesanan dari tawaran jasamu atau chat langsung klien muncul di sini.')),
           for (final d in dl) _DirectCard(d),
         ],
       ],
     ]);
   }
 
-  Widget _stat(String l, String v) => Box(padding: const EdgeInsets.all(10), child: Column(children: [Text(v, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800)), Text(l, style: const TextStyle(fontSize: 11, color: g500))]));
+  Widget _stat(String l, String v) => Box(padding: const EdgeInsets.all(8), child: Column(children: [Text(v, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800)), Text(l, style: const TextStyle(fontSize: 11, color: g500))]));
 
   Widget _kycBanner(BuildContext context, AppState s) {
     final k = s.kyc;
@@ -136,21 +136,21 @@ class _DirectCard extends StatelessWidget {
     final mine = data['svcId'] != null && s.mySvcs.any((x) => x.id == data['svcId']);
     final pt = data['ptype'] as String;
     return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.only(bottom: 8),
       child: Box(
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Row(children: [
             const Avatar(size: 38),
-            const SizedBox(width: 10),
+            const SizedBox(width: 8),
             Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(d.chat.otherName, style: const TextStyle(fontWeight: FontWeight.w700)),
               Text(ago(d.msg.at), style: const TextStyle(fontSize: 11, color: g500)),
             ])),
             if (mine) const Tag('Dari tawaranmu', icon: Icons.storefront_outlined),
           ]),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
           Text(data['title'] as String, style: const TextStyle(fontWeight: FontWeight.w700)),
-          if ((data['desc'] as String? ?? '').isNotEmpty) Text(data['desc'] as String, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12.5, color: g700)),
+          if ((data['desc'] as String? ?? '').isNotEmpty) Text(data['desc'] as String, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, color: g700)),
           const SizedBox(height: 6),
           Row(children: [
             const Icon(Icons.event_outlined, size: 16, color: g500),
@@ -159,7 +159,7 @@ class _DirectCard extends StatelessWidget {
           ]),
           const SizedBox(height: 6),
           Text('${rp(data['price'] as int)}${unitOf(pt)}', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
           Row(children: [
             Expanded(child: pbtn('Terima', () {
               final err = s.acceptDirect(d.chat, d.msg);
@@ -246,12 +246,12 @@ class IncomingDetailPage extends StatelessWidget {
     return AppScaffold(underBar: true,
       appBar: PageBar(title: const Text('Detail request')),
       body: ListView(padding: pagePad(context), children: [
-        Row(children: [CatIcon(catOf(r.cat), size: 44), const SizedBox(width: 10), Expanded(child: Text(r.title, style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w800)))]),
+        Row(children: [CatIcon(catOf(r.cat), size: 44), const SizedBox(width: 8), Expanded(child: Text(r.title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800)))]),
         const SizedBox(height: 8),
         Wrap(spacing: 6, runSpacing: 6, children: [CatTag(catOf(r.cat).name, catOf(r.cat).color, height: 22), CatTag(ptypes[r.ptype] ?? '', kPeach, height: 22)]),
-        const SizedBox(height: 10),
+        const SizedBox(height: 12),
         Text(r.desc, style: const TextStyle(height: 1.4)),
-        const SizedBox(height: 10),
+        const SizedBox(height: 12),
         Box(child: Column(children: [
           Kv('Klien', '${r.clientName}  (${r.clientRating.toStringAsFixed(1)})'),
           Kv('Area', '${r.area}  |  ~${r.dist.toStringAsFixed(1)} km'),
@@ -264,12 +264,12 @@ class IncomingDetailPage extends StatelessWidget {
           Kv('Perkiraan bersih', rp((r.unitTotal * .9).round())),
         ])),
         const SizedBox(height: 8),
-        Text('Rekomendasi wajar: ${rp(rec[0])} sampai ${rp(rec[1])}${unitOf(r.ptype)}', style: const TextStyle(fontSize: 12.5, color: g500)),
-        if (catOf(r.cat).risk > 1) const Padding(padding: EdgeInsets.only(top: 10), child: Warn('Kategori sensitif: butuh SKCK dan level L2.', icon: Icons.shield_outlined)),
+        Text('Rekomendasi wajar: ${rp(rec[0])} sampai ${rp(rec[1])}${unitOf(r.ptype)}', style: const TextStyle(fontSize: 13, color: g500)),
+        if (catOf(r.cat).risk > 1) const Padding(padding: EdgeInsets.only(top: 8), child: Warn('Kategori sensitif: butuh SKCK dan level L2.', icon: Icons.shield_outlined)),
         const SizedBox(height: 16),
         if (myAcc != null && myAcc.status == 'accepted') ...[
           const Warn('ACC terkirim. Menunggu klien memilih. Negosiasi harga lewat chat.', icon: Icons.hourglass_top),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
           full(pbtn('Buka chat', () {
             final c = s.chatFor(type: 'order', refId: r.id, otherId: 'c:${r.clientName}', otherName: r.clientName, otherAgent: false, title: r.title);
             Navigator.push(context, MaterialPageRoute(builder: (_) => ChatPage(c.id)));
@@ -281,7 +281,7 @@ class IncomingDetailPage extends StatelessWidget {
         else
           Row(children: [
             Expanded(child: obtn('Tolak', () { s.agentReject(r); Navigator.pop(context); })),
-            const SizedBox(width: 10),
+            const SizedBox(width: 8),
             Expanded(flex: 2, child: pbtn('ACC / tawar', () => _acc(context, s, r), icon: Icons.check)),
           ]),
       ]),
@@ -316,7 +316,7 @@ class JobsTab extends StatelessWidget {
                       const SizedBox(height: 8),
                       for (final r in waiting)
                         Padding(
-                          padding: const EdgeInsets.only(bottom: 10),
+                          padding: const EdgeInsets.only(bottom: 8),
                           child: Box(
                             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => IncomingDetailPage(r.id))),
                             child: Row(children: [const Icon(Icons.hourglass_top), const SizedBox(width: 12), Expanded(child: Text(r.title, style: const TextStyle(fontWeight: FontWeight.w600))), const Tag('ACC terkirim')]),
@@ -387,22 +387,22 @@ class EarningsTab extends StatelessWidget {
       const SizedBox(height: 12),
       Box(color: g900, border: g900, child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         const Text('Saldo tersedia', style: TextStyle(color: g300)),
-        Text(rp(s.balance), style: const TextStyle(color: cW, fontSize: 30, fontWeight: FontWeight.w900)),
+        Text(rp(s.balance), style: const TextStyle(color: cW, fontSize: 34, fontWeight: FontWeight.w800)),
         const SizedBox(height: 4),
-        Text('Tertahan di escrow: ${rp(s.held)}', style: const TextStyle(color: g300, fontSize: 12.5)),
+        Text('Tertahan di escrow: ${rp(s.held)}', style: const TextStyle(color: g300, fontSize: 13)),
         const SizedBox(height: 12),
         Row(children: [
           Expanded(child: FilledButton(style: FilledButton.styleFrom(backgroundColor: cW, foregroundColor: g900), onPressed: s.kyc.status == 'approved' ? () => _withdraw(context, s) : null, child: const Text('Tarik saldo'))),
         ]),
       ])),
-      if (s.balance < 0) const Padding(padding: EdgeInsets.only(top: 10), child: Warn('Saldo negatif karena komisi order COD. Akan terpotong otomatis dari pendapatan berikutnya.', icon: Icons.payments_outlined)),
-      const SizedBox(height: 10),
+      if (s.balance < 0) const Padding(padding: EdgeInsets.only(top: 8), child: Warn('Saldo negatif karena komisi order COD. Akan terpotong otomatis dari pendapatan berikutnya.', icon: Icons.payments_outlined)),
+      const SizedBox(height: 12),
       Row(children: [
-        Expanded(child: Box(padding: const EdgeInsets.all(10), child: Column(children: [Text(rp(s.earned(const Duration(days: 1))), style: const TextStyle(fontWeight: FontWeight.w800)), const Text('Hari ini', style: TextStyle(fontSize: 11, color: g500))]))),
+        Expanded(child: Box(padding: const EdgeInsets.all(8), child: Column(children: [Text(rp(s.earned(const Duration(days: 1))), style: const TextStyle(fontWeight: FontWeight.w800)), const Text('Hari ini', style: TextStyle(fontSize: 11, color: g500))]))),
         const SizedBox(width: 8),
-        Expanded(child: Box(padding: const EdgeInsets.all(10), child: Column(children: [Text(rp(s.earned(const Duration(days: 7))), style: const TextStyle(fontWeight: FontWeight.w800)), const Text('7 hari', style: TextStyle(fontSize: 11, color: g500))]))),
+        Expanded(child: Box(padding: const EdgeInsets.all(8), child: Column(children: [Text(rp(s.earned(const Duration(days: 7))), style: const TextStyle(fontWeight: FontWeight.w800)), const Text('7 hari', style: TextStyle(fontSize: 11, color: g500))]))),
         const SizedBox(width: 8),
-        Expanded(child: Box(padding: const EdgeInsets.all(10), child: Column(children: [Text(rp(s.earned(const Duration(days: 30))), style: const TextStyle(fontWeight: FontWeight.w800)), const Text('30 hari', style: TextStyle(fontSize: 11, color: g500))]))),
+        Expanded(child: Box(padding: const EdgeInsets.all(8), child: Column(children: [Text(rp(s.earned(const Duration(days: 30))), style: const TextStyle(fontWeight: FontWeight.w800)), const Text('30 hari', style: TextStyle(fontSize: 11, color: g500))]))),
       ]),
       const Section('Reputasi'),
       Box(child: Column(children: [
@@ -542,7 +542,7 @@ class _KycPageState extends State<KycPage> {
           const Text('SKCK (opsional)', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
           const SizedBox(height: 6),
           const Text('Tanpa SKCK kamu mulai di level L1: hanya kategori risiko rendah dan maks Rp500.000 per order. Dengan SKCK dan 5 order rating baik, kamu naik ke L2 dan bisa ambil kategori sensitif (masuk rumah, antar anak).', style: TextStyle(height: 1.4)),
-          const SizedBox(height: 14),
+          const SizedBox(height: 16),
           const Ph(h: 110, icon: Icons.description_outlined),
           const SizedBox(height: 8),
           obtn(k.skck ? 'SKCK terunggah' : 'Unggah SKCK', () => setState(() => k.skck = !k.skck), icon: k.skck ? Icons.check : Icons.upload_file),
@@ -599,7 +599,7 @@ class _KycPageState extends State<KycPage> {
             padding: const EdgeInsets.all(12),
             child: Row(children: [
               if (step > 0) Expanded(child: obtn('Kembali', () => setState(() => step--))),
-              if (step > 0) const SizedBox(width: 10),
+              if (step > 0) const SizedBox(width: 8),
               Expanded(
                 flex: 2,
                 child: pbtn(step == steps.length - 1 ? 'Kirim pendaftaran' : 'Lanjut', () {

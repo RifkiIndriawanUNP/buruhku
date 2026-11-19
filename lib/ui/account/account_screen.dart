@@ -35,9 +35,9 @@ class AccountTab extends StatelessWidget {
           : Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               const Text('Jadi agen Buruhku', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
               const SizedBox(height: 4),
-              Text({'none': 'Dapatkan penghasilan dari pekerjaan harian di sekitarmu.', 'pending': 'Pendaftaran sedang direview admin.', 'rejected': 'Ditolak: ${k.reason}', 'needs_more': 'Perlu data tambahan: ${k.reason}'}[k.status]!, style: const TextStyle(fontSize: 13.5, color: _subGray)),
+              Text({'none': 'Dapatkan penghasilan dari pekerjaan harian di sekitarmu.', 'pending': 'Pendaftaran sedang direview admin.', 'rejected': 'Ditolak: ${k.reason}', 'needs_more': 'Perlu data tambahan: ${k.reason}'}[k.status]!, style: const TextStyle(fontSize: 13, color: _subGray)),
               if (k.status == 'none' || k.status == 'needs_more' || (k.status == 'rejected' && k.tries < 3)) ...[
-                const SizedBox(height: 10),
+                const SizedBox(height: 12),
                 full(pbtn(k.status == 'none' ? 'Daftar sekarang' : 'Lengkapi pendaftaran', () => _go(context, const KycPage()), icon: Icons.how_to_reg_outlined)),
               ],
             ]),
@@ -54,7 +54,7 @@ class AccountTab extends StatelessWidget {
               onTap: () => _go(context, const EditProfilePage()),
               child: Stack(clipBehavior: Clip.none, children: [
                 Container(
-                  padding: const EdgeInsets.all(5),
+                  padding: const EdgeInsets.all(4),
                   decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
                   child: const MyAvatar(size: 100),
                 ),
@@ -65,17 +65,17 @@ class AccountTab extends StatelessWidget {
                     width: 34,
                     height: 34,
                     decoration: BoxDecoration(color: kBlue, shape: BoxShape.circle, border: Border.all(color: _bgGray, width: 3)),
-                    child: const Icon(Icons.camera_alt, size: 17, color: Colors.white),
+                    child: const Icon(Icons.camera_alt, size: 16, color: Colors.white),
                   ),
                 ),
               ]),
             ),
           ),
-          const SizedBox(height: 14),
-          Padding(padding: const EdgeInsets.symmetric(horizontal: 24), child: Text(s.name, textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 27, fontWeight: FontWeight.w800, height: 1.2, color: g900))),
+          const SizedBox(height: 16),
+          Padding(padding: const EdgeInsets.symmetric(horizontal: 24), child: Text(s.name, textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w800, height: 1.2, color: g900))),
           const SizedBox(height: 4),
           Padding(padding: const EdgeInsets.symmetric(horizontal: 24), child: Text('${s.phone} \u2022 ${s.agentMode ? 'Mode agen' : 'Mode klien'}', textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 15, color: _subGray))),
-          const SizedBox(height: 20),
+          const SizedBox(height: 24),
           agentCard,
 
           // ---- akun
@@ -193,7 +193,7 @@ class WalletPage extends StatelessWidget {
                     title: const Text('Tambah e-wallet'),
                     content: Column(mainAxisSize: MainAxisSize.min, children: [
                       DropdownButtonFormField<String>(initialValue: w, items: [for (final x in ['GoPay', 'OVO', 'DANA', 'ShopeePay']) DropdownMenuItem(value: x, child: Text(x))], onChanged: (v) => set(() => w = v ?? w)),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 12),
                       TextField(controller: no, keyboardType: TextInputType.phone, decoration: const InputDecoration(labelText: 'Nomor akun')),
                     ]),
                     actions: [TextButton(onPressed: () => Navigator.pop(d, false), child: const Text('Batal')), FilledButton(onPressed: () => Navigator.pop(d, true), child: const Text('Simpan'))],
@@ -302,7 +302,7 @@ class _NotifPageState extends State<NotifPage> {
               const Expanded(child: Center(child: Text('Notifikasi', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, height: 1.2, color: g900)))),
               const SizedBox(width: 48),
             ]),
-            const SizedBox(height: 18),
+            const SizedBox(height: 16),
             PillTabs(labels: const ['Semua', 'Order', 'Sistem'], index: tab, onChanged: (i) => setState(() => tab = i)),
             const SizedBox(height: 16),
             AnimatedSwitcher(
@@ -314,7 +314,7 @@ class _NotifPageState extends State<NotifPage> {
               child: SoftCard(
               key: ValueKey(tab),
               radius: 28,
-              padding: const EdgeInsets.fromLTRB(18, 16, 18, 6),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 6),
               child: list.isEmpty
                   ? Padding(padding: const EdgeInsets.only(bottom: 12), child: Empty(Icons.notifications_none, tab == 1 ? 'Belum ada notifikasi order.' : (tab == 2 ? 'Belum ada notifikasi sistem.' : 'Belum ada notifikasi.')))
                   : Column(crossAxisAlignment: CrossAxisAlignment.start, children: rows),
@@ -383,22 +383,22 @@ class _NoteRow extends StatelessWidget {
       lead = Container(
         width: 46,
         height: 46,
-        decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(14)),
-        child: Icon(icon, size: 25, color: Colors.white),
+        decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(12)),
+        child: Icon(icon, size: 24, color: Colors.white),
       );
     }
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.only(bottom: 14),
+        padding: const EdgeInsets.only(bottom: 12),
         child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
           lead,
           const SizedBox(width: 12),
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Row(children: [
-                Flexible(child: Text(n.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 15.5, fontWeight: FontWeight.w800, height: 1.25, color: g900))),
+                Flexible(child: Text(n.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, height: 1.25, color: g900))),
                 if (fresh) ...[const SizedBox(width: 6), Container(width: 8, height: 8, decoration: const BoxDecoration(color: kGreen, shape: BoxShape.circle))],
               ]),
               const SizedBox(height: 2),
@@ -496,7 +496,7 @@ class SafetyPage extends StatelessWidget {
         const Padding(padding: EdgeInsets.fromLTRB(16, 0, 16, 8), child: SosButton()),
         const Padding(
           padding: EdgeInsets.fromLTRB(32, 0, 32, 8),
-          child: Text('Saat SOS ditekan, lokasi live dibagikan ke kontak darurat dan tim keamanan Buruhku.', style: TextStyle(fontSize: 12.5, color: g500)),
+          child: Text('Saat SOS ditekan, lokasi live dibagikan ke kontak darurat dan tim keamanan Buruhku.', style: TextStyle(fontSize: 13, color: g500)),
         ),
         const SetTitle('Kontak darurat'),
         SetGroup([
@@ -508,8 +508,8 @@ class SafetyPage extends StatelessWidget {
           child: Column(children: [
             for (final t in ['Pastikan wajah agen sesuai foto profil sebelum memberi PIN kerja.', 'Bayar hanya lewat escrow Buruhku. Tolak ajakan transfer di luar aplikasi.', 'Jangan bagikan OTP, PIN, atau kode verifikasi ke siapa pun.', 'Untuk pekerjaan di dalam rumah, usahakan ada orang lain di rumah.', 'Laporkan perilaku mencurigakan lewat menu Laporan.'])
               Padding(
-                padding: const EdgeInsets.symmetric(vertical: 5),
-                child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [const Icon(Icons.check_circle, size: 18, color: kGreen), const SizedBox(width: 10), Expanded(child: Text(t, style: const TextStyle(fontSize: 14, height: 1.35)))]),
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [const Icon(Icons.check_circle, size: 18, color: kGreen), const SizedBox(width: 8), Expanded(child: Text(t, style: const TextStyle(fontSize: 14, height: 1.35)))]),
               ),
           ]),
         ),
@@ -593,7 +593,7 @@ class MyReportsPage extends StatelessWidget {
                     Text('${r.cat}${r.target.isEmpty ? '' : ' - ${r.target}'}', style: const TextStyle(color: g700)),
                     const SizedBox(height: 4),
                     Text(r.desc, maxLines: 3, overflow: TextOverflow.ellipsis),
-                    if (r.action.isNotEmpty) Padding(padding: const EdgeInsets.only(top: 6), child: Text('Tindakan: ${r.action}', style: const TextStyle(fontSize: 12.5, color: g700))),
+                    if (r.action.isNotEmpty) Padding(padding: const EdgeInsets.only(top: 6), child: Text('Tindakan: ${r.action}', style: const TextStyle(fontSize: 13, color: g700))),
                     Text(ago(r.at), style: const TextStyle(fontSize: 11, color: g500)),
                   ]),
                 ),
@@ -653,7 +653,7 @@ class HelpPage extends StatelessWidget {
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Row(children: [Text(t.no, style: const TextStyle(fontWeight: FontWeight.w800)), const Spacer(), Tag(t.status, filled: t.status == 'Dijawab')]),
                 Text(t.subject, style: const TextStyle(fontWeight: FontWeight.w600)),
-                if (t.reply.isNotEmpty) Padding(padding: const EdgeInsets.only(top: 6), child: Text('Balasan: ${t.reply}', style: const TextStyle(fontSize: 12.5, color: g700))),
+                if (t.reply.isNotEmpty) Padding(padding: const EdgeInsets.only(top: 6), child: Text('Balasan: ${t.reply}', style: const TextStyle(fontSize: 13, color: g700))),
               ]),
             ),
         ],
@@ -736,12 +736,12 @@ class AdminPage extends StatelessWidget {
               : ListView(padding: underBarPad(context, kPagePad, extra: 48), children: [
                   for (final r in review)
                     Padding(
-                      padding: const EdgeInsets.only(bottom: 10),
+                      padding: const EdgeInsets.only(bottom: 8),
                       child: Box(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                         Text(r.title, style: const TextStyle(fontWeight: FontWeight.w700)),
                         Text(r.desc),
                         const SizedBox(height: 4),
-                        Text(r.reason, style: const TextStyle(fontSize: 12.5, color: g700)),
+                        Text(r.reason, style: const TextStyle(fontSize: 13, color: g700)),
                         const SizedBox(height: 8),
                         Row(children: [Expanded(child: pbtn('Setujui', () => s.adminApproveReq(r))), const SizedBox(width: 8), Expanded(child: obtn('Hapus', () => s.adminRejectReq(r)))]),
                       ])),
@@ -753,7 +753,7 @@ class AdminPage extends StatelessWidget {
               : ListView(padding: underBarPad(context, kPagePad, extra: 48), children: [
                   for (final r in reps)
                     Padding(
-                      padding: const EdgeInsets.only(bottom: 10),
+                      padding: const EdgeInsets.only(bottom: 8),
                       child: Box(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                         Text('${r.no}: ${r.cat}', style: const TextStyle(fontWeight: FontWeight.w700)),
                         Text('Terlapor: ${r.target.isEmpty ? '-' : r.target}', style: const TextStyle(color: g700)),
@@ -775,12 +775,12 @@ class AdminPage extends StatelessWidget {
                     Builder(builder: (_) {
                       final o = s.orderById(d.orderId);
                       return Padding(
-                        padding: const EdgeInsets.only(bottom: 10),
+                        padding: const EdgeInsets.only(bottom: 8),
                         child: Box(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                           Text('${o?.title ?? d.orderId}  (${o == null ? '' : rp(o.total)})', style: const TextStyle(fontWeight: FontWeight.w700)),
                           Text(d.type, style: const TextStyle(color: g700)),
                           Text(d.desc),
-                          if (d.response.isNotEmpty) Text('Tanggapan: ${d.response}', style: const TextStyle(fontSize: 12.5, color: g500)),
+                          if (d.response.isNotEmpty) Text('Tanggapan: ${d.response}', style: const TextStyle(fontSize: 13, color: g500)),
                           const SizedBox(height: 8),
                           Wrap(spacing: 8, children: [
                             OutlinedButton(onPressed: () => s.resolveDispute(d, 'release'), child: const Text('Lepas ke agen')),

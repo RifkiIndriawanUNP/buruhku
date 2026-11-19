@@ -29,7 +29,7 @@ class AgentDetail extends StatelessWidget {
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           top,
           const SizedBox(height: 2),
-          Text(label, style: const TextStyle(fontSize: 11.5, color: g500)),
+          Text(label, style: const TextStyle(fontSize: 12, color: g500)),
         ]),
       );
 
@@ -63,12 +63,12 @@ class AgentDetail extends StatelessWidget {
                   child: Container(width: 18, height: 18, decoration: BoxDecoration(color: a.online ? kGreen : g400, shape: BoxShape.circle, border: Border.all(color: cW, width: 3))),
                 ),
               ]),
-              const SizedBox(width: 14),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Row(children: [
                     Flexible(child: Text(a.short, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: g900))),
-                    if (a.verified) ...[const SizedBox(width: 5), const VerifiedBadge(size: 20)],
+                    if (a.verified) ...[const SizedBox(width: 4), const VerifiedBadge(size: 20)],
                   ]),
                   const SizedBox(height: 2),
                   Text(a.online ? 'Online' : 'Offline', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: a.online ? kGreen : g500)),
@@ -81,7 +81,7 @@ class AgentDetail extends StatelessWidget {
                 ]),
               ),
             ]),
-            const SizedBox(height: 14),
+            const SizedBox(height: 16),
             Container(
               padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
               decoration: BoxDecoration(color: cBg, borderRadius: BorderRadius.circular(16)),
@@ -96,13 +96,13 @@ class AgentDetail extends StatelessWidget {
         DetailCard(
           title: 'Tentang',
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(a.bio, style: const TextStyle(fontSize: 14.5, height: 1.45, color: g900)),
-            const SizedBox(height: 10),
+            Text(a.bio, style: const TextStyle(fontSize: 14, height: 1.45, color: g900)),
+            const SizedBox(height: 12),
             Kv('Area layanan', 'Sekitar ~${a.dist.toStringAsFixed(0)} km dari lokasimu'),
             Kv('Tarif mulai', '${rp(a.base)} per pekerjaan kecil'),
             const SizedBox(height: 8),
             AppMap(height: 140, center: a.pos, zoom: 14, circleCenter: a.pos, radiusKm: .6, interactive: false),
-            const Padding(padding: EdgeInsets.only(top: 4), child: Text('Lokasi perkiraan agen, bukan titik tepat.', style: TextStyle(fontSize: 11.5, color: g500))),
+            const Padding(padding: EdgeInsets.only(top: 4), child: Text('Lokasi perkiraan agen, bukan titik tepat.', style: TextStyle(fontSize: 12, color: g500))),
           ]),
         ),
         DetailCard(
@@ -125,7 +125,7 @@ class AgentDetail extends StatelessWidget {
                     itemBuilder: (ctx, idx) => GestureDetector(
                       onTap: () => showPhotoViewer(context, a.portfolio, initial: idx),
                       child: ClipRRect(
-                        borderRadius: BorderRadius.circular(14),
+                        borderRadius: BorderRadius.circular(12),
                         child: Image.network(a.portfolio[idx], width: 130, height: 100, fit: BoxFit.cover, errorBuilder: (_, __, ___) => const Ph(w: 130, h: 100)),
                       ),
                     ),
@@ -142,7 +142,7 @@ class AgentDetail extends StatelessWidget {
               ? const Text('Belum ada ulasan.', style: TextStyle(color: g500))
               : Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   ReviewSummary(rating: rating, revs: revs),
-                  const Padding(padding: EdgeInsets.symmetric(vertical: 14), child: Divider(height: 1, thickness: 1, color: kLine)),
+                  const Padding(padding: EdgeInsets.symmetric(vertical: 12), child: Divider(height: 1, thickness: 1, color: kLine)),
                   ReviewList(revs.take(3).toList(), svcLabel: svcLabel),
                 ]),
         ),
@@ -152,13 +152,13 @@ class AgentDetail extends StatelessWidget {
         child: SafeArea(
           top: false,
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
             child: !a.direct
                 ? const Warn('Agen ini tidak menerima chat langsung. Buat request agar agen bisa ACC.', icon: Icons.chat_bubble_outline)
                 : Row(children: [
                     GestureDetector(
                       onTap: () => _chat(context, a),
-                      child: Container(width: 48, height: 48, decoration: const BoxDecoration(color: cBg, shape: BoxShape.circle), child: const Icon(Icons.chat_bubble_outline, size: 22, color: g900)),
+                      child: Container(width: 48, height: 48, decoration: const BoxDecoration(color: cBg, shape: BoxShape.circle), child: const Icon(Icons.chat_bubble_outline, size: 24, color: g900)),
                     ),
                     const SizedBox(width: 12),
                     Expanded(child: pbtn('Order langsung', () => _chat(context, a, offer: true), icon: Icons.assignment_outlined)),

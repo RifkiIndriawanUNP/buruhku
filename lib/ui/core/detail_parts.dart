@@ -28,7 +28,7 @@ class DetailCard extends StatelessWidget {
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               if (title != null) ...[
                 DetailHead(title!, action: action, onAction: onAction, padded: false),
-                const SizedBox(height: 10),
+                const SizedBox(height: 12),
               ],
               child,
             ]),
@@ -47,9 +47,9 @@ class DetailHead extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-        padding: padded ? const EdgeInsets.fromLTRB(16, 4, 16, 8) : EdgeInsets.zero,
+        padding: padded ? const EdgeInsets.fromLTRB(16, 12, 16, 8) : EdgeInsets.zero,
         child: Row(children: [
-          Expanded(child: Text(title, style: const TextStyle(fontSize: 16.5, fontWeight: FontWeight.w800, color: g900))),
+          Expanded(child: Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: g900))),
           if (action != null)
             GestureDetector(
               behavior: HitTestBehavior.opaque,
@@ -123,7 +123,7 @@ class _PhotoSliderState extends State<PhotoSlider> {
             right: 14,
             bottom: 26,
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(color: const Color(0x99000000), borderRadius: BorderRadius.circular(12)),
               child: Text('${_i + 1}/$n', style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700)),
             ),
@@ -161,13 +161,13 @@ class ReviewSummary extends StatelessWidget {
     int count(int star) => revs.where((r) => r.rating == star).length;
     return Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
       Column(mainAxisSize: MainAxisSize.min, children: [
-        Text(rating.toStringAsFixed(1), style: const TextStyle(fontSize: 34, fontWeight: FontWeight.w900, height: 1.1, color: g900)),
+        Text(rating.toStringAsFixed(1), style: const TextStyle(fontSize: 34, fontWeight: FontWeight.w800, height: 1.1, color: g900)),
         const SizedBox(height: 2),
         Stars(rating, size: 14),
         const SizedBox(height: 4),
         Text('$total ulasan', style: const TextStyle(fontSize: 12, color: g500)),
       ]),
-      const SizedBox(width: 18),
+      const SizedBox(width: 16),
       Expanded(
         child: Column(children: [
           for (var star = 5; star >= 1; star--)
@@ -201,18 +201,18 @@ class ReviewTile extends StatelessWidget {
   Widget build(BuildContext context) => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
           Avatar(size: 36, imageUrl: r.avatarUrl),
-          const SizedBox(width: 10),
+          const SizedBox(width: 8),
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(r.from, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: g900)),
-              Text(ago(r.at), style: const TextStyle(fontSize: 11.5, color: g500)),
+              Text(ago(r.at), style: const TextStyle(fontSize: 12, color: g500)),
             ]),
           ),
           Stars(r.rating.toDouble(), size: 13),
         ]),
         if (svcLabel != null) ...[
           const SizedBox(height: 6),
-          Text('Jasa: $svcLabel', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 11.5, color: g500)),
+          Text('Jasa: $svcLabel', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, color: g500)),
         ],
         const SizedBox(height: 6),
         Text(r.comment, style: const TextStyle(fontSize: 14, height: 1.35, color: g900)),

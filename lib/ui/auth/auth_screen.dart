@@ -35,7 +35,7 @@ class _OnboardingState extends State<Onboarding> {
                         Ph(w: 220, h: 220, icon: s[0] as IconData),
                         const SizedBox(height: 32),
                         Text(s[1] as String, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
-                        const SizedBox(height: 10),
+                        const SizedBox(height: 12),
                         Text(s[2] as String, textAlign: TextAlign.center, style: const TextStyle(color: g700, height: 1.4)),
                       ]),
                     ),
@@ -89,7 +89,7 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     final w = MediaQuery.sizeOf(context).width;
-    const radius = BorderRadius.all(Radius.circular(18));
+    const radius = BorderRadius.all(Radius.circular(16));
     return Scaffold(
       body: SafeArea(
         bottom: false,
@@ -108,24 +108,24 @@ class _LoginPageState extends State<LoginPage> {
                           'assets/images/splash_illustration.png',
                           width: (w * .82).clamp(240.0, 340.0).toDouble(),
                           fit: BoxFit.contain,
-                          errorBuilder: (_, __, ___) => Container(width: 96, height: 96, decoration: BoxDecoration(color: g900, borderRadius: BorderRadius.circular(24)), child: const Icon(Icons.handyman, color: cW, size: 52)),
+                          errorBuilder: (_, __, ___) => Container(width: 96, height: 96, decoration: BoxDecoration(color: g900, borderRadius: BorderRadius.circular(24)), child: const Icon(Icons.handyman, color: cW, size: 56)),
                         ),
                       ),
                     ),
                   ),
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
+                    padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
                     decoration: const BoxDecoration(color: cW, borderRadius: BorderRadius.vertical(top: Radius.circular(32))),
                     child: SafeArea(
                       top: false,
                       child: Form(
                         key: key,
                         child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-                          const Text('Masuk ke Buruhku', style: TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: g900)),
+                          const Text('Masuk ke Buruhku', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: g900)),
                           const SizedBox(height: 6),
                           const Text('Masukkan nomor HP, kami kirim kode OTP.', style: TextStyle(fontSize: 15, color: g500)),
-                          const SizedBox(height: 22),
+                          const SizedBox(height: 24),
                           TextFormField(
                             controller: ctl,
                             keyboardType: TextInputType.phone,
@@ -139,7 +139,7 @@ class _LoginPageState extends State<LoginPage> {
                               fillColor: cBg,
                               prefixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),
                               prefixIcon: Padding(
-                                padding: const EdgeInsets.only(left: 18, right: 10),
+                                padding: const EdgeInsets.only(left: 16, right: 8),
                                 child: Row(mainAxisSize: MainAxisSize.min, children: [
                                   const Text('+62', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
                                   const SizedBox(width: 12),
@@ -151,14 +151,14 @@ class _LoginPageState extends State<LoginPage> {
                               focusedBorder: const OutlineInputBorder(borderRadius: radius, borderSide: BorderSide(color: kGreen, width: 2)),
                               errorBorder: const OutlineInputBorder(borderRadius: radius, borderSide: BorderSide(color: kRed, width: 1.5)),
                               focusedErrorBorder: const OutlineInputBorder(borderRadius: radius, borderSide: BorderSide(color: kRed, width: 2)),
-                              contentPadding: const EdgeInsets.symmetric(vertical: 18),
+                              contentPadding: const EdgeInsets.symmetric(vertical: 16),
                             ),
                             validator: (v) => (v ?? '').replaceAll(RegExp(r'\D'), '').length < 9 ? 'Nomor HP minimal 9 digit' : null,
                           ),
                           const SizedBox(height: 16),
                           full(pbtn('Kirim kode OTP', _send, icon: Icons.arrow_forward_rounded)),
-                          const SizedBox(height: 14),
-                          const Center(child: Text('Satu nomor untuk satu akun.', style: TextStyle(fontSize: 12.5, color: g500))),
+                          const SizedBox(height: 16),
+                          const Center(child: Text('Satu nomor untuk satu akun.', style: TextStyle(fontSize: 13, color: g500))),
                         ]),
                       ),
                     ),
@@ -200,15 +200,15 @@ class _OtpPageState extends State<OtpPage> {
       underBar: true,
       appBar: PageBar(title: const Text('Verifikasi')),
       body: ListView(padding: underBarPad(context, const EdgeInsets.fromLTRB(24, 12, 24, 24)), children: [
-        const Icon(Icons.mark_email_unread_outlined, size: 44, color: kGreen),
-        const SizedBox(height: 14),
-        const Text('Masukkan kode', style: TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: g900)),
+        const Icon(Icons.mark_email_unread_outlined, size: 48, color: kGreen),
+        const SizedBox(height: 16),
+        const Text('Masukkan kode', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: g900)),
         const SizedBox(height: 6),
         Text('Kode 6 digit dikirim ke ${s.pendingPhone}', style: const TextStyle(fontSize: 15, color: g500)),
-        const SizedBox(height: 28),
+        const SizedBox(height: 24),
         OtpBoxes(ctl: ctl, error: err != null, onChanged: (_) => setState(() => err = null)),
-        if (err != null) Padding(padding: const EdgeInsets.only(top: 10), child: Text(err!, style: const TextStyle(fontSize: 13, color: kRed, fontWeight: FontWeight.w600))),
-        const SizedBox(height: 18),
+        if (err != null) Padding(padding: const EdgeInsets.only(top: 8), child: Text(err!, style: const TextStyle(fontSize: 13, color: kRed, fontWeight: FontWeight.w600))),
+        const SizedBox(height: 16),
         // Mode demo: ketuk untuk mengisi kode otomatis.
         Center(
           child: GestureDetector(
@@ -217,7 +217,7 @@ class _OtpPageState extends State<OtpPage> {
               err = null;
             }),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(color: cW, borderRadius: BorderRadius.circular(16)),
               child: Row(mainAxisSize: MainAxisSize.min, children: [
                 const Icon(Icons.science_outlined, size: 16, color: g500),
@@ -241,7 +241,7 @@ class _OtpPageState extends State<OtpPage> {
           },
           child: const Text('Kirim ulang kode'),
         ),
-        const Center(child: Text('Jangan bagikan kode ke siapa pun.', style: TextStyle(fontSize: 12.5, color: g500))),
+        const Center(child: Text('Jangan bagikan kode ke siapa pun.', style: TextStyle(fontSize: 13, color: g500))),
       ]),
     );
   }
@@ -301,7 +301,7 @@ class _OtpBoxesState extends State<OtpBoxes> {
                       width: 2,
                     ),
                   ),
-                  child: Text(i < text.length ? text[i] : '', style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w800, color: g900)),
+                  child: Text(i < text.length ? text[i] : '', style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: g900)),
                 ),
               ),
             ],

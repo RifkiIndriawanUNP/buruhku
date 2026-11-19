@@ -44,10 +44,10 @@ class _AgentMapViewState extends State<AgentMapView> {
       //       ? AgentCard(picked, wide: true)
       //       : Container(
       //           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      //           decoration: BoxDecoration(color: cW, border: Border.all(color: g300), borderRadius: BorderRadius.circular(6)),
+      //           decoration: BoxDecoration(color: cW, border: Border.all(color: g300), borderRadius: BorderRadius.circular(8)),
       //           child: Text(
       //             l.isEmpty ? 'Tidak ada agen yang cocok dengan filter.' : '${l.length} agen dalam ${widget.radiusKm.toInt()} km. Ketuk marker untuk melihat agen.',
-      //             style: const TextStyle(fontSize: 12.5, color: g700),
+      //             style: const TextStyle(fontSize: 13, color: g700),
       //           ),
       //         ),
       // ),

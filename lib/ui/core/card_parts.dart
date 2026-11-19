@@ -67,7 +67,7 @@ class PhotoPlaceholder extends StatelessWidget {
         width: double.infinity,
         alignment: Alignment.center,
         decoration: BoxDecoration(color: kPh, borderRadius: BorderRadius.circular(radius)),
-        child: const Icon(Icons.image_outlined, color: kPhIcon, size: 30),
+        child: const Icon(Icons.image_outlined, color: kPhIcon, size: 32),
       );
 }
 
@@ -184,7 +184,7 @@ class PillBtn extends StatelessWidget {
           child: Center(
             child: FittedBox(
               fit: BoxFit.scaleDown,
-              child: Text(label, maxLines: 1, style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: g900, height: 1.2)),
+              child: Text(label, maxLines: 1, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: g900, height: 1.2)),
             ),
           ),
         ),
@@ -326,7 +326,7 @@ class FilterPill extends StatelessWidget {
         onTap: onTap,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 180),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
             color: selected ? kGreen : Colors.white,
             borderRadius: BorderRadius.circular(22),
@@ -335,6 +335,86 @@ class FilterPill extends StatelessWidget {
           child: Text(label, maxLines: 1, style: TextStyle(fontSize: 14, fontWeight: selected ? FontWeight.w700 : FontWeight.w600, height: 1.2, color: selected ? Colors.white : g900)),
         ),
       );
+}
+
+/// Tinggi header bergaya halaman Pesan (judul 28 + baris pil). Dipasang di FloatHeader.height.
+/// 124 + kPagePad.top (8) membuat jarak pil -> isi sama persis dengan halaman Pesan (24).
+const double kTitleHeaderH = 124;
+
+/// Tinggi header kalau hanya judul (tanpa pil).
+const double kTitleOnlyH = 56;
+
+/// Header halaman bergaya Pesan: judul 28 w800 (baris setinggi 52, seperti baris Pesan + tombol cari),
+/// lalu baris [FilterPill]. Kalau [labels] diisi, widget ini harus berada di dalam DefaultTabController:
+/// pil mengikuti dan menggerakkan tab-nya.
+class PageTitleHeader extends StatefulWidget {
+  final String title;
+  final List<String>? labels;
+  final Widget? trailing;
+  const PageTitleHeader(this.title, {this.labels, this.trailing, super.key});
+  @override
+  State<PageTitleHeader> createState() => _PageTitleHeaderState();
+}
+
+class _PageTitleHeaderState extends State<PageTitleHeader> {
+  TabController? _c;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (widget.labels == null) return;
+    final c = DefaultTabController.of(context);
+    if (c != _c) {
+      _c?.removeListener(_tick);
+      _c = c..addListener(_tick);
+    }
+  }
+
+  void _tick() {
+    if (mounted) setState(() {});
+  }
+
+  @override
+  void dispose() {
+    _c?.removeListener(_tick);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final labels = widget.labels;
+    return MediaQuery.withClampedTextScaling(
+      maxScaleFactor: 1.25,
+      child: Column(mainAxisSize: MainAxisSize.min, children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
+          child: SizedBox(
+            height: 52,
+            child: Row(children: [
+              Expanded(child: Text(widget.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w800, height: 1.2, color: g900))),
+              if (widget.trailing != null) widget.trailing!,
+            ]),
+          ),
+        ),
+        if (labels != null) ...[
+          const SizedBox(height: 16),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Row(children: [
+                for (var i = 0; i < labels.length; i++) ...[
+                  if (i > 0) const SizedBox(width: 8),
+                  FilterPill(labels[i], selected: (_c?.index ?? 0) == i, onTap: () => _c?.animateTo(i)),
+                ],
+              ]),
+            ),
+          ),
+        ],
+      ]),
+    );
+  }
 }
 
 const kSubGray = Color(0xFF8E8E93);
@@ -367,13 +447,13 @@ class SetRow extends StatelessWidget {
         behavior: HitTestBehavior.opaque,
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: Row(children: [
-            Container(width: 42, height: 42, decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(13)), child: Icon(icon, size: 23, color: Colors.white)),
+            Container(width: 42, height: 42, decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(12)), child: Icon(icon, size: 24, color: Colors.white)),
             const SizedBox(width: 16),
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-                Text(title, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 16.5, height: 1.25, color: titleColor ?? g900)),
+                Text(title, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 16, height: 1.25, color: titleColor ?? g900)),
                 if (sub != null) Text(sub!, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 14, height: 1.3, color: kSubGray)),
               ]),
             ),
@@ -406,11 +486,11 @@ class SetHead extends StatelessWidget {
   const SetHead(this.text, {this.action, this.onAction, super.key});
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.fromLTRB(32, 8, 28, 8),
+        padding: const EdgeInsets.fromLTRB(32, 12, 24, 8),
         child: Row(children: [
           Expanded(child: Text(text, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: kGreen))),
           if (action != null)
-            GestureDetector(behavior: HitTestBehavior.opaque, onTap: onAction, child: Text(action!, style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700, color: g900))),
+            GestureDetector(behavior: HitTestBehavior.opaque, onTap: onAction, child: Text(action!, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: g900))),
         ]),
       );
 }
@@ -421,7 +501,7 @@ class SetTitle extends StatelessWidget {
   const SetTitle(this.text, {super.key});
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.fromLTRB(32, 8, 32, 8),
+        padding: const EdgeInsets.fromLTRB(32, 12, 32, 8),
         child: Text(text, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: kGreen)),
       );
 }

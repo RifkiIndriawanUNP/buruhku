@@ -9,7 +9,7 @@ class Box extends StatelessWidget {
   final EdgeInsets padding;
   final Color? color, border;
   final double radius;
-  const Box({required this.child, this.onTap, this.padding = const EdgeInsets.all(14), this.color, this.border, this.radius = 20});
+  const Box({required this.child, this.onTap, this.padding = const EdgeInsets.all(12), this.color, this.border, this.radius = 22});
   @override
   Widget build(BuildContext context) {
     // Kotak abu-abu lama (g50/g100) diganti putih supaya terbaca di atas latar abu-abu halaman.
@@ -27,7 +27,7 @@ class Ph extends StatelessWidget {
   final IconData icon;
   final double radius;
   final String? imageUrl;
-  const Ph({this.w, this.h, this.icon = Icons.image_outlined, this.radius = 14, this.imageUrl});
+  const Ph({this.w, this.h, this.icon = Icons.image_outlined, this.radius = 12, this.imageUrl});
   @override
   Widget build(BuildContext context) {
     if (imageUrl != null && imageUrl!.isNotEmpty) {
@@ -73,10 +73,10 @@ class Tag extends StatelessWidget {
   const Tag(this.text, {this.icon, this.filled = false});
   @override
   Widget build(BuildContext context) => Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(color: filled ? kGreen : const Color(0xFFEDEEF2), borderRadius: BorderRadius.circular(12)),
       child: Row(mainAxisSize: MainAxisSize.min, children: [
-        if (icon != null) Padding(padding: const EdgeInsets.only(right: 4), child: Icon(icon, size: 13, color: filled ? cW : g700)),
+        if (icon != null) Padding(padding: const EdgeInsets.only(right: 4), child: Icon(icon, size: 14, color: filled ? cW : g700)),
         Flexible(child: Text(text, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: filled ? cW : g700))),
       ]));
 }
@@ -110,7 +110,7 @@ class Section extends StatelessWidget {
   const Section(this.title, {this.action, this.onAction});
   @override
   Widget build(BuildContext context) => Padding(
-      padding: const EdgeInsets.fromLTRB(4, 20, 4, 10),
+      padding: const EdgeInsets.fromLTRB(4, 24, 4, 8),
       child: Row(children: [
         Expanded(child: Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, height: 1.2, color: g900))),
         if (action != null) TextButton(onPressed: onAction, style: TextButton.styleFrom(foregroundColor: kGreen), child: Text(action!, style: const TextStyle(fontWeight: FontWeight.w700))),
@@ -141,7 +141,7 @@ class Empty extends StatelessWidget {
           padding: const EdgeInsets.all(32),
           child: Column(mainAxisSize: MainAxisSize.min, children: [
             Container(width: 84, height: 84, decoration: const BoxDecoration(color: cW, shape: BoxShape.circle), child: Icon(icon, size: 40, color: g300)),
-            const SizedBox(height: 14),
+            const SizedBox(height: 16),
             Text(text, textAlign: TextAlign.center, style: const TextStyle(color: g500, height: 1.4)),
             if (action != null) ...[const SizedBox(height: 16), action!],
           ])));
@@ -157,8 +157,8 @@ class Warn extends StatelessWidget {
       decoration: BoxDecoration(color: const Color(0xFFFFF4E0), borderRadius: BorderRadius.circular(16)),
       child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Icon(icon, size: 20, color: const Color(0xFFF08A00)),
-        const SizedBox(width: 10),
-        Expanded(child: Text(text, style: const TextStyle(fontSize: 12.5, height: 1.35, color: g700))),
+        const SizedBox(width: 8),
+        Expanded(child: Text(text, style: const TextStyle(fontSize: 13, height: 1.35, color: g700))),
       ]));
 }
 
@@ -191,12 +191,12 @@ Widget obtn(String label, VoidCallback? f, {IconData? icon}) =>
     icon == null ? OutlinedButton(onPressed: f, child: Text(label)) : OutlinedButton.icon(onPressed: f, icon: Icon(icon, size: 18), label: Text(label));
 /// Tombol kompak (tinggi 38) untuk di dalam kartu. Tombol form tetap memakai pbtn/obtn.
 Widget pbtnS(String label, VoidCallback? f, {IconData? icon}) {
-  final st = FilledButton.styleFrom(minimumSize: const Size(64, 38), padding: const EdgeInsets.symmetric(horizontal: 14));
+  final st = FilledButton.styleFrom(minimumSize: const Size(64, 40), padding: const EdgeInsets.symmetric(horizontal: 16));
   return icon == null ? FilledButton(style: st, onPressed: f, child: Text(label)) : FilledButton.icon(style: st, onPressed: f, icon: Icon(icon, size: 18), label: Text(label));
 }
 
 Widget obtnS(String label, VoidCallback? f, {IconData? icon}) {
-  final st = OutlinedButton.styleFrom(minimumSize: const Size(64, 38), padding: const EdgeInsets.symmetric(horizontal: 14));
+  final st = OutlinedButton.styleFrom(minimumSize: const Size(64, 40), padding: const EdgeInsets.symmetric(horizontal: 16));
   return icon == null ? OutlinedButton(style: st, onPressed: f, child: Text(label)) : OutlinedButton.icon(style: st, onPressed: f, icon: Icon(icon, size: 18), label: Text(label));
 }
 
@@ -214,7 +214,7 @@ class Seg extends StatelessWidget {
               child: GestureDetector(
                   onTap: () => onChanged(e.key),
                   child: Container(
-                      alignment: Alignment.center, padding: const EdgeInsets.symmetric(vertical: 11),
+                      alignment: Alignment.center, padding: const EdgeInsets.symmetric(vertical: 12),
                       margin: const EdgeInsets.only(right: 8),
                       decoration: BoxDecoration(color: e.key == value ? kGreen : cW, border: Border.all(color: e.key == value ? kGreen : kLine), borderRadius: BorderRadius.circular(24)),
                       child: Text(e.value, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 13, color: e.key == value ? cW : g900, fontWeight: FontWeight.w700))))),

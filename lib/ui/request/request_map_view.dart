@@ -48,7 +48,7 @@ class _RequestMapViewState extends State<RequestMapView> {
                     _agent = null;
                   }),
                   child: Container(
-                    padding: const EdgeInsets.all(5),
+                    padding: const EdgeInsets.all(4),
                     decoration: BoxDecoration(color: cW, shape: BoxShape.circle, border: Border.all(color: kGreen, width: r.id == _req ? 3.5 : 2.5)),
                     child: CatIcon(catOf(r.cat), size: 28),
                   ),
@@ -83,8 +83,8 @@ class _RequestMapViewState extends State<RequestMapView> {
                     ]),
                   )
                 : Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                    decoration: BoxDecoration(color: cW, borderRadius: BorderRadius.circular(18)),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(color: cW, borderRadius: BorderRadius.circular(16)),
                     child: Text('${agents.length} agen di sekitar \u00b7 ${reqs.length} request aktif', textAlign: TextAlign.center, style: const TextStyle(fontSize: 13, color: g700)),
                   ),
       ),
