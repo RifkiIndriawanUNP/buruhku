@@ -41,7 +41,7 @@ class AgentCard extends StatelessWidget {
     final rating = s.ratingOf(a);
 
     final name = Row(children: [
-      Flexible(child: Text(a.short, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, height: _lh, color: g900))),
+      Flexible(child: Text(a.short, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, height: _lh, color: g900))),
       if (a.verified) ...[const SizedBox(width: 4), const VerifiedBadge()],
     ]);
 
@@ -150,7 +150,7 @@ class AgentCard extends StatelessWidget {
                       '${rating.toStringAsFixed(1)}  \u00b7  ~${a.dist.toStringAsFixed(1)} km  \u00b7  ${a.jobs} order',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 13, height: _lh, color: g700),
+                      style: TextStyle(fontSize: 13, height: _lh, color: g700),
                     ),
                   ),
                 ]),
@@ -178,7 +178,7 @@ class AgentCard extends StatelessWidget {
               child: SizedBox(
                 height: _btn,
                 width: double.infinity,
-                child: Center(child: Text(a.direct ? 'Order Langsung' : 'Lihat Profil', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: g900))),
+                child: Center(child: Text(a.direct ? 'Order Langsung' : 'Lihat Profil', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: g900))),
               ),
             ),
           ),
@@ -193,10 +193,10 @@ class AgentCard extends StatelessWidget {
             fit: BoxFit.scaleDown,
             child: Row(mainAxisSize: MainAxisSize.min, children: [
               if (icon != null) ...[Icon(icon, size: 14, color: kStar), const SizedBox(width: 4)],
-              Text(value, maxLines: 1, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, height: _lh, color: g900)),
+              Text(value, maxLines: 1, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, height: _lh, color: g900)),
             ]),
           ),
-          Text(label, maxLines: 1, style: const TextStyle(fontSize: 11, height: _lh, color: g500)),
+          Text(label, maxLines: 1, style: TextStyle(fontSize: 11, height: _lh, color: g500)),
         ]),
       );
 }

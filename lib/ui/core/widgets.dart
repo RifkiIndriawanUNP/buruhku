@@ -41,8 +41,8 @@ class Ph extends StatelessWidget {
 
   Widget _fallback() => Container(
       width: w, height: h, alignment: Alignment.center,
-      decoration: BoxDecoration(color: const Color(0xFFE4E5E9), borderRadius: BorderRadius.circular(radius)),
-      child: Icon(icon, color: const Color(0xFFB4B6BE)));
+      decoration: BoxDecoration(color: kPh, borderRadius: BorderRadius.circular(radius)),
+      child: Icon(icon, color: kPhIcon));
 }
 
 class Avatar extends StatelessWidget {
@@ -62,8 +62,8 @@ class Avatar extends StatelessWidget {
 
   Widget _fallback() => Container(
       width: size, height: size,
-      decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0xFFDADADA)),
-      child: Icon(icon, size: size * .55, color: const Color(0xFFAEB0B8)));
+      decoration: BoxDecoration(shape: BoxShape.circle, color: kAvatarBg),
+      child: Icon(icon, size: size * .55, color: kAvatarIcon));
 }
 
 class Tag extends StatelessWidget {
@@ -74,10 +74,10 @@ class Tag extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(color: filled ? kGreen : const Color(0xFFEDEEF2), borderRadius: BorderRadius.circular(12)),
+      decoration: BoxDecoration(color: filled ? kGreen : kTrack, borderRadius: BorderRadius.circular(12)),
       child: Row(mainAxisSize: MainAxisSize.min, children: [
-        if (icon != null) Padding(padding: const EdgeInsets.only(right: 4), child: Icon(icon, size: 14, color: filled ? cW : g700)),
-        Flexible(child: Text(text, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: filled ? cW : g700))),
+        if (icon != null) Padding(padding: const EdgeInsets.only(right: 4), child: Icon(icon, size: 14, color: filled ? Colors.white : g700)),
+        Flexible(child: Text(text, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: filled ? Colors.white : g700))),
       ]));
 }
 
@@ -112,7 +112,7 @@ class Section extends StatelessWidget {
   Widget build(BuildContext context) => Padding(
       padding: const EdgeInsets.fromLTRB(4, 24, 4, 8),
       child: Row(children: [
-        Expanded(child: Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, height: 1.2, color: g900))),
+        Expanded(child: Text(title, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, height: 1.2, color: g900))),
         if (action != null) TextButton(onPressed: onAction, style: TextButton.styleFrom(foregroundColor: kGreen), child: Text(action!, style: const TextStyle(fontWeight: FontWeight.w700))),
       ]));
 }
@@ -125,7 +125,7 @@ class Kv extends StatelessWidget {
   Widget build(BuildContext context) => Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Expanded(flex: 4, child: Text(k, style: const TextStyle(color: g500))),
+        Expanded(flex: 4, child: Text(k, style: TextStyle(color: g500))),
         Expanded(flex: 6, child: Text(v, textAlign: TextAlign.right, style: TextStyle(fontWeight: bold ? FontWeight.w700 : FontWeight.w500))),
       ]));
 }
@@ -140,9 +140,9 @@ class Empty extends StatelessWidget {
       child: Padding(
           padding: const EdgeInsets.all(32),
           child: Column(mainAxisSize: MainAxisSize.min, children: [
-            Container(width: 84, height: 84, decoration: const BoxDecoration(color: cW, shape: BoxShape.circle), child: Icon(icon, size: 40, color: g300)),
+            Container(width: 84, height: 84, decoration: BoxDecoration(color: cW, shape: BoxShape.circle), child: Icon(icon, size: 40, color: g300)),
             const SizedBox(height: 16),
-            Text(text, textAlign: TextAlign.center, style: const TextStyle(color: g500, height: 1.4)),
+            Text(text, textAlign: TextAlign.center, style: TextStyle(color: g500, height: 1.4)),
             if (action != null) ...[const SizedBox(height: 16), action!],
           ])));
 }
@@ -154,11 +154,11 @@ class Warn extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Container(
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(color: const Color(0xFFFFF4E0), borderRadius: BorderRadius.circular(16)),
+      decoration: BoxDecoration(color: kWarnBg, borderRadius: BorderRadius.circular(16)),
       child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Icon(icon, size: 20, color: const Color(0xFFF08A00)),
         const SizedBox(width: 8),
-        Expanded(child: Text(text, style: const TextStyle(fontSize: 13, height: 1.35, color: g700))),
+        Expanded(child: Text(text, style: TextStyle(fontSize: 13, height: 1.35, color: g700))),
       ]));
 }
 
@@ -217,7 +217,7 @@ class Seg extends StatelessWidget {
                       alignment: Alignment.center, padding: const EdgeInsets.symmetric(vertical: 12),
                       margin: const EdgeInsets.only(right: 8),
                       decoration: BoxDecoration(color: e.key == value ? kGreen : cW, border: Border.all(color: e.key == value ? kGreen : kLine), borderRadius: BorderRadius.circular(24)),
-                      child: Text(e.value, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 13, color: e.key == value ? cW : g900, fontWeight: FontWeight.w700))))),
+                      child: Text(e.value, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 13, color: e.key == value ? Colors.white : g900, fontWeight: FontWeight.w700))))),
       ]);
 }
 

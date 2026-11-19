@@ -24,7 +24,7 @@ class SearchPage extends StatelessWidget {
         underBar: true,
         appBar: PageBar(title: Text('"$q"'), bottom: PillTabBar(const ['Jasa', 'Agen'])),
         body: TabBarView(children: [
-          ListView(padding: underBarPad(context, const EdgeInsets.fromLTRB(16, 8, 16, kBarSpace), extra: PillTabs.height + 14), children: [
+          RevealListView(padding: underBarPad(context, const EdgeInsets.fromLTRB(16, 8, 16, kBarSpace), extra: PillTabs.height + 14), children: [
             for (final c in cs)
               ListTile(leading: CatIcon(c, size: 34), title: Text(c.name), trailing: const Icon(Icons.chevron_right), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => AgentListPage(cat: c.id, title: c.name)))),
             for (final t in ts)
@@ -41,7 +41,7 @@ class SearchPage extends StatelessWidget {
                     action: pbtn('Buat request', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RequestFormPage())))),
               ),
           ]),
-          ag.isEmpty ? const Empty(Icons.person_search, 'Agen tidak ditemukan.') : ListView(padding: underBarPad(context, const EdgeInsets.fromLTRB(16, 8, 16, kBarSpace), extra: PillTabs.height + 14), children: [for (final a in ag) AgentTile(a)]),
+          ag.isEmpty ? const Empty(Icons.person_search, 'Agen tidak ditemukan.') : RevealListView(padding: underBarPad(context, const EdgeInsets.fromLTRB(16, 8, 16, kBarSpace), extra: PillTabs.height + 14), children: [for (final a in ag) AgentTile(a)]),
         ]),
       ),
     );

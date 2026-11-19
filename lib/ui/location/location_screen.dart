@@ -64,11 +64,11 @@ class _LocationFieldState extends State<LocationField> {
       const Text('Lokasi pekerjaan', style: TextStyle(fontWeight: FontWeight.w700)),
       const SizedBox(height: 8),
       if (s.places.isEmpty)
-        const Text('Belum ada lokasi tersimpan. Simpan lokasi di bawah atau lewat Akun > Profil dan alamat.', style: TextStyle(fontSize: 13, color: g500))
+        Text('Belum ada lokasi tersimpan. Simpan lokasi di bawah atau lewat Akun > Profil dan alamat.', style: TextStyle(fontSize: 13, color: g500))
       else
         SizedBox(
           height: 40,
-          child: ListView(scrollDirection: Axis.horizontal, children: [
+          child: RevealListView(scrollDirection: Axis.horizontal, children: [
             for (final p in s.places)
               Padding(
                 padding: const EdgeInsets.only(right: 8),
@@ -133,7 +133,7 @@ class SavedPlacesSection extends StatelessWidget {
         Navigator.push(context, MaterialPageRoute(builder: (_) => const PlaceEditPage()));
       }),
       if (s.places.isEmpty)
-        const Padding(
+        Padding(
           padding: EdgeInsets.only(bottom: 12),
           child: Text('Belum ada lokasi tersimpan. Simpan rumah, kantor, atau tempat lain agar cepat dipilih saat membuat request atau order.', style: TextStyle(color: g500, fontSize: 13)),
         ),
@@ -152,7 +152,7 @@ class SavedPlacesSection extends StatelessWidget {
                     if (s.address == p.address) const Tag('Utama'),
                   ]),
                   const SizedBox(height: 2),
-                  Text(p.address, style: const TextStyle(color: g700, fontSize: 13)),
+                  Text(p.address, style: TextStyle(color: g700, fontSize: 13)),
                 ]),
               ),
               PopupMenuButton<String>(
@@ -199,7 +199,7 @@ class _PlaceEditPageState extends State<PlaceEditPage> {
         appBar: PageBar(title: Text(widget.place == null ? 'Tambah lokasi' : 'Ubah lokasi')),
         body: Form(
           key: key,
-          child: ListView(padding: pagePad(context), children: [
+          child: RevealListView(padding: pagePad(context), children: [
             TF('Nama lokasi', label, maxLen: 30, validator: (v) => (v ?? '').trim().isEmpty ? 'Nama wajib diisi' : null),
             Wrap(spacing: 8, children: [
               for (final l in ['Rumah', 'Kantor', 'Rumah keluarga'])

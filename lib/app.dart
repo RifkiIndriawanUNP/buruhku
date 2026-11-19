@@ -1,17 +1,71 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:buruhku/ui/core/ui.dart';
 import 'package:buruhku/ui/auth/auth_screen.dart';
 import 'package:buruhku/ui/shell/app_shell.dart';
 
-class BuruhkuApp extends StatelessWidget {
+/// Mengatur tema terang/gelap. Warna netral dibaca lewat getter global (lihat theme.dart), jadi saat mode
+/// berganti seluruh elemen ditandai kotor supaya dibangun ulang dengan palet baru (State tetap terjaga).
+class BuruhkuApp extends StatefulWidget {
   const BuruhkuApp({super.key});
   @override
-  Widget build(BuildContext context) => MaterialApp(
-        title: 'Buruhku',
-        debugShowCheckedModeBanner: false,
-        theme: buildTheme(),
-        home: const Root(),
-      );
+  State<BuruhkuApp> createState() => _BuruhkuAppState();
+}
+
+class _BuruhkuAppState extends State<BuruhkuApp> with WidgetsBindingObserver {
+  final _theme = ThemeController.instance;
+
+  bool get _dark => _theme.resolveDark(WidgetsBinding.instance.platformDispatcher.platformBrightness);
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _theme.addListener(_onChange);
+  }
+
+  @override
+  void dispose() {
+    _theme.removeListener(_onChange);
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangePlatformBrightness() => _onChange();
+
+  void _onChange() {
+    if (!mounted) return;
+    setState(() {});
+    _rebuildAll(); // juga saat hanya label pilihan yang berubah
+  }
+
+  /// Tandai semua elemen di bawah aplikasi supaya dibangun ulang (State tidak hilang).
+  void _rebuildAll() {
+    void mark(Element e) {
+      e.markNeedsBuild();
+      e.visitChildren(mark);
+    }
+    (context as Element).visitChildren(mark);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final dark = _dark;
+    AppPalette.current = dark ? AppPalette.dark : AppPalette.light; // harus diatur sebelum halaman dibangun
+    return MaterialApp(
+      title: 'Buruhku',
+      debugShowCheckedModeBanner: false,
+      theme: buildTheme(AppPalette.light),
+      darkTheme: buildTheme(AppPalette.dark),
+      themeMode: dark ? ThemeMode.dark : ThemeMode.light,
+      builder: (context, child) => AnnotatedRegion<SystemUiOverlayStyle>(
+        value: (dark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark).copyWith(statusBarColor: Colors.transparent, systemNavigationBarColor: Colors.transparent),
+        child: child ?? const SizedBox.shrink(),
+      ),
+      home: const Root(),
+    );
+  }
 }
 
 class Root extends StatefulWidget {
@@ -78,13 +132,13 @@ class Splash extends StatelessWidget {
                 errorBuilder: (_, __, ___) => Container(
                   width: 96, height: 96,
                   decoration: BoxDecoration(color: g900, borderRadius: BorderRadius.circular(16)),
-                  child: const Icon(Icons.handyman, color: cW, size: 52),
+                  child: Icon(Icons.handyman, color: cW, size: 52),
                 ),
               ),
               const SizedBox(height: 4),
               const Text('Buruhku', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800)),
               const SizedBox(height: 4),
-              const Text('Siap mengerjakan apa pun yang disuruh', style: TextStyle(color: g500)),
+              Text('Siap mengerjakan apa pun yang disuruh', style: TextStyle(color: g500)),
             ]),
           ),
         ),

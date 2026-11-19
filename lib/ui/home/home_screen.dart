@@ -26,8 +26,8 @@ PageRouteBuilder<void> _searchRoute(Widget page) => PageRouteBuilder<void>(
 Widget _boxShuttle(BuildContext _, Animation<double> __, HeroFlightDirection ___, BuildContext ____, BuildContext _____) => Material(
       color: Colors.transparent,
       child: Container(
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(28)),
-        child: Row(children: const [
+        decoration: BoxDecoration(color: cW, borderRadius: BorderRadius.circular(28)),
+        child: Row(children: [
           SizedBox(width: 48, child: Align(alignment: Alignment.centerLeft, child: Padding(padding: EdgeInsets.only(left: 12), child: Icon(Icons.search, size: 28, color: g900)))),
           Expanded(child: Text('Cari jasa atau agen (contoh. Setrika baju)', maxLines: 1, overflow: TextOverflow.clip, style: TextStyle(fontSize: 14, color: g500, decoration: TextDecoration.none, fontWeight: FontWeight.w400))),
         ]),
@@ -84,7 +84,7 @@ class _HomeSearchPageState extends State<_HomeSearchPage> {
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
           child: Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
-            RoundBtn(size: 52, onTap: () => Navigator.maybePop(context), child: const Icon(Icons.arrow_back_ios_new_rounded, size: 20, color: g900)),
+            RoundBtn(size: 52, onTap: () => Navigator.maybePop(context), child: Icon(Icons.arrow_back_ios_new_rounded, size: 20, color: g900)),
             const SizedBox(width: 8),
             Expanded(
               child: Hero(
@@ -93,10 +93,10 @@ class _HomeSearchPageState extends State<_HomeSearchPage> {
                 createRectTween: (b, e) => RectTween(begin: b, end: e),
                 child: Container(
                   height: 52, // sama dengan tombol kembali
-                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(26)),
+                  decoration: BoxDecoration(color: cW, borderRadius: BorderRadius.circular(26)),
                   child: Stack(children: [
                     // ikon: kotak 28 di tengah tinggi 52
-                    const Positioned(left: 12, top: 12, child: Icon(Icons.search, size: 28, color: g900)),
+                    Positioned(left: 12, top: 12, child: Icon(Icons.search, size: 28, color: g900)),
                     // tulisan: area setinggi kotak (52), teks di tengah-tengahnya. Geser dengan _searchTextDy.
                     Positioned(
                       left: 52,
@@ -111,10 +111,10 @@ class _HomeSearchPageState extends State<_HomeSearchPage> {
                         minLines: null,
                         textInputAction: TextInputAction.search,
                         textAlignVertical: TextAlignVertical.center,
-                        style: const TextStyle(fontSize: 15, height: 1.0, color: g900),
+                        style: TextStyle(fontSize: 15, height: 1.0, color: g900),
                         strutStyle: const StrutStyle(fontSize: 15, height: 1.0, forceStrutHeight: true),
                         onSubmitted: _go,
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           isCollapsed: true,
                           filled: false,
                           border: InputBorder.none,
@@ -168,16 +168,15 @@ class _HomeTabState extends State<HomeTab> {
     final svcW = (w * .564).clamp(200.0, 260.0).toDouble();
     final agentW = ((w - _hPad * 2 - 8) / 2).clamp(150.0, 220.0).toDouble();
 
-    final list = ListView(padding: const EdgeInsets.only(top: 12), children: [
+    final list = RevealListView(padding: const EdgeInsets.only(top: 12), children: [
       _header(context),
-      if (vm.canSwitchToAgent) _agentSwitch(),
       const SizedBox(height: 16),
       _search(context),
       const _Head('Kategori jasa'),
       _categories(context),
       _Head('Jasa sekitar', onAll: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ServiceListPage(title: 'Jasa sekitar')))),
       if (svcs.isEmpty)
-        const Padding(padding: EdgeInsets.symmetric(horizontal: _hPad), child: Text('Belum ada tawaran jasa di sekitarmu.', style: TextStyle(color: g500)))
+        Padding(padding: EdgeInsets.symmetric(horizontal: _hPad), child: Text('Belum ada tawaran jasa di sekitarmu.', style: TextStyle(color: g500)))
       else
         _hScroll([for (final v in svcs) ServiceCard(v, width: svcW)]),
       _Head('Agen terdekat', onAll: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AgentListPage(title: 'Agen terdekat', sort: 'jarak')))),
@@ -197,7 +196,7 @@ class _HomeTabState extends State<HomeTab> {
         child: Row(children: [
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              const Text('Location', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, height: 1.2, color: g900)),
+              Text('Location', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, height: 1.2, color: g900)),
               const SizedBox(height: 6),
               InkWell(
                 onTap: () async {
@@ -207,9 +206,9 @@ class _HomeTabState extends State<HomeTab> {
                   }
                 },
                 child: Row(children: [
-                  const Icon(Icons.location_on_outlined, size: 24, color: g500),
+                  Icon(Icons.location_on_outlined, size: 24, color: g500),
                   const SizedBox(width: 6),
-                  Expanded(child: Text(vm.address.isEmpty ? 'Atur lokasi' : vm.address, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: g500))),
+                  Expanded(child: Text(vm.address.isEmpty ? 'Atur lokasi' : vm.address, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: g500))),
                 ]),
               ),
             ]),
@@ -225,22 +224,15 @@ class _HomeTabState extends State<HomeTab> {
               child: const Icon(Icons.notifications, size: 28, color: kGreen),
             ),
           ),
+          if (vm.canSwitchToAgent) ...[
+            const SizedBox(width: 8),
+            RoundBtn(
+              size: 52,
+              onTap: () => vm.switchToAgentMode(),
+              child: Icon(Icons.swap_horiz, size: 26, color: g900),
+            ),
+          ],
         ]),
-      );
-
-  Widget _agentSwitch() => Padding(
-        padding: const EdgeInsets.fromLTRB(_hPad, 12, _hPad, 0),
-        child: SoftCard(
-          radius: 18,
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-          onTap: () => vm.switchToAgentMode(),
-          child: const Row(children: [
-            Icon(Icons.swap_horiz, color: g900),
-            SizedBox(width: 8),
-            Expanded(child: Text('Beralih ke mode agen', style: TextStyle(fontWeight: FontWeight.w600, color: g900))),
-            Icon(Icons.chevron_right, color: g500),
-          ]),
-        ),
       );
 
   // ------------------------------------------------------------ pencarian
@@ -257,9 +249,9 @@ class _HomeTabState extends State<HomeTab> {
         readOnly: true, // hanya pemicu: mengetuk menerbangkan kotak ke atas, lalu membuka halaman pencarian
         showCursor: false,
         onTap: () => Navigator.push(context, _searchRoute(const _HomeSearchPage())),
-        decoration: const InputDecoration(
+        decoration: InputDecoration(
           filled: true,
-          fillColor: Color(0xFFFFFFFF),
+          fillColor: cW,
           prefixIcon: Padding(
             padding: EdgeInsets.only(left: 12),
             child: Icon(Icons.search, size: 28, color: g900),
@@ -293,16 +285,19 @@ class _HomeTabState extends State<HomeTab> {
   // ------------------------------------------------------------ daftar horizontal
   // IntrinsicHeight + stretch: semua kartu setinggi kartu tertinggi, tidak ada tinggi tetap
   // yang bisa overflow. Padding bawah memberi ruang untuk bayangan kartu kaca.
-  Widget _hScroll(List<Widget> items) => SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.fromLTRB(_hPad, 4, _hPad, 32),
-        child: IntrinsicHeight(
-          child: Row(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-            for (var i = 0; i < items.length; i++) ...[
-              if (i > 0) const SizedBox(width: 8),
-              items[i],
-            ],
-          ]),
+  Widget _hScroll(List<Widget> items) => RevealGroup(
+        count: items.length,
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.fromLTRB(_hPad, 4, _hPad, 32),
+          child: IntrinsicHeight(
+            child: Row(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              for (var i = 0; i < items.length; i++) ...[
+                if (i > 0) const SizedBox(width: 8),
+                RevealItem(index: i, child: items[i]),
+              ],
+            ]),
+          ),
         ),
       );
 }
@@ -315,7 +310,7 @@ class _Head extends StatelessWidget {
   Widget build(BuildContext context) => Padding(
         padding: const EdgeInsets.fromLTRB(_hPad, 12, _hPad, 12),
         child: Row(children: [
-          Expanded(child: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, height: 1.2, color: g900))),
+          Expanded(child: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, height: 1.2, color: g900))),
           if (onAll != null)
             GestureDetector(
               behavior: HitTestBehavior.opaque,
@@ -344,7 +339,7 @@ class _CatItem extends StatelessWidget {
                 child: SoftCard(radius: tile * .3, padding: EdgeInsets.zero, child: Center(child: CatIcon(c, size: tile * .62))),
               ),
               const SizedBox(height: 8),
-              Text(c.short, textAlign: TextAlign.center, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, height: 1.2, color: g900)),
+              Text(c.short, textAlign: TextAlign.center, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, height: 1.2, color: g900)),
             ]),
           ),
         );

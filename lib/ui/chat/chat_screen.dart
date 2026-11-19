@@ -57,10 +57,10 @@ Widget _searchShuttle(BuildContext _, Animation<double> a, HeroFlightDirection d
       builder: (_, __) {
         final t = Curves.easeInOut.transform(dir == HeroFlightDirection.push ? a.value : 1 - a.value);
         return Container(
-          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(26)),
+          decoration: BoxDecoration(color: cW, borderRadius: BorderRadius.circular(26)),
           alignment: Alignment.lerp(Alignment.center, Alignment.centerLeft, t),
           padding: EdgeInsets.only(left: 12 * t),
-          child: const Icon(Icons.search, size: 28, color: g900),
+          child: Icon(Icons.search, size: 28, color: g900),
         );
       },
     );
@@ -100,7 +100,7 @@ class _ChatsTabState extends State<ChatsTab> {
         Padding(
           padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
           child: Row(children: [
-            const Expanded(child: Text('Pesan', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, height: 1.2, color: g900))),
+            Expanded(child: Text('Pesan', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, height: 1.2, color: g900))),
             Hero(
               tag: _searchHero,
               flightShuttleBuilder: _searchShuttle,
@@ -108,7 +108,7 @@ class _ChatsTabState extends State<ChatsTab> {
               child: RoundBtn(
                 size: 52,
                 onTap: () => Navigator.push(context, _fadeRoute(_ChatSearchPage(row: _row))),
-                child: const Icon(Icons.search, size: 28, color: g900),
+                child: Icon(Icons.search, size: 28, color: g900),
               ),
             ),
           ]),
@@ -130,8 +130,8 @@ class _ChatsTabState extends State<ChatsTab> {
         ]),
         builder: (inset) => l.isEmpty
             ? Padding(padding: EdgeInsets.only(top: inset), child: Empty(Icons.chat_bubble_outline, seg == 'direct' ? 'Chat langsung dimulai dari profil agen.' : seg == 'order' ? 'Chat negosiasi muncul saat ada agen yang ACC requestmu.' : 'Belum ada percakapan.'))
-            : ListView(padding: padBelow(inset, const EdgeInsets.fromLTRB(16, 4, 16, kBarSpace)), children: [
-                SoftCard(radius: 28, padding: const EdgeInsets.fromLTRB(16, 8, 16, 8), child: Column(children: [for (final c in l) _row(context, c)])),
+            : RevealListView(padding: padBelow(inset, const EdgeInsets.fromLTRB(16, 4, 16, kBarSpace)), children: [
+                RevealGroup(count: l.length, child: SoftCard(radius: 28, padding: const EdgeInsets.fromLTRB(16, 8, 16, 8), child: Column(children: revealRows([for (final c in l) _row(context, c)])))),
               ]),
       ),
     );
@@ -161,16 +161,16 @@ class _ChatsTabState extends State<ChatsTab> {
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
               Row(children: [
-                Flexible(child: Text(c.otherName, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, height: 1.25, color: g900))),
+                Flexible(child: Text(c.otherName, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, height: 1.25, color: g900))),
                 const SizedBox(width: 6),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFFD0D1D6))),
-                  child: Text(c.type == 'order' ? 'Order' : 'Langsung', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, height: 1.2, color: g700)),
+                  decoration: BoxDecoration(borderRadius: BorderRadius.circular(12), border: Border.all(color: kLine)),
+                  child: Text(c.type == 'order' ? 'Order' : 'Langsung', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, height: 1.2, color: g700)),
                 ),
               ]),
               const SizedBox(height: 2),
-              Text(text, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 14, height: 1.3, color: g500)),
+              Text(text, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 14, height: 1.3, color: g500)),
             ]),
           ),
           const SizedBox(width: 8),
@@ -178,7 +178,7 @@ class _ChatsTabState extends State<ChatsTab> {
             if (last != null)
               Row(mainAxisSize: MainAxisSize.min, children: [
                 if (last.from == 'me') ...[const Icon(Icons.done_all, size: 16, color: kGreen), const SizedBox(width: 4)],
-                Text(_date(last.at), style: const TextStyle(fontSize: 13, height: 1.2, color: g500)),
+                Text(_date(last.at), style: TextStyle(fontSize: 13, height: 1.2, color: g500)),
               ]),
             if (c.unread > 0) ...[
               const SizedBox(height: 4),
@@ -192,7 +192,7 @@ class _ChatsTabState extends State<ChatsTab> {
               ),
             ] else if (c.closed) ...[
               const SizedBox(height: 4),
-              const Icon(Icons.lock_outline, size: 14, color: g500),
+              Icon(Icons.lock_outline, size: 14, color: g500),
             ],
           ]),
         ]),
@@ -249,7 +249,7 @@ class _ChatSearchPageState extends State<_ChatSearchPage> {
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
           child: Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
-            RoundBtn(size: 52, onTap: () => Navigator.maybePop(context), child: const Icon(Icons.arrow_back_ios_new_rounded, size: 20, color: g900)),
+            RoundBtn(size: 52, onTap: () => Navigator.maybePop(context), child: Icon(Icons.arrow_back_ios_new_rounded, size: 20, color: g900)),
             const SizedBox(width: 8),
             Expanded(
               child: Hero(
@@ -258,10 +258,10 @@ class _ChatSearchPageState extends State<_ChatSearchPage> {
                 createRectTween: (b, e) => RectTween(begin: b, end: e),
                 child: Container(
                   height: 52, // sama dengan tombol kembali
-                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(26)),
+                  decoration: BoxDecoration(color: cW, borderRadius: BorderRadius.circular(26)),
                   child: Stack(children: [
                     // ikon: kotak 28 di tengah tinggi 52
-                    const Positioned(left: 12, top: 12, child: Icon(Icons.search, size: 28, color: g900)),
+                    Positioned(left: 12, top: 12, child: Icon(Icons.search, size: 28, color: g900)),
                     // tulisan: area setinggi kotak (52), teks di tengah-tengahnya. Geser dengan _searchTextDy.
                     Positioned(
                       left: 52,
@@ -276,10 +276,10 @@ class _ChatSearchPageState extends State<_ChatSearchPage> {
                         minLines: null,
                         textInputAction: TextInputAction.search,
                         textAlignVertical: TextAlignVertical.center,
-                        style: const TextStyle(fontSize: 15, height: 1.0, color: g900),
+                        style: TextStyle(fontSize: 15, height: 1.0, color: g900),
                         strutStyle: const StrutStyle(fontSize: 15, height: 1.0, forceStrutHeight: true),
                         onChanged: (_) => setState(() {}),
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           isCollapsed: true,
                           filled: false,
                           border: InputBorder.none,
@@ -305,8 +305,8 @@ class _ChatSearchPageState extends State<_ChatSearchPage> {
               ? const Empty(Icons.search, 'Ketik nama atau judul pekerjaan untuk mencari percakapan.')
               : l.isEmpty
                   ? const Empty(Icons.chat_bubble_outline, 'Tidak ada percakapan yang cocok.')
-                  : ListView(padding: const EdgeInsets.fromLTRB(16, 4, 16, 24), children: [
-                      SoftCard(radius: 28, padding: const EdgeInsets.fromLTRB(16, 8, 16, 8), child: Column(children: [for (final c in l) widget.row(context, c)])),
+                  : RevealListView(padding: const EdgeInsets.fromLTRB(16, 4, 16, 24), children: [
+                      RevealGroup(count: l.length, child: SoftCard(radius: 28, padding: const EdgeInsets.fromLTRB(16, 8, 16, 8), child: Column(children: revealRows([for (final c in l) widget.row(context, c)])))),
                     ]),
         ),
       ]),
@@ -488,7 +488,7 @@ class _ChatPageState extends State<ChatPage> {
               child: Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
                 GestureDetector(
                   onTap: () => _attach(c),
-                  child: Container(width: 48, height: 48, decoration: const BoxDecoration(color: cW, shape: BoxShape.circle), child: const Icon(Icons.add, size: 28, color: g900)),
+                  child: Container(width: 48, height: 48, decoration: BoxDecoration(color: cW, shape: BoxShape.circle), child: Icon(Icons.add, size: 28, color: g900)),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
@@ -497,7 +497,7 @@ class _ChatPageState extends State<ChatPage> {
                     minLines: 1,
                     maxLines: 4,
                     onSubmitted: (_) => _send(),
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       hintText: 'Tulis pesan...',
                       filled: true,
                       fillColor: cW,
@@ -537,7 +537,7 @@ class _ChatBanner extends StatelessWidget {
           child: Row(children: [
             Container(width: 34, height: 34, decoration: BoxDecoration(color: kGreenBg, borderRadius: BorderRadius.circular(12)), child: Icon(icon, size: 20, color: kGreen)),
             const SizedBox(width: 8),
-            Expanded(child: Text(text, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: g900))),
+            Expanded(child: Text(text, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: g900))),
             const SizedBox(width: 8),
             FilledButton(
               style: FilledButton.styleFrom(minimumSize: const Size(0, 36), padding: const EdgeInsets.symmetric(horizontal: 16)),
@@ -594,8 +594,8 @@ class _BubbleState extends State<_Bubble> {
         child: Container(
           margin: const EdgeInsets.symmetric(vertical: 8),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-          decoration: BoxDecoration(color: const Color(0xFFE4E5E9), borderRadius: BorderRadius.circular(12)),
-          child: Text(m.body, textAlign: TextAlign.center, style: const TextStyle(fontSize: 12, color: g700)),
+          decoration: BoxDecoration(color: kPh, borderRadius: BorderRadius.circular(12)),
+          child: Text(m.body, textAlign: TextAlign.center, style: TextStyle(fontSize: 12, color: g700)),
         ),
       );
     }
@@ -657,7 +657,7 @@ class _BubbleState extends State<_Bubble> {
               child: const Warn('Terindikasi penipuan (link, permintaan transfer di luar aplikasi, atau OTP/PIN). Jangan bayar atau kirim kode di luar Buruhku.'),
             ),
           ),
-        Padding(padding: const EdgeInsets.only(top: 4, left: 4, right: 4), child: Text(ftime(m.at), style: const TextStyle(fontSize: 11, color: g500))),
+        Padding(padding: const EdgeInsets.only(top: 4, left: 4, right: 4), child: Text(ftime(m.at), style: TextStyle(fontSize: 11, color: g500))),
       ]),
     );
   }
@@ -710,7 +710,7 @@ Future<bool?> directOfferSheet(BuildContext context, Chat chat, Agent? agent) {
               const SizedBox(height: 12),
               if (pt != 'lump') TF('Durasi (${pt == 'hourly' ? 'jam' : 'hari'})', dur, type: TextInputType.number, validator: (v) => (double.tryParse(v ?? '') ?? 0) <= 0 ? 'Wajib diisi' : null),
               TF('Harga (Rp${unitOf(pt)})', price, money: true, validator: (v) => money(v ?? '') < 15000 ? 'Minimal Rp15.000' : null),
-              const Text('Setelah disepakati, kamu membayar ke escrow (atau COD) dan dana baru cair ke agen setelah pekerjaan selesai.', style: TextStyle(fontSize: 12, color: g500)),
+              Text('Setelah disepakati, kamu membayar ke escrow (atau COD) dan dana baru cair ke agen setelah pekerjaan selesai.', style: TextStyle(fontSize: 12, color: g500)),
               const SizedBox(height: 12),
               full(pbtn('Kirim penawaran', () {
                 if (!key.currentState!.validate()) return;

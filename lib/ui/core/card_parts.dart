@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:buruhku/ui/core/reveal.dart';
 import 'package:buruhku/ui/core/theme.dart';
 import 'package:buruhku/utils/formatters.dart';
 
 // Potongan UI yang dipakai bersama oleh kartu jasa dan kartu agen.
 
 const kBlue = Color(0xFF2AABEE); // lencana terverifikasi
-const kNavy = Color(0xFF1A2B5F); // bintang & ikon statistik
 const kSeeAll = Color(0xFF4CC585); // teks "Lihat semua"
 const kPeach = Color(0xFFFFCCBC); // tag jenis harga
-const kPh = Color(0xFFE4E5E9); // latar placeholder foto
-const kPhIcon = Color(0xFFB4B6BE);
 
 // Jarak baku. Pakai konstanta ini, jangan angka lepas, supaya semua kartu terasa sama rapatnya.
 const kGapXs = 4.0; // antar baris teks kecil
@@ -55,7 +53,7 @@ class PhotoPlaceholder extends StatelessWidget {
         width: double.infinity,
         alignment: Alignment.center,
         decoration: BoxDecoration(color: kPh, borderRadius: BorderRadius.circular(radius)),
-        child: const SizedBox(
+        child: SizedBox(
           width: 22,
           height: 22,
           child: CircularProgressIndicator(strokeWidth: 2, color: kNavy),
@@ -67,7 +65,7 @@ class PhotoPlaceholder extends StatelessWidget {
         width: double.infinity,
         alignment: Alignment.center,
         decoration: BoxDecoration(color: kPh, borderRadius: BorderRadius.circular(radius)),
-        child: const Icon(Icons.image_outlined, color: kPhIcon, size: 32),
+        child: Icon(Icons.image_outlined, color: kPhIcon, size: 32),
       );
 }
 
@@ -95,7 +93,7 @@ class AvatarPh extends StatelessWidget {
   Widget _fallback() => Container(
         width: size,
         height: size,
-        decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0xFFDADADA)),
+        decoration: BoxDecoration(shape: BoxShape.circle, color: kAvatarBg),
         child: Icon(Icons.person, size: size * 0.6, color: Colors.white70),
       );
 }
@@ -119,7 +117,7 @@ class CatTag extends StatelessWidget {
             widthFactor: 1,
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: Text(text, maxLines: 1, softWrap: false, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: fontSize, fontWeight: FontWeight.w600, color: g900, height: 1.1)),
+              child: Text(text, maxLines: 1, softWrap: false, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: fontSize, fontWeight: FontWeight.w600, color: const Color(0xFF1C1C1C), height: 1.1)),
             ),
           ),
         ),
@@ -146,7 +144,7 @@ class SoftCard extends StatelessWidget {
         child: Container(
           padding: padding,
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: cW,
             borderRadius: BorderRadius.circular(radius),
           ),
           child: child,
@@ -184,7 +182,7 @@ class PillBtn extends StatelessWidget {
           child: Center(
             child: FittedBox(
               fit: BoxFit.scaleDown,
-              child: Text(label, maxLines: 1, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: g900, height: 1.2)),
+              child: Text(label, maxLines: 1, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: g900, height: 1.2)),
             ),
           ),
         ),
@@ -254,9 +252,9 @@ class PillTabs extends StatelessWidget {
           height: height,
           padding: const EdgeInsets.all(_inset),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: cW,
             borderRadius: BorderRadius.circular(height / 2),
-            border: Border.all(color: const Color(0xFFDCDDE1)),
+            border: Border.all(color: kLine),
             boxShadow: const [
               BoxShadow(color: Color(0x14000000), blurRadius: 18, offset: Offset(0, 6)),
             ],
@@ -328,9 +326,9 @@ class FilterPill extends StatelessWidget {
           duration: const Duration(milliseconds: 180),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
-            color: selected ? kGreen : Colors.white,
+            color: selected ? kGreen : cW,
             borderRadius: BorderRadius.circular(22),
-            border: Border.all(color: selected ? kGreen : const Color(0xFFE3E4E8)),
+            border: Border.all(color: selected ? kGreen : kLine2),
           ),
           child: Text(label, maxLines: 1, style: TextStyle(fontSize: 14, fontWeight: selected ? FontWeight.w700 : FontWeight.w600, height: 1.2, color: selected ? Colors.white : g900)),
         ),
@@ -391,7 +389,7 @@ class _PageTitleHeaderState extends State<PageTitleHeader> {
           child: SizedBox(
             height: 52,
             child: Row(children: [
-              Expanded(child: Text(widget.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w800, height: 1.2, color: g900))),
+              Expanded(child: Text(widget.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, height: 1.2, color: g900))),
               if (widget.trailing != null) widget.trailing!,
             ]),
           ),
@@ -417,18 +415,21 @@ class _PageTitleHeaderState extends State<PageTitleHeader> {
   }
 }
 
-const kSubGray = Color(0xFF8E8E93);
 
 /// Kartu putih bergaya pengaturan Telegram. Isinya adalah beberapa [SetRow].
-class SetGroup extends StatelessWidget {
+class SetGroup extends StatelessWidget with SelfReveal {
   final List<Widget> children;
   const SetGroup(this.children, {super.key});
+
+  @override
+  int get revealCount => children.length;
+
   @override
   Widget build(BuildContext context) => Container(
         margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
         padding: const EdgeInsets.symmetric(vertical: 6),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
-        child: Column(children: children),
+        decoration: BoxDecoration(color: cW, borderRadius: BorderRadius.circular(22)),
+        child: Column(children: revealRows(children)),
       );
 }
 
@@ -454,7 +455,7 @@ class SetRow extends StatelessWidget {
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
                 Text(title, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 16, height: 1.25, color: titleColor ?? g900)),
-                if (sub != null) Text(sub!, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 14, height: 1.3, color: kSubGray)),
+                if (sub != null) Text(sub!, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 14, height: 1.3, color: kSubGray)),
               ]),
             ),
             if (badge != null) ...[const SizedBox(width: 8), badge!],
@@ -473,7 +474,7 @@ class SetCard extends StatelessWidget {
         width: double.infinity,
         margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
         padding: padding,
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+        decoration: BoxDecoration(color: cW, borderRadius: BorderRadius.circular(22)),
         child: child,
       );
 }
@@ -490,7 +491,7 @@ class SetHead extends StatelessWidget {
         child: Row(children: [
           Expanded(child: Text(text, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: kGreen))),
           if (action != null)
-            GestureDetector(behavior: HitTestBehavior.opaque, onTap: onAction, child: Text(action!, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: g900))),
+            GestureDetector(behavior: HitTestBehavior.opaque, onTap: onAction, child: Text(action!, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: g900))),
         ]),
       );
 }

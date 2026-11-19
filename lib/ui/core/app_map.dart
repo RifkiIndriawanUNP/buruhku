@@ -7,7 +7,7 @@ import 'package:buruhku/ui/core/page_bar.dart';
 import 'package:buruhku/utils/geo.dart';
 
 /// Satu titik di peta (agen, agen yang sedang berjalan, dst.).
-Widget _markerFallback() => Container(color: g100, child: const Icon(Icons.person, size: 20, color: g500));
+Widget _markerFallback() => Container(color: g100, child: Icon(Icons.person, size: 20, color: g500));
 
 class MapMark {
   final LatLng point;
@@ -38,8 +38,8 @@ class MapMark {
   factory MapMark.walker(LatLng p) => MapMark(
         p,
         Container(
-          decoration: BoxDecoration(color: kGreen, shape: BoxShape.circle, border: Border.all(color: cW, width: 2)),
-          child: const Icon(Icons.directions_walk, size: 20, color: cW),
+          decoration: BoxDecoration(color: kGreen, shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 2)),
+          child: Icon(Icons.directions_walk, size: 20, color: Colors.white),
         ),
         size: 36,
       );
@@ -83,19 +83,34 @@ class AppMap extends StatefulWidget {
   State<AppMap> createState() => _AppMapState();
 }
 
+/// invert + hue-rotate 180 (jaga warna), dikecilkan sedikit supaya tidak menyilaukan.
+const _kDarkTiles = ColorFilter.matrix(<double>[
+  0.505, -1.258, -0.127, 0, 232, //
+  -0.375, -0.378, -0.127, 0, 232, //
+  -0.375, -1.258, 0.753, 0, 232, //
+  0, 0, 0, 1, 0,
+]);
+
 class _AppMapState extends State<AppMap> {
   final _c = MapController();
 
   // Dibuat SEKALI per peta. Kalau dibuat ulang di setiap build (sekali per detik saat pelacakan),
   // flutter_map memproses ulang opsi dan lapisan tile sehingga terasa patah-patah.
   MapOptions? _opts;
-  late final TileLayer _tiles = TileLayer(
-    urlTemplate: Env.tileUrl,
-    userAgentPackageName: Env.tileUserAgent,
-    keepBuffer: 1,
-    panBuffer: widget.interactive ? 1 : 0, // peta pratinjau tidak perlu memuat tile cadangan
-    tileUpdateTransformer: TileUpdateTransformers.throttle(const Duration(milliseconds: 80)),
-  );
+  TileLayer _tileLayer({required bool dark}) => TileLayer(
+        urlTemplate: Env.tileUrl,
+        userAgentPackageName: Env.tileUserAgent,
+        keepBuffer: 1,
+        panBuffer: widget.interactive ? 1 : 0, // peta pratinjau tidak perlu memuat tile cadangan
+        tileUpdateTransformer: TileUpdateTransformers.throttle(const Duration(milliseconds: 80)),
+        // Mode gelap: tile dibalik (invert) dan putar hue 180 derajat supaya warna air/hijau tetap wajar.
+        tileBuilder: dark ? (context, tileWidget, tile) => ColorFiltered(colorFilter: _kDarkTiles, child: tileWidget) : null,
+      );
+  // Satu lapisan per mode, dibuat sekali (lihat catatan di atas soal flutter_map).
+  late final TileLayer _lightTiles = _tileLayer(dark: false);
+  late final TileLayer _darkTilesLayer = _tileLayer(dark: true);
+  TileLayer get _tiles => isDarkMode ? _darkTilesLayer : _lightTiles;
+  bool? _optsDark;
   bool _ready = false;
   LatLng? _tapped;
 
@@ -142,6 +157,10 @@ class _AppMapState extends State<AppMap> {
 
   @override
   Widget build(BuildContext context) {
+    if (_optsDark != isDarkMode) {
+      _optsDark = isDarkMode; // warna latar peta ikut mode, jadi opsi dibuat ulang sekali saat mode berganti
+      _opts = null;
+    }
     final w = widget;
     final pts = _points();
     final start = w.center ?? w.pin ?? kMapCenter;
@@ -177,7 +196,7 @@ class _AppMapState extends State<AppMap> {
             ]),
           MarkerLayer(markers: [
             for (final m in w.marks) Marker(point: m.point, width: m.size, height: m.size, alignment: m.alignment, child: m.child),
-            if (w.pin != null) Marker(point: w.pin!, width: 40, height: 40, alignment: Alignment.topCenter, child: const Icon(Icons.location_on, size: 40, color: g900)),
+            if (w.pin != null) Marker(point: w.pin!, width: 40, height: 40, alignment: Alignment.topCenter, child: Icon(Icons.location_on, size: 40, color: g900)),
           ]),
         ],
       ),
@@ -209,8 +228,8 @@ class _Label extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Container(
         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-        color: const Color(0xCCFFFFFF),
-        child: Text(text, style: const TextStyle(fontSize: 11, color: g700)),
+        color: cW.withAlpha(204),
+        child: Text(text, style: TextStyle(fontSize: 11, color: g700)),
       );
 }
 
@@ -222,7 +241,7 @@ class _ZoomBtn extends StatelessWidget {
   Widget build(BuildContext context) => Material(
         color: cW,
         elevation: 0,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6), side: const BorderSide(color: g200)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6), side: BorderSide(color: g200)),
         child: InkWell(borderRadius: BorderRadius.circular(6), onTap: onTap, child: SizedBox(width: 30, height: 30, child: Icon(icon, size: 18, color: g900))),
       );
 }
@@ -241,7 +260,7 @@ class MapThumb extends StatelessWidget {
         child: Container(
           height: height,
           decoration: BoxDecoration(color: g100, border: Border.all(color: g300), borderRadius: BorderRadius.circular(8)),
-          child: const Center(
+          child: Center(
             child: Column(mainAxisSize: MainAxisSize.min, children: [
               Icon(Icons.location_on, size: 32, color: g900),
               SizedBox(height: 2),

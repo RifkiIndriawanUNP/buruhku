@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart' show LatLng;
 import 'package:buruhku/domain/models/models.dart';
@@ -11,6 +12,7 @@ import 'package:buruhku/utils/geo.dart';
 /// Ketuk penanda untuk melihat ringkasannya.
 class RequestMapView extends StatefulWidget {
   const RequestMapView({super.key});
+
   @override
   State<RequestMapView> createState() => _RequestMapViewState();
 }
@@ -22,9 +24,13 @@ class _RequestMapViewState extends State<RequestMapView> {
   Widget build(BuildContext context) {
     final s = context.s;
     final agents = s.searchAgents(maxDist: 15, sort: 'jarak');
-    final reqs = s.myReqs.where((r) => const ['OPEN', 'HAS_ACCEPTORS', 'FULL'].contains(r.status)).toList();
+    final reqs = s.myReqs
+        .where((r) => const ['OPEN', 'HAS_ACCEPTORS', 'FULL'].contains(r.status))
+        .toList();
+
     final pa = agents.where((a) => a.id == _agent).firstOrNull;
     final pr = reqs.where((r) => r.id == _req).firstOrNull;
+
     return Stack(children: [
       Positioned.fill(
         child: AppMap(
@@ -35,10 +41,17 @@ class _RequestMapViewState extends State<RequestMapView> {
           onBackgroundTap: (_) => setState(() => _agent = _req = null),
           marks: [
             for (final a in agents)
-              MapMark.agent(a.pos, online: a.online, selected: a.id == _agent, imageUrl: a.avatarUrl, onTap: () => setState(() {
-                    _agent = a.id;
-                    _req = null;
-                  })),
+              MapMark.agent(
+                a.pos,
+                online: a.online,
+                selected: a.id == _agent,
+                imageUrl: a.avatarUrl,
+                onTap: () => setState(() {
+                  _agent = a.id;
+                  _req = null;
+                }),
+              ),
+
             for (final r in reqs)
               MapMark(
                 LatLng(r.lat, r.lng),
@@ -49,7 +62,14 @@ class _RequestMapViewState extends State<RequestMapView> {
                   }),
                   child: Container(
                     padding: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(color: cW, shape: BoxShape.circle, border: Border.all(color: kGreen, width: r.id == _req ? 3.5 : 2.5)),
+                    decoration: BoxDecoration(
+                      color: cW,
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: kGreen,
+                        width: r.id == _req ? 3.5 : 2.5,
+                      ),
+                    ),
                     child: CatIcon(catOf(r.cat), size: 28),
                   ),
                 ),
@@ -58,36 +78,85 @@ class _RequestMapViewState extends State<RequestMapView> {
           ],
         ),
       ),
-      Positioned(
-        left: 16,
-        right: 16,
-        bottom: kBarSpace + 40, // di atas tombol Daftar
-        child: pa != null
-            ? AgentCard(pa, wide: true)
-            : pr != null
-                ? SoftCard(
-                    radius: 22,
-                    padding: const EdgeInsets.all(12),
-                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ReqDetailPage(pr.id))),
-                    child: Row(children: [
-                      CatIcon(catOf(pr.cat), size: 40),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                          Text(pr.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
-                          const SizedBox(height: 4),
-                          Tag(reqLabels[pr.status] ?? pr.status, filled: true),
-                        ]),
+
+      // CARD AGEN: di bawah tab bar atas
+      if (pa != null)
+        Positioned(
+          top: 80,
+          left: 12,
+          right: 12,
+          child: AgentCard(pa, wide: true),
+        ),
+
+      // CARD REQUEST: tetap di bagian bawah
+      if (pa == null && pr != null)
+        Positioned(
+          left: 16,
+          right: 16,
+          bottom: kBarSpace + 40,
+          child: SoftCard(
+            radius: 22,
+            padding: const EdgeInsets.all(12),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => ReqDetailPage(pr.id),
+              ),
+            ),
+            child: Row(children: [
+              CatIcon(catOf(pr.cat), size: 40),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      pr.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 15,
                       ),
-                      const Icon(Icons.chevron_right),
-                    ]),
-                  )
-                : Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    decoration: BoxDecoration(color: cW, borderRadius: BorderRadius.circular(16)),
-                    child: Text('${agents.length} agen di sekitar \u00b7 ${reqs.length} request aktif', textAlign: TextAlign.center, style: const TextStyle(fontSize: 13, color: g700)),
-                  ),
-      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Tag(reqLabels[pr.status] ?? pr.status, filled: true),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right),
+            ]),
+          ),
+        ),
+
+      // INFORMASI JUMLAH AGEN DAN REQUEST
+      if (pa == null && pr == null)
+        Positioned(
+          top: 80,
+          left: 0,
+          right: 0,
+          child: Center(
+            child: Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 8,
+              ),
+              decoration: BoxDecoration(
+                color: cW,
+                border: Border.all(color: g300),
+                borderRadius: BorderRadius.circular(15),
+              ),
+              child: Text(
+                '${agents.length} agen di sekitar · ${reqs.length} request aktif',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: g700,
+                ),
+              ),
+            ),
+          ),
+        ),
     ]);
   }
 }

@@ -15,3 +15,4 @@ export 'package:buruhku/ui/core/page_bar.dart';
 export 'package:buruhku/ui/core/detail_parts.dart';
 export 'package:buruhku/ui/core/photo_viewer.dart';
 export 'package:buruhku/ui/core/scroll_fab.dart';
+export 'package:buruhku/ui/core/reveal.dart';

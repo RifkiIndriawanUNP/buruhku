@@ -185,7 +185,7 @@ class _FaceDemoDialogState extends State<_FaceDemoDialog> {
           if (!done) ...[const CircularProgressIndicator(strokeWidth: 2.5), const SizedBox(height: 12), const Text('Mencocokkan wajah dengan foto KTP...')]
           else ...[const Icon(Icons.check_circle, size: 32), const SizedBox(height: 6), Text('Liveness lolos, kecocokan wajah $match%', textAlign: TextAlign.center)],
           const SizedBox(height: 8),
-          const Text('Hasil ini simulasi untuk demo. Foto selfie tidak disimpan.', textAlign: TextAlign.center, style: TextStyle(fontSize: 12, color: g500)),
+          Text('Hasil ini simulasi untuk demo. Foto selfie tidak disimpan.', textAlign: TextAlign.center, style: TextStyle(fontSize: 12, color: g500)),
         ]),
         actions: [if (done) TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Lanjut'))],
       );

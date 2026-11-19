@@ -110,22 +110,35 @@ class _ShellState extends State<Shell> {
           NotificationListener<ScrollNotification>(
             onNotification: _onNotification,
             child: RepaintBoundary(
-              child: SafeArea(bottom: false, child: IndexedStack(index: i, children: pages)),
+              child: SafeArea(
+                bottom: false,
+                child: IndexedStack(index: i, children: [
+                  // Tiap tab memutar ulang urutan animasi barisnya setiap kali dibuka. Key memuat mode agar ikut diputar saat ganti mode.
+                  for (var k = 0; k < pages.length; k++)
+                    RevealTab(key: ValueKey('tab-${agent ? 'a' : 'c'}$k'), active: k == i, child: pages[k]),
+                ]),
+              ),
             ),
           ),
           Positioned(
             left: 0,
             right: 0,
             bottom: 0,
-            child: BottomBar(
-              index: i,
-              items: items,
-              center: agent ? null : 2,
-              onTap: (v) {
-                if (_hidden) setState(() => _hidden = false);
-                _vm.goTab(v);
-              },
-              compact: _hidden,
+            // Bar bawah muncul lebih dulu dan lebih singkat, tanpa sapuan.
+            child: Reveal(
+              blur: 6,
+              dy: 18,
+              duration: const Duration(milliseconds: 500),
+              child: BottomBar(
+                index: i,
+                items: items,
+                center: agent ? null : 2,
+                onTap: (v) {
+                  if (_hidden) setState(() => _hidden = false);
+                  _vm.goTab(v);
+                },
+                compact: _hidden,
+              ),
             ),
           ),
         ],

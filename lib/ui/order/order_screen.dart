@@ -21,7 +21,7 @@ Widget _topBar(String title, List<String> labels) => MediaQuery.withClampedTextS
       child: Column(mainAxisSize: MainAxisSize.min, children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
-          child: SizedBox(height: 52, child: Align(alignment: Alignment.centerLeft, child: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w800, height: 1.2, color: g900)))),
+          child: SizedBox(height: 52, child: Align(alignment: Alignment.centerLeft, child: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, height: 1.2, color: g900)))),
         ),
         PillTabBar(labels),
       ]),
@@ -42,7 +42,7 @@ class OrderTile extends StatelessWidget {
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text(o.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w700)),
                 const SizedBox(height: 2),
-                Text('${o.iAmClient ? 'Agen' : 'Klien'}: ${o.otherName}  |  ${ago(o.created)}', style: const TextStyle(fontSize: 12, color: g500)),
+                Text('${o.iAmClient ? 'Agen' : 'Klien'}: ${o.otherName}  |  ${ago(o.created)}', style: TextStyle(fontSize: 12, color: g500)),
                 const SizedBox(height: 6),
                 Wrap(spacing: 6, runSpacing: 4, children: [
                   Tag(ordLabels[o.status] ?? o.status, filled: o.active),
@@ -116,7 +116,7 @@ class GroupTile extends StatelessWidget {
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(subs.first.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w700)),
               const SizedBox(height: 2),
-              Text('${r?.chosen.length ?? subs.length} dari ${r?.workers ?? subs.length} agen terpilih', style: const TextStyle(fontSize: 12, color: g500)),
+              Text('${r?.chosen.length ?? subs.length} dari ${r?.workers ?? subs.length} agen terpilih', style: TextStyle(fontSize: 12, color: g500)),
               const SizedBox(height: 6),
               Wrap(spacing: 6, runSpacing: 4, children: [
                 for (final e in counts.entries.take(3)) Tag('${e.value} ${e.key}', filled: subs.any((o) => o.active && (ordLabels[o.status] ?? o.status) == e.key)),
@@ -156,7 +156,7 @@ class _ActiveViewState extends State<_ActiveView> {
                     padding: EdgeInsets.only(top: inset + segH),
                     child: Empty(seg == 'now' ? Icons.hourglass_empty : Icons.event_available_outlined, seg == 'now' ? 'Belum ada order berjalan.' : 'Belum ada order terjadwal.'),
                   )
-                : ListView(padding: padBelow(inset + segH), children: [for (final e in l) _entryTile(e)]),
+                : RevealListView(padding: padBelow(inset + segH), children: [for (final e in l) _entryTile(e)]),
           ),
           Positioned(
             left: 0,
@@ -199,7 +199,7 @@ class HistoryTab extends StatelessWidget {
           _ActiveView(act),
           his.isEmpty
               ? Padding(padding: EdgeInsets.only(top: inset), child: const Empty(Icons.history, 'Order selesai atau batal akan muncul di sini.'))
-              : ListView(padding: padBelow(inset), children: [for (final e in his) _entryTile(e)]),
+              : RevealListView(padding: padBelow(inset), children: [for (final e in his) _entryTile(e)]),
         ]),
       ),
     );
@@ -252,7 +252,7 @@ class GroupOrderPage extends StatelessWidget {
     final pick = await sheet<Agent>(context, (x) => SafeArea(
           child: Column(mainAxisSize: MainAxisSize.min, children: [
             const Padding(padding: EdgeInsets.all(8), child: Text('Tambah agen favorit', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16))),
-            if (favs.isEmpty) const Padding(padding: EdgeInsets.all(24), child: Text('Tidak ada agen favorit yang bisa ditambahkan.', style: TextStyle(color: g500))),
+            if (favs.isEmpty) Padding(padding: EdgeInsets.all(24), child: Text('Tidak ada agen favorit yang bisa ditambahkan.', style: TextStyle(color: g500))),
             for (final a in favs)
               ListTile(
                 leading: const Avatar(size: 40), title: Text(a.short),
@@ -305,7 +305,7 @@ class GroupOrderPage extends StatelessWidget {
             itemBuilder: (_) => const [PopupMenuItem(value: 'edit', child: Text('Ubah request')), PopupMenuItem(value: 'cancel', child: Text('Batalkan request'))],
           ),
       ]),
-      body: ListView(padding: pagePad(context), children: [
+      body: RevealListView(padding: pagePad(context), children: [
         Row(children: [
           CatIcon(catOf(r.cat), size: 44),
           const SizedBox(width: 8),
@@ -318,7 +318,7 @@ class GroupOrderPage extends StatelessWidget {
           Tag(reqLabels[r.status] ?? r.status, filled: true),
           Tag('${started ? r.chosen.length : agreed}/${r.workers} agen ${started ? 'dimulai' : 'sepakat'}', icon: Icons.groups_outlined),
         ]),
-        if (open && !started) Padding(padding: const EdgeInsets.only(top: 8), child: Live((_) => Text('Sisa waktu mencari agen: ${clock(r.expires.difference(DateTime.now()))}', style: const TextStyle(color: g700)))),
+        if (open && !started) Padding(padding: const EdgeInsets.only(top: 8), child: Live((_) => Text('Sisa waktu mencari agen: ${clock(r.expires.difference(DateTime.now()))}', style: TextStyle(color: g700)))),
         if (r.status == 'IN_REVIEW') Padding(padding: const EdgeInsets.only(top: 8), child: Warn('${r.reason}\nBuka Akun > Panel Admin (Simulasi) untuk menyetujui.')),
         const SizedBox(height: 12),
         Box(child: Column(children: [
@@ -355,7 +355,7 @@ class GroupOrderPage extends StatelessWidget {
         ],
         // ---- 1. Agen ACC: pending, sepakat; setelah order dimulai tampil tombol chat dan order
         Section('Agen ACC (${shown.length})', action: canAdd ? 'Tambah agen favorit' : null, onAction: canAdd ? () => _addFav(context, s, r) : null),
-        if (shown.isEmpty) const Text('Belum ada agen. Pilih agen dari daftar "Sedang mencari agen" atau tambahkan dari favorit.', style: TextStyle(color: g500, fontSize: 13)),
+        if (shown.isEmpty) Text('Belum ada agen. Pilih agen dari daftar "Sedang mencari agen" atau tambahkan dari favorit.', style: TextStyle(color: g500, fontSize: 13)),
         for (final a in shown) _GroupAcc(r, a, subs.where((o) => o.otherId == a.agentId).isEmpty ? null : subs.firstWhere((o) => o.otherId == a.agentId)),
         if (!started) ...[
           // ---- 2. Sedang mencari agen: agen yang bisa dipilih
@@ -367,7 +367,7 @@ class GroupOrderPage extends StatelessWidget {
               padding: const EdgeInsets.only(bottom: kTileGap),
         child: Box(
                 child: Row(children: [
-                  const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: g700)),
+                  SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: g700)),
                   const SizedBox(width: 12),
                   Expanded(child: Text('Mencari agen terdekat dan memberi notifikasi bertahap (3 km, 7 km, lalu lebih jauh)...\nDitemukan ${interest.length} dari ${AppState.kSearchTarget} agen')),
                 ]),
@@ -389,13 +389,13 @@ class GroupOrderPage extends StatelessWidget {
       ]),
       bottomNavigationBar: (agreed > 0 && canAdd)
           ? Container(
-              decoration: const BoxDecoration(color: cW, border: Border(top: BorderSide(color: g300))),
+              decoration: BoxDecoration(color: cW, border: Border(top: BorderSide(color: g300))),
               child: SafeArea(
                 top: false,
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
                   child: Column(mainAxisSize: MainAxisSize.min, children: [
-                    Text(enough ? 'Agen sudah cukup. Kamu tetap bisa menambah agen.' : 'Baru ${r.chosen.length + agreed} dari ${r.workers} agen sepakat. Tetap bisa mulai.', style: const TextStyle(fontSize: 12, color: g500)),
+                    Text(enough ? 'Agen sudah cukup. Kamu tetap bisa menambah agen.' : 'Baru ${r.chosen.length + agreed} dari ${r.workers} agen sepakat. Tetap bisa mulai.', style: TextStyle(fontSize: 12, color: g500)),
                     const SizedBox(height: 6),
                     full(pbtn('Mulai order ($agreed agen)', () => _start(context, s, r), icon: Icons.play_arrow)),
                   ]),
@@ -430,12 +430,12 @@ class _Candidate extends StatelessWidget {
               Expanded(
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Row(children: [Text(ag.short, style: const TextStyle(fontWeight: FontWeight.w700)), const SizedBox(width: 6), if (ag.verified) const Icon(Icons.verified_outlined, size: 16)]),
-                  Row(children: [Stars(s.ratingOf(ag), size: 12), Text('  ${s.ratingOf(ag).toStringAsFixed(1)}  ~${ag.dist.toStringAsFixed(1)} km  ${ag.jobs} job', style: const TextStyle(fontSize: 12, color: g500))]),
+                  Row(children: [Stars(s.ratingOf(ag), size: 12), Text('  ${s.ratingOf(ag).toStringAsFixed(1)}  ~${ag.dist.toStringAsFixed(1)} km  ${ag.jobs} job', style: TextStyle(fontSize: 12, color: g500))]),
                 ]),
               ),
               Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
                 Text(rp(acc == null ? ag.base : acc.price), style: const TextStyle(fontWeight: FontWeight.w800)),
-                Text(acc == null ? 'mulai dari' : (unit.isEmpty ? 'borongan' : unit), style: const TextStyle(fontSize: 11, color: g500)),
+                Text(acc == null ? 'mulai dari' : (unit.isEmpty ? 'borongan' : unit), style: TextStyle(fontSize: 11, color: g500)),
               ]),
             ]),
           ),
@@ -501,19 +501,19 @@ class _GroupAcc extends StatelessWidget {
               Expanded(
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Row(children: [Text(ag.short, style: const TextStyle(fontWeight: FontWeight.w700)), const SizedBox(width: 6), if (ag.verified) const Icon(Icons.verified_outlined, size: 16)]),
-                  Row(children: [Stars(s.ratingOf(ag), size: 12), Text('  ${s.ratingOf(ag).toStringAsFixed(1)}  ~${ag.dist.toStringAsFixed(1)} km', style: const TextStyle(fontSize: 12, color: g500))]),
+                  Row(children: [Stars(s.ratingOf(ag), size: 12), Text('  ${s.ratingOf(ag).toStringAsFixed(1)}  ~${ag.dist.toStringAsFixed(1)} km', style: TextStyle(fontSize: 12, color: g500))]),
                 ]),
               ),
               Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
                 Text(rp(a.price), style: const TextStyle(fontWeight: FontWeight.w800)),
-                Text(unitOf(r.ptype).isEmpty ? 'borongan' : unitOf(r.ptype), style: const TextStyle(fontSize: 11, color: g500)),
+                Text(unitOf(r.ptype).isEmpty ? 'borongan' : unitOf(r.ptype), style: TextStyle(fontSize: 11, color: g500)),
               ]),
             ]),
           ),
           const SizedBox(height: 12),
           if (a.status == 'invited')
             Row(children: [
-              const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: g700)),
+              SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: g700)),
               const SizedBox(width: 8),
               tag(const Tag('Pending', icon: Icons.hourglass_top)),
               IconButton.outlined(tooltip: 'Batalkan pilihan', onPressed: () => s.declineAcc(r, a), icon: const Icon(Icons.close)),
@@ -537,7 +537,7 @@ class _GroupAcc extends StatelessWidget {
               if (!cancelled) ...[obtn('Chat', openChat, icon: Icons.chat_bubble_outline), const SizedBox(width: 8)],
               if (ord != null) obtn('Order', () => Navigator.push(context, MaterialPageRoute(builder: (_) => OrderPage(ord.id)))),
             ]),
-          if (cancelled && a.note.isNotEmpty) Padding(padding: const EdgeInsets.only(top: 6), child: Text(_cap(a.note), style: const TextStyle(fontSize: 12, color: g500))),
+          if (cancelled && a.note.isNotEmpty) Padding(padding: const EdgeInsets.only(top: 6), child: Text(_cap(a.note), style: TextStyle(fontSize: 12, color: g500))),
         ]),
       ),
     );
@@ -671,7 +671,7 @@ class _OrderPageState extends State<OrderPage> {
                 Expanded(child: obtnS('Tolak', () => s.respondChange(o, false))),
               ])
             else
-              const Text('Menunggu persetujuan pihak lain...', style: TextStyle(color: g500)),
+              Text('Menunggu persetujuan pihak lain...', style: TextStyle(color: g500)),
           ]),
         ),
       ],
@@ -697,7 +697,7 @@ class _OrderPageState extends State<OrderPage> {
             ],
           ),
       ]),
-      body: ListView(padding: pageListPad(context), children: [
+      body: RevealListView(padding: pageListPad(context), children: [
         // Status dan tahapan
         DetailCard(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -706,7 +706,7 @@ class _OrderPageState extends State<OrderPage> {
               const SizedBox(width: 12),
               Expanded(
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text(o.title, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, height: 1.2, color: g900)),
+                  Text(o.title, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, height: 1.2, color: g900)),
                   const SizedBox(height: 6),
                   Wrap(spacing: 4, runSpacing: 4, children: [CatTag(catOf(o.cat).name, catOf(o.cat).color, height: 22), CatTag(ptypes[o.ptype] ?? '', kPeach, height: 22)]),
                 ]),
@@ -742,22 +742,22 @@ class _OrderPageState extends State<OrderPage> {
               const SizedBox(width: 12),
               Expanded(
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text(o.otherName, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: g900)),
+                  Text(o.otherName, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: g900)),
                   const SizedBox(height: 2),
                   if (cli && o.otherId.startsWith('a'))
                     Row(children: [
                       const Icon(Icons.star, size: 14, color: kStar),
                       const SizedBox(width: 4),
-                      Text('${s.ratingOf(s.agentById(o.otherId)).toStringAsFixed(1)}  \u00b7  Agen', style: const TextStyle(fontSize: 13, color: g500)),
+                      Text('${s.ratingOf(s.agentById(o.otherId)).toStringAsFixed(1)}  \u00b7  Agen', style: TextStyle(fontSize: 13, color: g500)),
                     ])
                   else
-                    Text(cli ? 'Agen' : 'Klien', style: const TextStyle(fontSize: 13, color: g500)),
+                    Text(cli ? 'Agen' : 'Klien', style: TextStyle(fontSize: 13, color: g500)),
                 ]),
               ),
               if (chat != null)
                 GestureDetector(
                   onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ChatPage(chat.id))),
-                  child: Container(width: 44, height: 44, decoration: const BoxDecoration(color: cBg, shape: BoxShape.circle), child: const Icon(Icons.chat_bubble_outline, size: 20, color: g900)),
+                  child: Container(width: 44, height: 44, decoration: BoxDecoration(color: cBg, shape: BoxShape.circle), child: Icon(Icons.chat_bubble_outline, size: 20, color: g900)),
                 ),
             ]),
           ),
@@ -768,8 +768,8 @@ class _OrderPageState extends State<OrderPage> {
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Kv('Jenis', disp.type),
               Kv('Status', disp.status == 'open' ? 'Menunggu tanggapan' : disp.status == 'responded' ? 'Ditanggapi, menunggu admin' : 'Diputuskan'),
-              if (disp.response.isNotEmpty) Text(disp.response, style: const TextStyle(color: g700)),
-              if (disp.status != 'resolved') const Padding(padding: EdgeInsets.only(top: 6), child: Text('Dana tetap ditahan. Keputusan ada di Akun > Panel Admin (Simulasi).', style: TextStyle(fontSize: 12, color: g500))),
+              if (disp.response.isNotEmpty) Text(disp.response, style: TextStyle(color: g700)),
+              if (disp.status != 'resolved') Padding(padding: EdgeInsets.only(top: 6), child: Text('Dana tetap ditahan. Keputusan ada di Akun > Panel Admin (Simulasi).', style: TextStyle(fontSize: 12, color: g500))),
               if (disp.status != 'resolved') ...[
                 const SizedBox(height: 12),
                 full(obtn('Batalkan sengketa', () async {
@@ -794,11 +794,11 @@ class _OrderPageState extends State<OrderPage> {
             PayRow('Harga', '${rp(o.unit)}${unitOf(o.ptype)}'),
             if (o.extra > 0) PayRow('Tambahan disetujui', rp(o.extra)),
             PayRow(cli ? 'Biaya layanan' : 'Komisi platform (10%)', rp(cli ? o.fee : o.commission)),
-            const Padding(padding: EdgeInsets.symmetric(vertical: 8), child: Divider(height: 1, thickness: 1, color: kLine)),
+            Padding(padding: EdgeInsets.symmetric(vertical: 8), child: Divider(height: 1, thickness: 1, color: kLine)),
             PayRow(cli ? 'Total bayar' : 'Pendapatan bersih', rp(cli ? o.total + o.fee : o.net), bold: true),
             const SizedBox(height: 6),
             Row(children: [
-              const Text('Escrow', style: TextStyle(fontSize: 13, color: g500)),
+              Text('Escrow', style: TextStyle(fontSize: 13, color: g500)),
               const Spacer(),
               Tag({'none': 'Belum dibayar', 'cod': 'Bayar tunai (COD)', 'held': 'Dana ditahan', 'released': 'Dilepas ke agen', 'refunded': 'Dikembalikan', 'split': 'Dibagi 50:50', 'partial': 'Kompensasi sebagian'}[o.escrow] ?? o.escrow),
             ]),
@@ -857,7 +857,7 @@ class _OrderPageState extends State<OrderPage> {
               return Column(children: [
                 AppMap(height: 190, pin: dest, marks: [MapMark.walker(here)], route: [from, dest], fitKey: o.id),
                 const SizedBox(height: 6),
-                Text('${o.otherName} menuju lokasimu. Estimasi tiba ${n == null ? '-' : '${n.difference(DateTime.now()).inSeconds.clamp(0, 99)} dtk (demo)'}', style: const TextStyle(fontSize: 13, color: g700)),
+                Text('${o.otherName} menuju lokasimu. Estimasi tiba ${n == null ? '-' : '${n.difference(DateTime.now()).inSeconds.clamp(0, 99)} dtk (demo)'}', style: TextStyle(fontSize: 13, color: g700)),
               ]);
             }),
             const SizedBox(height: 12),
@@ -878,7 +878,7 @@ class _OrderPageState extends State<OrderPage> {
         if (cli) {
           return [
             Box(color: g100, child: Column(children: [
-              const Text('PIN kerja', style: TextStyle(color: g500)),
+              Text('PIN kerja', style: TextStyle(color: g500)),
               Text(o.pin.split('').join('  '), style: const TextStyle(fontSize: 34, fontWeight: FontWeight.w800, letterSpacing: 4)),
               const SizedBox(height: 6),
               const Text('Pastikan wajah orang yang datang sesuai foto profil agen, baru tunjukkan PIN ini.', textAlign: TextAlign.center, style: TextStyle(fontSize: 13)),
@@ -910,7 +910,7 @@ class _OrderPageState extends State<OrderPage> {
             final hrs = t.inSeconds / 3600;
             return Box(color: g100, child: Column(children: [
               Text(clock(t), style: const TextStyle(fontSize: 34, fontWeight: FontWeight.w800)),
-              Text(o.ptype == 'hourly' ? 'Timer berjalan: ${rp((o.unit * hrs).round())} dari tarif ${rp(o.unit)}/jam' : 'Pekerjaan sedang dikerjakan', style: const TextStyle(color: g700, fontSize: 13)),
+              Text(o.ptype == 'hourly' ? 'Timer berjalan: ${rp((o.unit * hrs).round())} dari tarif ${rp(o.unit)}/jam' : 'Pekerjaan sedang dikerjakan', style: TextStyle(color: g700, fontSize: 13)),
             ]));
           }),
           const SizedBox(height: 12),
@@ -962,7 +962,7 @@ class _OrderPageState extends State<OrderPage> {
               ),
             ]),
             const SizedBox(height: 8),
-            Live((_) => Text('Konfirmasi otomatis dalam ${clock(Duration(hours: 24) - DateTime.now().difference(o.finishedAt ?? DateTime.now()))}', style: const TextStyle(fontSize: 13, color: g500))),
+            Live((_) => Text('Konfirmasi otomatis dalam ${clock(Duration(hours: 24) - DateTime.now().difference(o.finishedAt ?? DateTime.now()))}', style: TextStyle(fontSize: 13, color: g500))),
             const SizedBox(height: 12),
             full(pbtn('Konfirmasi selesai dan lepas dana', () => s.completeOrder(o), icon: Icons.task_alt)),
             const SizedBox(height: 8),
@@ -1092,7 +1092,7 @@ class _PaymentPageState extends State<PaymentPage> {
     final seed = os.first.id.codeUnits.fold(0, (a, b) => a + b);
     return AppScaffold(underBar: true,
       appBar: PageBar(title: const Text('Pembayaran')),
-      body: ListView(padding: pagePad(context), children: [
+      body: RevealListView(padding: pagePad(context), children: [
         Box(child: Column(children: [
           Kv('Pekerjaan', os.first.title),
           if (os.length > 1) for (final o in os) Kv('Agen ${o.otherName}', rp(o.total)),
@@ -1102,7 +1102,7 @@ class _PaymentPageState extends State<PaymentPage> {
           Kv('Total bayar', rp(cod ? total : total + fee), bold: true),
         ])),
         const SizedBox(height: 8),
-        Live((_) => Text('Batas bayar: ${clock(due.difference(DateTime.now()))}', style: const TextStyle(color: g700))),
+        Live((_) => Text('Batas bayar: ${clock(due.difference(DateTime.now()))}', style: TextStyle(color: g700))),
         const SizedBox(height: 4),
         const Warn('Dana ditahan platform (escrow) dan baru dilepas ke agen setelah kamu mengonfirmasi pekerjaan selesai.', icon: Icons.lock_outline),
         for (final g in groups.entries) ...[
@@ -1124,10 +1124,10 @@ class _PaymentPageState extends State<PaymentPage> {
         if (method != null) ...[
           const Section('Instruksi'),
           if (cod) const Warn('Bayar tunai langsung ke agen setelah pekerjaan selesai. Tidak ada perlindungan escrow, dan biaya layanan tidak dikenakan.', icon: Icons.payments_outlined)
-          else if (method == 'QRIS') Center(child: Column(children: [FakeQr(seed), const SizedBox(height: 6), const Text('Scan dengan aplikasi e-wallet atau mobile banking.', style: TextStyle(color: g500, fontSize: 13))]))
+          else if (method == 'QRIS') Center(child: Column(children: [FakeQr(seed), const SizedBox(height: 6), Text('Scan dengan aplikasi e-wallet atau mobile banking.', style: TextStyle(color: g500, fontSize: 13))]))
           else if (method!.startsWith('VA'))
             Box(child: Row(children: [
-              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [const Text('Nomor Virtual Account', style: TextStyle(color: g500, fontSize: 12)), Text('8077 ${(1000000000 + seed * 7919).toString().substring(0, 10)}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800))])),
+              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text('Nomor Virtual Account', style: TextStyle(color: g500, fontSize: 12)), Text('8077 ${(1000000000 + seed * 7919).toString().substring(0, 10)}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800))])),
               IconButton(onPressed: () { Clipboard.setData(ClipboardData(text: '8077${1000000000 + seed * 7919}')); toast(context, 'Nomor VA disalin.'); }, icon: const Icon(Icons.copy)),
             ]))
           else
@@ -1176,7 +1176,7 @@ class _RatingPageState extends State<RatingPage> {
     final tags = o.iAmClient ? ['Tepat waktu', 'Rapi', 'Sopan', 'Kuat'] : ['Ramah', 'Deskripsi jelas', 'Bayar cepat'];
     return AppScaffold(underBar: true,
       appBar: PageBar(title: Text(o.iAmClient ? 'Nilai agen' : 'Nilai klien')),
-      body: ListView(padding: pagePad(context), children: [
+      body: RevealListView(padding: pagePad(context), children: [
         Center(child: Column(children: [const Avatar(size: 64), const SizedBox(height: 6), Text(o.otherName, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700))])),
         StarPicker(rating, (v) => setState(() => rating = v)),
         Wrap(spacing: 8, runSpacing: 8, children: [for (final t in tags) FilterChip(label: Text(t), selected: sel.contains(t), onSelected: (v) => setState(() => v ? sel.add(t) : sel.remove(t)))]),
@@ -1221,7 +1221,7 @@ class _DisputePageState extends State<DisputePage> {
       appBar: PageBar(title: const Text('Ajukan masalah')),
       body: Form(
         key: key,
-        child: ListView(padding: pagePad(context), children: [
+        child: RevealListView(padding: pagePad(context), children: [
           const Warn('Dana tetap ditahan selama sengketa. Pihak lain punya 48 jam menanggapi, lalu admin memutuskan.', icon: Icons.gavel_outlined),
           const SizedBox(height: 16),
           DropdownButtonFormField<String>(initialValue: type, decoration: const InputDecoration(labelText: 'Jenis masalah'), items: [for (final t in types) DropdownMenuItem(value: t, child: Text(t))], onChanged: (v) => setState(() => type = v ?? type)),
@@ -1252,11 +1252,11 @@ class InvoicePage extends StatelessWidget {
     final cli = o.iAmClient;
     return AppScaffold(underBar: true,
       appBar: PageBar(title: const Text('Invoice')),
-      body: ListView(padding: pagePad(context), children: [
+      body: RevealListView(padding: pagePad(context), children: [
         Box(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           const Text('BURUHKU', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, letterSpacing: 2)),
           const SizedBox(height: 4),
-          Text('INV/${o.id}', style: const TextStyle(color: g500)),
+          Text('INV/${o.id}', style: TextStyle(color: g500)),
           const Divider(height: 24),
           Kv('Tanggal', fdt(o.doneAt ?? o.created)),
           Kv('Klien', cli ? (s.name) : o.otherName),

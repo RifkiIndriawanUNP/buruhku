@@ -36,7 +36,7 @@ class _OnboardingState extends State<Onboarding> {
                         const SizedBox(height: 32),
                         Text(s[1] as String, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
                         const SizedBox(height: 12),
-                        Text(s[2] as String, textAlign: TextAlign.center, style: const TextStyle(color: g700, height: 1.4)),
+                        Text(s[2] as String, textAlign: TextAlign.center, style: TextStyle(color: g700, height: 1.4)),
                       ]),
                     ),
                 ],
@@ -108,7 +108,7 @@ class _LoginPageState extends State<LoginPage> {
                           'assets/images/splash_illustration.png',
                           width: (w * .82).clamp(240.0, 340.0).toDouble(),
                           fit: BoxFit.contain,
-                          errorBuilder: (_, __, ___) => Container(width: 96, height: 96, decoration: BoxDecoration(color: g900, borderRadius: BorderRadius.circular(24)), child: const Icon(Icons.handyman, color: cW, size: 56)),
+                          errorBuilder: (_, __, ___) => Container(width: 96, height: 96, decoration: BoxDecoration(color: g900, borderRadius: BorderRadius.circular(24)), child: Icon(Icons.handyman, color: cW, size: 56)),
                         ),
                       ),
                     ),
@@ -116,15 +116,15 @@ class _LoginPageState extends State<LoginPage> {
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
-                    decoration: const BoxDecoration(color: cW, borderRadius: BorderRadius.vertical(top: Radius.circular(32))),
+                    decoration: BoxDecoration(color: cW, borderRadius: BorderRadius.vertical(top: Radius.circular(32))),
                     child: SafeArea(
                       top: false,
                       child: Form(
                         key: key,
                         child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-                          const Text('Masuk ke Buruhku', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: g900)),
+                          Text('Masuk ke Buruhku', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: g900)),
                           const SizedBox(height: 6),
-                          const Text('Masukkan nomor HP, kami kirim kode OTP.', style: TextStyle(fontSize: 15, color: g500)),
+                          Text('Masukkan nomor HP, kami kirim kode OTP.', style: TextStyle(fontSize: 15, color: g500)),
                           const SizedBox(height: 24),
                           TextFormField(
                             controller: ctl,
@@ -158,7 +158,7 @@ class _LoginPageState extends State<LoginPage> {
                           const SizedBox(height: 16),
                           full(pbtn('Kirim kode OTP', _send, icon: Icons.arrow_forward_rounded)),
                           const SizedBox(height: 16),
-                          const Center(child: Text('Satu nomor untuk satu akun.', style: TextStyle(fontSize: 13, color: g500))),
+                          Center(child: Text('Satu nomor untuk satu akun.', style: TextStyle(fontSize: 13, color: g500))),
                         ]),
                       ),
                     ),
@@ -199,12 +199,12 @@ class _OtpPageState extends State<OtpPage> {
     return AppScaffold(
       underBar: true,
       appBar: PageBar(title: const Text('Verifikasi')),
-      body: ListView(padding: underBarPad(context, const EdgeInsets.fromLTRB(24, 12, 24, 24)), children: [
+      body: RevealListView(padding: underBarPad(context, const EdgeInsets.fromLTRB(24, 12, 24, 24)), children: [
         const Icon(Icons.mark_email_unread_outlined, size: 48, color: kGreen),
         const SizedBox(height: 16),
-        const Text('Masukkan kode', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: g900)),
+        Text('Masukkan kode', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: g900)),
         const SizedBox(height: 6),
-        Text('Kode 6 digit dikirim ke ${s.pendingPhone}', style: const TextStyle(fontSize: 15, color: g500)),
+        Text('Kode 6 digit dikirim ke ${s.pendingPhone}', style: TextStyle(fontSize: 15, color: g500)),
         const SizedBox(height: 24),
         OtpBoxes(ctl: ctl, error: err != null, onChanged: (_) => setState(() => err = null)),
         if (err != null) Padding(padding: const EdgeInsets.only(top: 8), child: Text(err!, style: const TextStyle(fontSize: 13, color: kRed, fontWeight: FontWeight.w600))),
@@ -220,9 +220,9 @@ class _OtpPageState extends State<OtpPage> {
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(color: cW, borderRadius: BorderRadius.circular(16)),
               child: Row(mainAxisSize: MainAxisSize.min, children: [
-                const Icon(Icons.science_outlined, size: 16, color: g500),
+                Icon(Icons.science_outlined, size: 16, color: g500),
                 const SizedBox(width: 6),
-                Text('Demo: kode ${s.otp} (ketuk untuk isi)', style: const TextStyle(fontSize: 13, color: g700)),
+                Text('Demo: kode ${s.otp} (ketuk untuk isi)', style: TextStyle(fontSize: 13, color: g700)),
               ]),
             ),
           ),
@@ -241,7 +241,7 @@ class _OtpPageState extends State<OtpPage> {
           },
           child: const Text('Kirim ulang kode'),
         ),
-        const Center(child: Text('Jangan bagikan kode ke siapa pun.', style: TextStyle(fontSize: 13, color: g500))),
+        Center(child: Text('Jangan bagikan kode ke siapa pun.', style: TextStyle(fontSize: 13, color: g500))),
       ]),
     );
   }
@@ -301,7 +301,7 @@ class _OtpBoxesState extends State<OtpBoxes> {
                       width: 2,
                     ),
                   ),
-                  child: Text(i < text.length ? text[i] : '', style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: g900)),
+                  child: Text(i < text.length ? text[i] : '', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: g900)),
                 ),
               ),
             ],
@@ -346,11 +346,11 @@ class _ProfileSetupState extends State<ProfileSetup> {
         appBar: PageBar(title: const Text('Lengkapi profil')),
         body: Form(
           key: key,
-          child: ListView(padding: pagePad(context), children: [
+          child: RevealListView(padding: pagePad(context), children: [
             Center(child: Column(children: [
               Stack(children: [
                 const MyAvatar(size: 88),
-                if (context.s.profilePhoto.isNotEmpty) const Positioned(right: 0, bottom: 0, child: Icon(Icons.check_circle, color: g900)),
+                if (context.s.profilePhoto.isNotEmpty) Positioned(right: 0, bottom: 0, child: Icon(Icons.check_circle, color: g900)),
               ]),
               TextButton.icon(onPressed: () => changeProfilePhoto(context), icon: const Icon(Icons.photo_camera_outlined), label: const Text('Ambil foto')),
             ])),

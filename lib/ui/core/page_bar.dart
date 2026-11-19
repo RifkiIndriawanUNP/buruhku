@@ -4,63 +4,91 @@ import 'package:flutter/material.dart';
 import 'package:buruhku/ui/core/card_parts.dart';
 import 'package:buruhku/ui/core/theme.dart';
 
-/// Bar atas TANPA latar: tidak ada warna, kotak, ataupun garis. Isi halaman yang digulir ke belakang bar
-/// diburamkan bertahap: paling kabur di tepi atas layar, makin ke bawah makin jernih (lihat [_ProgressiveBlur]).
-/// Gradien blur diperpanjang [_blurTail] px ke bawah bar supaya tidak berhenti mendadak di batas bar.
-const _blurTail = 28.0;
+/// Bar atas TANPA latar kotak: isi halaman yang digulir ke belakang bar diburamkan bertahap:
+/// paling kabur di tepi atas layar, makin ke bawah makin jernih (lihat [_ProgressiveBlur]).
+const _blurTail = 24.0;
 
 Widget _glassBar(Widget child) => Stack(clipBehavior: Clip.none, children: [
-      const Positioned(left: 0, right: 0, top: 0, bottom: -_blurTail, child: _ProgressiveBlur()),
+      const Positioned(
+        left: 0,
+        right: 0,
+        top: 0,
+        bottom: -_blurTail,
+        child: RepaintBoundary(child: _ProgressiveBlur()),
+      ),
       child,
     ]);
 
-/// Blur progresif: area bar dibagi pita-pita tipis, tiap pita memburamkan latarnya dengan kekuatan (sigma)
-/// berbeda. Satu BackdropFilter dengan ShaderMask tidak bisa dipakai untuk ini (mask tidak berlaku pada
-/// hasil blur), jadi pendekatan berpita dipakai tanpa paket tambahan.
-///
-/// Kekuatan blur mengikuti kurva smoothstep (landai di awal dan di akhir), sehingga tidak ada sambungan
-/// yang terlihat. Atur lewat konstanta di bawah:
-/// - [_bands]: makin banyak makin halus, tetapi makin berat digambar (turunkan ke 20 bila patah-patah).
-/// - [_maxSigma]: kekuatan blur di tepi atas.
+/// Blur progresif teroptimasi (4 lapis bertingkat + scrim gradien halus):
+/// Menggantikan 28 BackdropFilter yang memicu 25+ GPU render pass per frame scroll.
+/// Dengan 4 lapis + gradien transparan di atasnya, visual tetap mulus tanpa lag di 60/120fps.
 class _ProgressiveBlur extends StatelessWidget {
   const _ProgressiveBlur();
 
-  static const _bands = 28;
-  static const _maxSigma = 14.0;
-
-  static double _sigma(int i) {
-    final t = (i + 0.5) / _bands; // 0 = tepi atas, 1 = ujung bawah
-    final ease = t * t * (3 - 2 * t); // smoothstep
-    return _maxSigma * (1 - ease);
-  }
+  // Pita bertingkat: [topFraction, heightFraction, sigma]
+  static const _layers = [
+    (0.00, 0.38, 12.0), // Area status bar & atas: paling kabur
+    (0.35, 0.25, 7.5),  // Tengah atas
+    (0.57, 0.23, 3.8),  // Tengah bawah
+    (0.77, 0.23, 1.4),  // Ekor bawah: transisi jernih
+  ];
 
   @override
-  Widget build(BuildContext context) => LayoutBuilder(builder: (context, box) {
-        final bandH = box.maxHeight / _bands;
-        return Stack(children: [
-          for (var i = 0; i < _bands; i++)
-            if (_sigma(i) >= 0.5) // pita yang hampir tak terlihat dilewati agar hemat
+  Widget build(BuildContext context) {
+    final bg = Theme.of(context).scaffoldBackgroundColor;
+    return LayoutBuilder(builder: (context, box) {
+      final h = box.maxHeight;
+      if (h <= 0) return const SizedBox.shrink();
+      return IgnorePointer(
+        child: Stack(
+          children: [
+            for (final (topF, heightF, sigma) in _layers)
               Positioned(
                 left: 0,
                 right: 0,
-                top: i * bandH,
-                height: bandH + 1, // tumpang tindih 1 px agar tidak ada celah antar pita
+                top: h * topF,
+                height: (h * heightF) + 1.0,
                 child: ClipRect(
                   child: BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: _sigma(i), sigmaY: _sigma(i)),
+                    filter: ImageFilter.blur(
+                      sigmaX: sigma,
+                      sigmaY: sigma,
+                      tileMode: TileMode.clamp,
+                    ),
                     child: const SizedBox.expand(),
                   ),
                 ),
               ),
-        ]);
-      });
+            // Gradien tipis menyatu dengan warna scaffold untuk menyamarkan batas antar pita blur
+            Positioned.fill(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    stops: const [0.0, 0.45, 0.8, 1.0],
+                    colors: [
+                      bg.withValues(alpha: 0.55),
+                      bg.withValues(alpha: 0.22),
+                      bg.withValues(alpha: 0.05),
+                      bg.withValues(alpha: 0.0),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    });
+  }
 }
 
 /// Putih dengan garis dan bayangan lembut, serasi dengan RoundBtn, SoftCard, dan BottomBar.
 BoxDecoration _barBtnDeco(double r) => BoxDecoration(
       color: cW,
       borderRadius: BorderRadius.circular(r),
-      border: Border.all(color: const Color(0xFFDCDDE1)),
+      border: Border.all(color: kLine),
       boxShadow: const [BoxShadow(color: Color(0x14000000), blurRadius: 18, offset: Offset(0, 6))],
     );
 
@@ -92,14 +120,14 @@ class PageBar extends StatelessWidget implements PreferredSizeWidget {
         height: 48,
         alignment: Alignment.center,
         decoration: _barBtnDeco(24),
-        child: IconTheme(data: const IconThemeData(color: g900, size: 24), child: actions.first),
+        child: IconTheme(data: IconThemeData(color: g900, size: 24), child: actions.first),
       );
     } else if (n > 1) {
       right = Container(
         height: 48,
         padding: const EdgeInsets.symmetric(horizontal: 4),
         decoration: _barBtnDeco(24),
-        child: IconTheme(data: const IconThemeData(color: g900, size: 24), child: Row(mainAxisSize: MainAxisSize.min, children: actions)),
+        child: IconTheme(data: IconThemeData(color: g900, size: 24), child: Row(mainAxisSize: MainAxisSize.min, children: actions)),
       );
     }
 
@@ -113,7 +141,7 @@ class PageBar extends StatelessWidget implements PreferredSizeWidget {
               child: title == null
                   ? const SizedBox.shrink()
                   : DefaultTextStyle(
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, height: 1.2, color: g900),
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, height: 1.2, color: g900),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       textAlign: TextAlign.center,
@@ -122,7 +150,7 @@ class PageBar extends StatelessWidget implements PreferredSizeWidget {
             ),
           ),
         ),
-        if (canBack) Positioned(left: 20, top: 12, child: RoundBtn(size: 48, onTap: () => Navigator.maybePop(context), child: const Icon(Icons.arrow_back_ios_new_rounded, size: 20, color: g900))),
+        if (canBack) Positioned(left: 20, top: 12, child: RoundBtn(size: 48, onTap: () => Navigator.maybePop(context), child: Icon(Icons.arrow_back_ios_new_rounded, size: 20, color: g900))),
         Positioned(right: 20, top: 12, child: right),
       ]),
     );
@@ -207,7 +235,7 @@ class ProfileBar extends StatelessWidget implements PreferredSizeWidget {
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
           child: Row(children: [
             if (canBack) ...[
-              RoundBtn(size: _d, onTap: () => Navigator.maybePop(context), child: const Icon(Icons.arrow_back_ios_new_rounded, size: 20, color: g900)),
+              RoundBtn(size: _d, onTap: () => Navigator.maybePop(context), child: Icon(Icons.arrow_back_ios_new_rounded, size: 20, color: g900)),
               const SizedBox(width: 8),
             ],
             Expanded(
@@ -218,7 +246,7 @@ class ProfileBar extends StatelessWidget implements PreferredSizeWidget {
                 ),
                 child: Material(
                   color: cW,
-                  shape: const StadiumBorder(side: BorderSide(color: Color(0xFFDCDDE1))),
+                  shape: StadiumBorder(side: BorderSide(color: kLine)),
                   clipBehavior: Clip.antiAlias,
                   child: InkWell(
                     onTap: onTap,
@@ -231,8 +259,8 @@ class ProfileBar extends StatelessWidget implements PreferredSizeWidget {
                           const SizedBox(width: 12),
                           Expanded(
                             child: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.start, children: [
-                              Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, height: 1.2, color: g900)),
-                              if (subtitle != null) Text(subtitle!, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, height: 1.2, color: g500)),
+                              Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, height: 1.2, color: g900)),
+                              if (subtitle != null) Text(subtitle!, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 13, height: 1.2, color: g500)),
                             ]),
                           ),
                         ]),
@@ -248,13 +276,13 @@ class ProfileBar extends StatelessWidget implements PreferredSizeWidget {
                 width: _d,
                 height: _d,
                 alignment: Alignment.center,
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   color: cW,
                   shape: BoxShape.circle,
-                  border: Border.fromBorderSide(BorderSide(color: Color(0xFFDCDDE1))),
-                  boxShadow: [BoxShadow(color: Color(0x14000000), blurRadius: 18, offset: Offset(0, 6))],
+                  border: Border.fromBorderSide(BorderSide(color: kLine)),
+                  boxShadow: const [BoxShadow(color: Color(0x14000000), blurRadius: 18, offset: Offset(0, 6))],
                 ),
-                child: IconTheme(data: const IconThemeData(size: 24, color: g900), child: a),
+                child: IconTheme(data: IconThemeData(size: 24, color: g900), child: a),
               ),
             ],
           ]),
@@ -274,10 +302,6 @@ EdgeInsets pagePad(BuildContext c) => underBarPad(c, kPagePad);
 EdgeInsets pageListPad(BuildContext c) => underBarPad(c, kPageListPad);
 
 /// Scaffold untuk halaman ber-[PageBar] atau [ProfileBar]. Isi memanjang sampai ke bawah bar kaca.
-///
-/// - `underBar: false` (bawaan): isi otomatis diberi jarak atas, jadi tidak tertutup bar.
-/// - `underBar: true`: isi (ListView atau peta) dibiarkan memanjang ke belakang bar sehingga bisa digulir
-///   di bawah bar yang kabur. ListView-nya wajib memakai `pagePad(context)` atau `pageListPad(context)`.
 class AppScaffold extends StatelessWidget {
   final PreferredSizeWidget? appBar;
   final Widget? body;
@@ -287,7 +311,6 @@ class AppScaffold extends StatelessWidget {
   final Color? backgroundColor;
   final bool? resizeToAvoidBottomInset;
   final bool underBar;
-  /// true = isi memanjang ke belakang bottomNavigationBar (tombol bawah tidak punya latar yang memotong isi).
   final bool extendBody;
   const AppScaffold({
     this.appBar,
@@ -327,9 +350,7 @@ class AppScaffold extends StatelessWidget {
   }
 }
 
-
-/// Isi tambahan di bawah judul PageBar (chip, filter, dan sejenisnya). Berada di dalam area kabur bar,
-/// jadi tetap tajam dan melayang tanpa latar. Isi halaman yang digulir ke belakangnya terlihat.
+/// Isi tambahan di bawah judul PageBar (chip, filter, dan sejenisnya).
 class BarBottom extends StatelessWidget implements PreferredSizeWidget {
   final double height;
   final Widget child;
@@ -373,9 +394,6 @@ EdgeInsets insetPad(BuildContext c, [EdgeInsets base = kPagePad]) => base.copyWi
 
 /// Halaman tab dengan header melayang: isi memanjang sampai ke atas layar, header (judul, tab pil, chip)
 /// berada di atasnya tanpa latar dengan blur bertahap, sama seperti [PageBar].
-///
-/// [height] = tinggi header di luar status bar. [builder] menerima jarak atas total (status bar + header).
-/// Widget turunan yang membuat ListView sendiri cukup memakai `insetPad(context)`.
 class FloatHeader extends StatelessWidget {
   final Widget header;
   final double height;

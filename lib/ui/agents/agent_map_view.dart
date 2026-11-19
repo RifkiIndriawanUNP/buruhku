@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:buruhku/domain/models/models.dart';
 import 'package:buruhku/ui/core/ui.dart';
-import 'package:buruhku/ui/agents/agent_widgets.dart';
 import 'package:buruhku/utils/geo.dart';
+import 'package:buruhku/ui/agents/agent_widgets.dart';
+import 'package:buruhku/ui/core/theme.dart';
 
 /// Peta layar penuh berisi agen hasil filter. Ketuk marker untuk melihat ringkasan agen.
 /// Lingkaran menunjukkan jarak maksimum dari filter.
@@ -36,21 +37,47 @@ class _AgentMapViewState extends State<AgentMapView> {
           ],
         ),
       ),
-      // Positioned(
-      //   left: 12,
-      //   right: 12,
-      //   bottom: 76, // di atas tombol peta mengambang
-      //   child: picked != null
-      //       ? AgentCard(picked, wide: true)
-      //       : Container(
-      //           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      //           decoration: BoxDecoration(color: cW, border: Border.all(color: g300), borderRadius: BorderRadius.circular(8)),
-      //           child: Text(
-      //             l.isEmpty ? 'Tidak ada agen yang cocok dengan filter.' : '${l.length} agen dalam ${widget.radiusKm.toInt()} km. Ketuk marker untuk melihat agen.',
-      //             style: const TextStyle(fontSize: 13, color: g700),
-      //           ),
-      //         ),
-      // ),
+      // Card agen: di bawah tab bar atas
+if (picked != null)
+  Positioned(
+    top: 145,
+    left: 12,
+    right: 12,
+    child: AgentCard(
+      picked,
+      wide: true,
+    ),
+  ),
+
+    // Informasi jumlah agen: tetap di bawah
+    if (picked == null)
+      Positioned(
+        top: 145,
+        left: 0,
+        right: 0,
+        child: Center(
+          child: Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 8,
+            ),
+            decoration: BoxDecoration(
+              color: cW,
+              border: Border.all(color: g300),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              l.isEmpty
+                  ? 'Tidak ada agen yang cocok dengan filter.'
+                  : '${l.length} agen dalam ${widget.radiusKm.toInt()} km.',
+              style: TextStyle(
+                fontSize: 13,
+                color: g700,
+              ),
+            ),
+          ),
+        ),
+      ),
     ]);
   }
 }

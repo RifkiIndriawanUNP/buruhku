@@ -254,7 +254,7 @@ class _AgentListPageState extends State<AgentListPage> {
       );
     }
 
-    return ListView(
+    return RevealListView(
       padding: underBarPad(context, const EdgeInsets.fromLTRB(16, 8, 16, kBarSpace), extra: tabsH),
       children: [
         for (final v in l) ServiceTile(v),

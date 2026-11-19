@@ -18,7 +18,7 @@ class OrderStepper extends StatelessWidget {
     if (i == step) {
       return Container(width: 22, height: 22, decoration: BoxDecoration(color: cW, shape: BoxShape.circle, border: Border.all(color: kGreen, width: 3.5)));
     }
-    return Container(width: 14, height: 14, decoration: const BoxDecoration(color: kLine, shape: BoxShape.circle));
+    return Container(width: 14, height: 14, decoration: BoxDecoration(color: kLine, shape: BoxShape.circle));
   }
 
   @override
@@ -53,9 +53,9 @@ class OrderLine extends StatelessWidget {
         const SizedBox(width: 12),
         Expanded(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(label, style: const TextStyle(fontSize: 12, color: g500)),
+            Text(label, style: TextStyle(fontSize: 12, color: g500)),
             const SizedBox(height: 2),
-            Text(value, style: const TextStyle(fontSize: 14, height: 1.3, fontWeight: FontWeight.w600, color: g900)),
+            Text(value, style: TextStyle(fontSize: 14, height: 1.3, fontWeight: FontWeight.w600, color: g900)),
           ]),
         ),
       ]);
@@ -101,9 +101,9 @@ class OrderTimeline extends StatelessWidget {
               child: Padding(
                 padding: EdgeInsets.only(bottom: i < l.length - 1 ? 12 : 0),
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text(l[i].split('|').sublist(1).join('|'), style: const TextStyle(fontSize: 13, height: 1.3, color: g900)),
+                  Text(l[i].split('|').sublist(1).join('|'), style: TextStyle(fontSize: 13, height: 1.3, color: g900)),
                   const SizedBox(height: 2),
-                  Text(ftime(DateTime.parse(l[i].split('|').first)), style: const TextStyle(fontSize: 12, color: g500)),
+                  Text(ftime(DateTime.parse(l[i].split('|').first)), style: TextStyle(fontSize: 12, color: g500)),
                 ]),
               ),
             ),

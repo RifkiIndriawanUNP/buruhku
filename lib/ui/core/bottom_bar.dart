@@ -164,7 +164,7 @@ class _BottomBarState extends State<BottomBar> with TickerProviderStateMixin {
             borderRadius: BorderRadius.circular(21),
             gradient: const LinearGradient(colors: [kGreenLt, kGreen], begin: Alignment.centerLeft, end: Alignment.centerRight),
           ),
-          child: Icon(it.icon, color: cW, size: 28),
+          child: Icon(it.icon, color: Colors.white, size: 28),
         ),
       );
     }
@@ -270,7 +270,7 @@ class _BottomBarState extends State<BottomBar> with TickerProviderStateMixin {
                       child: DecoratedBox(
                         decoration: BoxDecoration(
                           borderRadius: shellRadius,
-                          border: Border.all(color: const Color(0xFFDCDDE1), width: 1),
+                          border: Border.all(color: kLine, width: 1),
                         ),
                         child: ClipRRect(
                           borderRadius: shellRadius,
@@ -286,8 +286,8 @@ class _BottomBarState extends State<BottomBar> with TickerProviderStateMixin {
                                       end: Alignment.bottomCenter,
                                       colors: [
                                         cW.withAlpha(180),
-                                        const Color(0xFFF7F7F7).withAlpha(180),
-                                        const Color(0xFFF7F7F7).withAlpha(180),
+                                        g50.withAlpha(180),
+                                        g50.withAlpha(180),
                                       ],
                                       stops: const [0.0, 0.55, 1.0],
                                     ),
@@ -314,7 +314,7 @@ class _BottomBarState extends State<BottomBar> with TickerProviderStateMixin {
                                 child: Opacity(
                                   opacity: 1 - prc,
                                   child: DecoratedBox(
-                                    decoration: BoxDecoration(color: const Color(0xFFE2E2E2), borderRadius: BorderRadius.circular(restH / 2)),
+                                    decoration: BoxDecoration(color: kLine2, borderRadius: BorderRadius.circular(restH / 2)),
                                   ),
                                 ),
                               ),
@@ -343,7 +343,7 @@ class _BottomBarState extends State<BottomBar> with TickerProviderStateMixin {
                                               gradient: LinearGradient(
                                                 begin: Alignment.topCenter,
                                                 end: Alignment.bottomCenter,
-                                                colors: [cW.withAlpha(250), const Color(0xFFF1F1F1).withAlpha(240)],
+                                                colors: [cW.withAlpha(250), g100.withAlpha(240)],
                                               ),
                                             ),
                                           ),
@@ -394,12 +394,13 @@ class _SmokePainter extends CustomPainter {
     return List.generate(100, (_) => Offset(r.nextDouble(), r.nextDouble()));
   }();
 
-  static final Paint _dotPaint = Paint()..color = g900.withAlpha(8);
-  static final Paint _wispPaint = Paint()
+  // Getter (bukan static final) supaya warnanya ikut mode terang/gelap.
+  static Paint get _dotPaint => Paint()..color = g900.withAlpha(8);
+  static Paint get _wispPaint => Paint()
     ..style = PaintingStyle.stroke
     ..strokeWidth = 18
     ..strokeCap = StrokeCap.round
-    ..color = const Color(0xFF9C9C9C).withAlpha(10);
+    ..color = g400.withAlpha(10);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -411,7 +412,7 @@ class _SmokePainter extends CustomPainter {
     for (final b in _blobs) {
       final cx = b.nx * size.width;
       final cy = b.ny * size.height;
-      final shade = b.isShade ? const Color(0xFFB8B8B8) : cW;
+      final shade = b.isShade ? g400 : cW;
       final paint = Paint()
         ..shader = RadialGradient(
           colors: [shade.withAlpha(28), shade.withAlpha(0)],

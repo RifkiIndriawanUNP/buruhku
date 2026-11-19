@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:buruhku/ui/core/reveal.dart';
 import 'package:buruhku/domain/models/models.dart';
 import 'package:buruhku/utils/formatters.dart';
 import 'package:buruhku/ui/core/card_parts.dart';
@@ -49,7 +50,7 @@ class DetailHead extends StatelessWidget {
   Widget build(BuildContext context) => Padding(
         padding: padded ? const EdgeInsets.fromLTRB(16, 12, 16, 8) : EdgeInsets.zero,
         child: Row(children: [
-          Expanded(child: Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: g900))),
+          Expanded(child: Text(title, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: g900))),
           if (action != null)
             GestureDetector(
               behavior: HitTestBehavior.opaque,
@@ -161,11 +162,11 @@ class ReviewSummary extends StatelessWidget {
     int count(int star) => revs.where((r) => r.rating == star).length;
     return Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
       Column(mainAxisSize: MainAxisSize.min, children: [
-        Text(rating.toStringAsFixed(1), style: const TextStyle(fontSize: 34, fontWeight: FontWeight.w800, height: 1.1, color: g900)),
+        Text(rating.toStringAsFixed(1), style: TextStyle(fontSize: 34, fontWeight: FontWeight.w800, height: 1.1, color: g900)),
         const SizedBox(height: 2),
         Stars(rating, size: 14),
         const SizedBox(height: 4),
-        Text('$total ulasan', style: const TextStyle(fontSize: 12, color: g500)),
+        Text('$total ulasan', style: TextStyle(fontSize: 12, color: g500)),
       ]),
       const SizedBox(width: 16),
       Expanded(
@@ -174,7 +175,7 @@ class ReviewSummary extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 2),
               child: Row(children: [
-                SizedBox(width: 10, child: Text('$star', style: const TextStyle(fontSize: 11, color: g700))),
+                SizedBox(width: 10, child: Text('$star', style: TextStyle(fontSize: 11, color: g700))),
                 const SizedBox(width: 4),
                 Expanded(
                   child: ClipRRect(
@@ -182,7 +183,7 @@ class ReviewSummary extends StatelessWidget {
                     child: LinearProgressIndicator(value: total == 0 ? 0 : count(star) / total, minHeight: 6, backgroundColor: cBg, color: const Color(0xFFFFB400)),
                   ),
                 ),
-                SizedBox(width: 22, child: Text('${count(star)}', textAlign: TextAlign.end, style: const TextStyle(fontSize: 11, color: g500))),
+                SizedBox(width: 22, child: Text('${count(star)}', textAlign: TextAlign.end, style: TextStyle(fontSize: 11, color: g500))),
               ]),
             ),
         ]),
@@ -204,18 +205,18 @@ class ReviewTile extends StatelessWidget {
           const SizedBox(width: 8),
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(r.from, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: g900)),
-              Text(ago(r.at), style: const TextStyle(fontSize: 12, color: g500)),
+              Text(r.from, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: g900)),
+              Text(ago(r.at), style: TextStyle(fontSize: 12, color: g500)),
             ]),
           ),
           Stars(r.rating.toDouble(), size: 13),
         ]),
         if (svcLabel != null) ...[
           const SizedBox(height: 6),
-          Text('Jasa: $svcLabel', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, color: g500)),
+          Text('Jasa: $svcLabel', maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: g500)),
         ],
         const SizedBox(height: 6),
-        Text(r.comment, style: const TextStyle(fontSize: 14, height: 1.35, color: g900)),
+        Text(r.comment, style: TextStyle(fontSize: 14, height: 1.35, color: g900)),
         if (r.tags.isNotEmpty) Padding(padding: const EdgeInsets.only(top: 6), child: Wrap(spacing: 4, runSpacing: 4, children: [for (final t in r.tags) Tag(t)])),
         if (r.photoUrl != null && r.photoUrl!.isNotEmpty) ...[
           const SizedBox(height: 8),
@@ -239,7 +240,7 @@ class ReviewList extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Column(children: [
         for (var i = 0; i < revs.length; i++) ...[
-          if (i > 0) const Padding(padding: EdgeInsets.symmetric(vertical: 12), child: Divider(height: 1, thickness: 1, color: kLine)),
+          if (i > 0) Padding(padding: EdgeInsets.symmetric(vertical: 12), child: Divider(height: 1, thickness: 1, color: kLine)),
           ReviewTile(revs[i], svcLabel: svcLabel?.call(revs[i])),
         ],
       ]);
@@ -256,9 +257,9 @@ class ReviewListPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) => AppScaffold(underBar: true,
         appBar: PageBar(title: Text(title)),
-        body: ListView(padding: pageListPad(context), children: [
+        body: RevealListView(padding: pageListPad(context), children: [
           DetailCard(child: ReviewSummary(rating: rating, revs: revs)),
-          DetailCard(child: revs.isEmpty ? const Text('Belum ada ulasan.', style: TextStyle(color: g500)) : ReviewList(revs, svcLabel: svcLabel)),
+          DetailCard(child: revs.isEmpty ? Text('Belum ada ulasan.', style: TextStyle(color: g500)) : ReviewList(revs, svcLabel: svcLabel)),
         ]),
       );
 }

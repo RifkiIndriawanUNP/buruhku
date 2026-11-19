@@ -47,10 +47,10 @@ class OfferStatusPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (label, bg, fg) = switch (status) {
-      'accepted' => ('Disepakati', const Color(0xFFDDF5E7), const Color(0xFF0B7A41)),
-      'rejected' => ('Ditolak', const Color(0xFFFFE3E3), const Color(0xFFC62828)),
-      'countered' => ('Ditawar balik', const Color(0xFFE3EDFF), const Color(0xFF2751B8)),
-      _ => ('Menunggu', const Color(0xFFFFF1D0), const Color(0xFF9A6B00)),
+      'accepted' => ('Disepakati', kOkBg, kOkFg),
+      'rejected' => ('Ditolak', kBadBg, kBadFg),
+      'countered' => ('Ditawar balik', kInfoBg, kInfoFg),
+      _ => ('Menunggu', kWaitBg, kWaitFg),
     };
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -65,7 +65,7 @@ Widget _price(int price, String ptype, {double size = 24}) {
   return Text.rich(TextSpan(
     text: rp(price),
     style: TextStyle(fontSize: size, fontWeight: FontWeight.w800, height: 1.15, color: g900),
-    children: [if (unit.isNotEmpty) TextSpan(text: unit, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: g500))],
+    children: [if (unit.isNotEmpty) TextSpan(text: unit, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: g500))],
   ));
 }
 
@@ -77,7 +77,7 @@ class _InfoRow extends StatelessWidget {
   Widget build(BuildContext context) => Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Icon(icon, size: 16, color: g500),
         const SizedBox(width: 8),
-        Expanded(child: Text(text, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, height: 1.3, color: g700))),
+        Expanded(child: Text(text, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 13, height: 1.3, color: g700))),
       ]);
 }
 
@@ -95,7 +95,7 @@ class PriceOfferCard extends StatelessWidget {
           Row(children: [
             const _IconDot(Icons.sell_outlined, kGreen, size: 34),
             const SizedBox(width: 8),
-            Expanded(child: Text(ptypes[ptype] ?? '', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: g500))),
+            Expanded(child: Text(ptypes[ptype] ?? '', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: g500))),
             OfferStatusPill(status),
           ]),
           const SizedBox(height: 12),
@@ -123,7 +123,7 @@ class OrderOfferCard extends StatelessWidget {
         Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
           catId != null ? CatIcon(catOf(catId), size: 42) : const _IconDot(Icons.assignment_outlined, kGreen, size: 42),
           const SizedBox(width: 8),
-          Expanded(child: Text((d['title'] ?? '').toString(), maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, height: 1.2, color: g900))),
+          Expanded(child: Text((d['title'] ?? '').toString(), maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, height: 1.2, color: g900))),
           const SizedBox(width: 8),
           OfferStatusPill(status),
         ]),
@@ -133,7 +133,7 @@ class OrderOfferCard extends StatelessWidget {
           if (when.isNotEmpty && addr.isNotEmpty) const SizedBox(height: 6),
           if (addr.isNotEmpty) _InfoRow(Icons.place_outlined, addr),
         ],
-        const Padding(padding: EdgeInsets.symmetric(vertical: 12), child: Divider(height: 1, thickness: 1, color: kLine)),
+        Padding(padding: EdgeInsets.symmetric(vertical: 12), child: Divider(height: 1, thickness: 1, color: kLine)),
         _price(d['price'] as int, d['ptype'] as String, size: 22),
         if (actions != null) ...[const SizedBox(height: 12), actions!],
       ]),
@@ -155,8 +155,8 @@ class ContactMsgCard extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              const Text('WhatsApp', style: TextStyle(fontSize: 12, color: g500)),
-              Text(number, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: g900)),
+              Text('WhatsApp', style: TextStyle(fontSize: 12, color: g500)),
+              Text(number, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: g900)),
             ]),
           ),
           if (onOpen != null) IconButton(onPressed: onOpen, visualDensity: VisualDensity.compact, icon: const Icon(Icons.open_in_new, size: 20, color: kGreen)),
@@ -181,9 +181,9 @@ class WalletMsgCard extends StatelessWidget {
         const SizedBox(width: 12),
         Expanded(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: g900)),
+            Text(name, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: g900)),
             const SizedBox(height: 2),
-            Text(mine || revealed ? number : masked, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, letterSpacing: .5, color: g700)),
+            Text(mine || revealed ? number : masked, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, letterSpacing: .5, color: g700)),
             if (purpose.isNotEmpty) ...[const SizedBox(height: 6), Tag(purpose)],
           ]),
         ),
@@ -226,8 +226,8 @@ class LocationMsgCard extends StatelessWidget {
               child: Row(children: [
                 const Icon(Icons.place, size: 18, color: kGreen),
                 const SizedBox(width: 6),
-                Expanded(child: Text(address, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, height: 1.3, color: g900))),
-                const Icon(Icons.chevron_right, size: 20, color: g500),
+                Expanded(child: Text(address, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 13, height: 1.3, color: g900))),
+                Icon(Icons.chevron_right, size: 20, color: g500),
               ]),
             ),
           ]),
